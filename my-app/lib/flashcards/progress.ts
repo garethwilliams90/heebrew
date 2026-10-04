@@ -1,50 +1,147 @@
-const PREFIX = "webrew.mastery.";
+import { createClient } from "@/lib/supabase/client";
 
-function storageKey(deckId: string) {
-  return `${PREFIX}${deckId}`;
-}
+const PAGE_SIZE = 1000;
 
-export function readDeckMastery(deckId: string): Record<string, number> {
-  if (typeof window === "undefined") {
-    return {};
+export type SaveResult = "ok" | "signed-out" | "error";
+
+type AuthContext = {
+  supabase: ReturnType<typeof createClient>;
+  userId: string;
+};
+
+async function requireUser(): Promise<AuthContext | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    return null;
   }
 
-  try {
-    const raw = window.localStorage.getItem(storageKey(deckId));
-    if (!raw) {
-      return {};
+  return { supabase, userId: data.user.id };
+}
+
+function masteryLevel(value: unknown) {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 6) {
+    return null;
+  }
+
+  return value;
+}
+
+export async function loadDeckMastery(deckId: string): Promise<{
+  signedIn: boolean;
+  mastery: Record<string, number>;
+}> {
+  const auth = await requireUser();
+
+  if (!auth) {
+    return { signedIn: false, mastery: {} };
+  }
+
+  const mastery: Record<string, number> = {};
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await auth.supabase
+      .from("card_progress")
+      .select("card_id, mastery")
+      .eq("user_id", auth.userId)
+      .eq("deck_id", deckId)
+      .order("card_id", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      throw error;
     }
 
-    const parsed: unknown = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") {
-      return {};
-    }
+    const rows = data ?? [];
 
-    const mastery: Record<string, number> = {};
-
-    for (const [id, level] of Object.entries(parsed)) {
-      if (
-        typeof level === "number" &&
-        Number.isInteger(level) &&
-        level >= 0 &&
-        level <= 6
-      ) {
-        mastery[id] = level;
+    for (const row of rows) {
+      const level = masteryLevel(row.mastery);
+      if (typeof row.card_id === "string" && level !== null) {
+        mastery[row.card_id] = level;
       }
     }
 
-    return mastery;
-  } catch {
-    return {};
+    if (rows.length < PAGE_SIZE) {
+      break;
+    }
   }
+
+  return { signedIn: true, mastery };
 }
 
-export function writeCardMastery(deckId: string, cardId: string, level: number) {
-  const mastery = readDeckMastery(deckId);
-  mastery[cardId] = level;
-  window.localStorage.setItem(storageKey(deckId), JSON.stringify(mastery));
+export async function writeCardMastery(
+  deckId: string,
+  cardId: string,
+  level: number,
+): Promise<SaveResult> {
+  const auth = await requireUser();
+
+  if (!auth) {
+    return "signed-out";
+  }
+
+  const { error } = await auth.supabase.from("card_progress").upsert(
+    {
+      user_id: auth.userId,
+      deck_id: deckId,
+      card_id: cardId,
+      mastery: level,
+    },
+    { onConflict: "user_id,deck_id,card_id", defaultToNull: false },
+  );
+
+  return error ? "error" : "ok";
 }
 
-export function clearDeckMastery(deckId: string) {
-  window.localStorage.removeItem(storageKey(deckId));
+export async function saveSessionProgress(
+  deckId: string,
+  updates: { cardId: string; mastery: number; practices: number }[],
+): Promise<SaveResult> {
+  if (updates.length === 0) {
+    return "ok";
+  }
+
+  const auth = await requireUser();
+
+  if (!auth) {
+    return "signed-out";
+  }
+
+  const { data, error: readError } = await auth.supabase
+    .from("card_progress")
+    .select("card_id, practice_count")
+    .eq("user_id", auth.userId)
+    .eq("deck_id", deckId)
+    .in(
+      "card_id",
+      updates.map((item) => item.cardId),
+    );
+
+  if (readError) {
+    return "error";
+  }
+
+  const counts = new Map<string, number>();
+
+  for (const row of data ?? []) {
+    if (typeof row.card_id === "string" && typeof row.practice_count === "number") {
+      counts.set(row.card_id, row.practice_count);
+    }
+  }
+
+  const practicedAt = new Date().toISOString();
+  const { error } = await auth.supabase.from("card_progress").upsert(
+    updates.map((item) => ({
+      user_id: auth.userId,
+      deck_id: deckId,
+      card_id: item.cardId,
+      mastery: item.mastery,
+      last_practiced_at: practicedAt,
+      practice_count: (counts.get(item.cardId) ?? 0) + item.practices,
+    })),
+    { onConflict: "user_id,deck_id,card_id" },
+  );
+
+  return error ? "error" : "ok";
 }

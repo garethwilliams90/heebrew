@@ -2,16 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Leaf, Volume2 } from "lucide-react";
+import { SoundControls, useSoundPrefs, type SoundChannel } from "@/components/flashcards/sound-toggle";
 import { useTranslations } from "next-intl";
 import { MarkedText } from "@/components/flashcards/marked-text";
 import { FamiliaritySelect } from "@/components/flashcards/familiarity-select";
 import { Button } from "@/components/ui/button";
-import {
-  clearDeckMastery,
-  readDeckMastery,
-  writeCardMastery,
-} from "@/lib/flashcards/progress";
-import { nextMastery } from "@/lib/flashcards/review";
+import { Link } from "@/i18n/navigation";
+import { loadDeckMastery, saveSessionProgress } from "@/lib/flashcards/progress";
+import { buildStudySession, nextMastery } from "@/lib/flashcards/review";
 import type {
   Flashcard,
   RecallGrade,
@@ -69,17 +67,30 @@ export function FlashcardSession({
   cards: Flashcard[];
 }) {
   const t = useTranslations("Flashcards");
+  const sound = useSoundPrefs();
   const cardsRef = useRef(cards);
-  const [queue, setQueue] = useState<StudyCard[]>(() =>
-    cards.map((card) => ({ ...card, mastery: 0 })),
-  );
+  const masteryRef = useRef<Record<string, number>>({});
+  const updatesRef = useRef(new Map<string, { mastery: number; practices: number }>());
+  const savedRef = useRef(false);
+  const savingRef = useRef<Promise<"ok" | "signed-out" | "error"> | null>(null);
+  const [queue, setQueue] = useState<StudyCard[]>([]);
+  const [sessionTotal, setSessionTotal] = useState(0);
+  const [ready, setReady] = useState(false);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [completed, setCompleted] = useState(0);
   const [speakingClip, setSpeakingClip] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState(false);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [saveError, setSaveError] = useState(false);
+  const [saving, setSaving] = useState(false);
   const clips = useRef(new Map<string, HTMLAudioElement>());
-  const pendingPlay = useRef<string | null>(null);
+  const pendingPlay = useRef<{
+    text: string;
+    nextClip: string | null;
+    kind: "word" | "sentence";
+  } | null>(null);
+  const speakingKindRef = useRef<"word" | "sentence" | null>(null);
   const hasCard = useRef(false);
   const flippedRef = useRef(false);
   const hebrewRef = useRef<string | null>(null);
@@ -96,13 +107,36 @@ export function FlashcardSession({
     : cards.map((item) => item.hebrew).join("\n");
 
   useEffect(() => {
-    const saved = readDeckMastery(deckId);
-    setQueue(
-      cardsRef.current.map((card) => ({
-        ...card,
-        mastery: saved[card.id] ?? 0,
-      })),
-    );
+    let cancelled = false;
+
+    loadDeckMastery(deckId)
+      .then(({ signedIn: hasAccount, mastery }) => {
+        if (cancelled) {
+          return;
+        }
+
+        setSignedIn(hasAccount);
+        masteryRef.current = mastery;
+        const next = buildStudySession(cardsRef.current, mastery);
+        setQueue(next);
+        setSessionTotal(next.length);
+        setReady(true);
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
+        const next = buildStudySession(cardsRef.current, masteryRef.current);
+        setQueue(next);
+        setSessionTotal(next.length);
+        setReady(true);
+        setSaveError(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [deckId]);
 
   useEffect(() => {
@@ -136,8 +170,10 @@ export function FlashcardSession({
 
           clips.current.set(clip.text, audio);
 
-          if (pendingPlay.current === clip.text && flippedRef.current) {
-            playClip(clip.text);
+          if (pendingPlay.current?.text === clip.text && flippedRef.current) {
+            const pending = pendingPlay.current;
+            pendingPlay.current = null;
+            playClip(pending.text, pending.nextClip, pending.kind);
           }
         }),
       );
@@ -203,7 +239,16 @@ export function FlashcardSession({
     }
   }, [usesRecordedAudio, index, queue]);
 
-  function playClip(text: string, nextClip: string | null = null) {
+  function playClip(text: string, nextClip: string | null, kind: "word" | "sentence") {
+    if (!sound.allows(kind)) {
+      pendingPlay.current = null;
+      speakingKindRef.current = null;
+      if (kind === "word" && nextClip && sound.allows("sentence")) {
+        playClip(nextClip, null, "sentence");
+      }
+      return;
+    }
+
     if (!clips.current.has(text) && text.startsWith("/deck-media/")) {
       const audio = new Audio(text);
       audio.preload = "auto";
@@ -213,7 +258,7 @@ export function FlashcardSession({
     const audio = clips.current.get(text);
 
     if (!audio) {
-      pendingPlay.current = text;
+      pendingPlay.current = { text, nextClip, kind };
       return;
     }
 
@@ -225,16 +270,19 @@ export function FlashcardSession({
     }
 
     audio.onended = () => {
-      if (nextClip && flippedRef.current) {
-        playClip(nextClip);
+      if (nextClip && flippedRef.current && sound.allows("sentence")) {
+        playClip(nextClip, null, "sentence");
         return;
       }
 
+      speakingKindRef.current = null;
       setSpeakingClip((current) => (current === text ? null : current));
     };
     setSpeechError(false);
+    speakingKindRef.current = kind;
     setSpeakingClip(text);
     void audio.play().catch(() => {
+      speakingKindRef.current = null;
       setSpeakingClip((current) => (current === text ? null : current));
       setSpeechError(true);
     });
@@ -242,8 +290,10 @@ export function FlashcardSession({
 
   function stopClip() {
     pendingPlay.current = null;
+    speakingKindRef.current = null;
 
     for (const clip of clips.current.values()) {
+      clip.onended = null;
       clip.pause();
       clip.currentTime = 0;
     }
@@ -256,8 +306,13 @@ export function FlashcardSession({
     flippedRef.current = next;
     setFlipped(next);
 
-    if (next && hebrewRef.current) {
-      playClip(hebrewRef.current, exampleAudioRef.current);
+    if (next && hebrewRef.current && sound.allows("word")) {
+      playClip(hebrewRef.current, exampleAudioRef.current, "word");
+      return;
+    }
+
+    if (next && exampleAudioRef.current && sound.allows("sentence")) {
+      playClip(exampleAudioRef.current, null, "sentence");
       return;
     }
 
@@ -270,7 +325,12 @@ export function FlashcardSession({
     }
 
     const updated = { ...card, mastery: nextMastery(card.mastery, grade) };
-    writeCardMastery(deckId, card.id, updated.mastery);
+    const previous = updatesRef.current.get(card.id);
+    updatesRef.current.set(card.id, {
+      mastery: updated.mastery,
+      practices: (previous?.practices ?? 0) + 1,
+    });
+    masteryRef.current = { ...masteryRef.current, [card.id]: updated.mastery };
     const rest = queue.filter((_, itemIndex) => itemIndex !== index);
 
     if (grade === "dontKnow") {
@@ -282,6 +342,10 @@ export function FlashcardSession({
       setCompleted((count) => count + 1);
       setQueue(rest);
       setIndex(rest.length === 0 ? 0 : Math.min(index, rest.length - 1));
+
+      if (rest.length === 0) {
+        void persistSession();
+      }
     }
 
     setFlipped(false);
@@ -290,9 +354,54 @@ export function FlashcardSession({
     setSpeechError(false);
   }
 
-  function studyAgain() {
-    clearDeckMastery(deckId);
-    setQueue(cards.map((item) => ({ ...item, mastery: 0 })));
+  async function persistSession() {
+    if (savedRef.current) {
+      return "ok" as const;
+    }
+
+    if (savingRef.current) {
+      return savingRef.current;
+    }
+
+    const updates = [...updatesRef.current.entries()].map(([cardId, value]) => ({
+      cardId,
+      mastery: value.mastery,
+      practices: value.practices,
+    }));
+
+    const request = saveSessionProgress(deckId, updates).then((result) => {
+      if (result === "error") {
+        setSaveError(true);
+      } else {
+        savedRef.current = true;
+        setSaveError(false);
+      }
+
+      return result;
+    });
+
+    savingRef.current = request;
+    setSaving(true);
+
+    try {
+      return await request;
+    } finally {
+      savingRef.current = null;
+      setSaving(false);
+    }
+  }
+
+  async function studyAgain() {
+    const result = await persistSession();
+    if (result === "error") {
+      return;
+    }
+
+    updatesRef.current.clear();
+    savedRef.current = false;
+    const next = buildStudySession(cardsRef.current, masteryRef.current);
+    setQueue(next);
+    setSessionTotal(next.length);
     setIndex(0);
     setCompleted(0);
     setFlipped(false);
@@ -306,47 +415,74 @@ export function FlashcardSession({
       return;
     }
 
-    writeCardMastery(deckId, card.id, level);
+    const graded = updatesRef.current.get(card.id);
+    if (graded) {
+      updatesRef.current.set(card.id, { ...graded, mastery: level });
+    }
+
+    masteryRef.current = { ...masteryRef.current, [card.id]: level };
     setQueue((current) =>
       current.map((item) => (item.id === card.id ? { ...item, mastery: level } : item)),
     );
   }
 
+  function toggleSound(channel: SoundChannel) {
+    const next = !sound.prefsRef.current[channel];
+    sound.setChannel(channel, next);
+    if (!next && (channel === "general" || channel === speakingKindRef.current)) {
+      stopClip();
+    }
+  }
+
   function speak(event: React.MouseEvent<HTMLButtonElement>) {
     event.stopPropagation();
-    if (!card) {
+    if (!card || !sound.allows("word")) {
       return;
     }
 
-    playClip(card.audioUrl ?? card.hebrew);
+    playClip(card.audioUrl ?? card.hebrew, null, "word");
   }
 
   function speakExample(event: React.MouseEvent<HTMLButtonElement>) {
     event.stopPropagation();
-    if (!card?.exampleAudioUrl) {
+    if (!card?.exampleAudioUrl || !sound.allows("sentence")) {
       return;
     }
 
-    playClip(card.exampleAudioUrl);
+    playClip(card.exampleAudioUrl, null, "sentence");
   }
 
   return (
     <main className="flex flex-1 flex-col items-center px-4 pb-10 sm:px-8">
-      {card ? (
+      {signedIn === false ? (
+        <p className="mb-4 text-center text-sm text-emerald-900/70">
+          <Link href="/login" className="text-emerald-800 underline underline-offset-2">
+            {t("signInToSave")}
+          </Link>
+        </p>
+      ) : null}
+      {saveError ? (
+        <p className="mb-4 text-center text-sm text-red-800" role="alert">
+          {t("saveError")}
+        </p>
+      ) : null}
+      {ready && card ? (
         <StudyCardView
           card={card}
           flipped={flipped}
           speakingClip={speakingClip}
           speechError={speechError}
+          soundPrefs={sound.prefs}
+          onToggleSound={toggleSound}
           completed={completed}
-          total={cards.length}
+          total={sessionTotal}
           onFlip={flip}
           onSpeak={speak}
           onSpeakExample={speakExample}
           onFamiliarity={setFamiliarity}
           onGrade={applyGrade}
         />
-      ) : (
+      ) : ready ? (
         <section className="flex flex-1 flex-col items-center justify-center text-center">
           <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />
           <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">
@@ -355,12 +491,13 @@ export function FlashcardSession({
           <p className="mt-3 max-w-sm text-emerald-900/70">{t("completeBody")}</p>
           <Button
             className="mt-8 h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900"
+            disabled={saving}
             onClick={studyAgain}
           >
             {t("studyAgain")}
           </Button>
         </section>
-      )}
+      ) : null}
     </main>
   );
 }
@@ -370,6 +507,8 @@ function StudyCardView({
   flipped,
   speakingClip,
   speechError,
+  soundPrefs,
+  onToggleSound,
   completed,
   total,
   onFlip,
@@ -382,6 +521,8 @@ function StudyCardView({
   flipped: boolean;
   speakingClip: string | null;
   speechError: boolean;
+  soundPrefs: { general: boolean; word: boolean; sentence: boolean };
+  onToggleSound: (channel: SoundChannel) => void;
   completed: number;
   total: number;
   onFlip: () => void;
@@ -401,6 +542,9 @@ function StudyCardView({
       <div className="mb-4 flex items-center justify-between gap-4 text-sm text-emerald-900/70">
         <p>{t("progress", { done: completed, total })}</p>
         <FamiliaritySelect level={card.mastery} onChange={onFamiliarity} />
+      </div>
+      <div className="mb-4">
+        <SoundControls prefs={soundPrefs} onToggle={onToggleSound} />
       </div>
       <div
         className="mb-6 h-1.5 overflow-hidden rounded-full bg-emerald-950/10"
@@ -445,7 +589,7 @@ function StudyCardView({
                 size="icon-lg"
                 className="border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
                 aria-label={wordPlaying ? t("listening") : t("listen")}
-                disabled={wordPlaying}
+                disabled={!soundPrefs.general || !soundPrefs.word || wordPlaying}
                 onClick={onSpeak}
               >
                 <Volume2 />
@@ -471,7 +615,7 @@ function StudyCardView({
                     size="icon"
                     className="mt-0.5 shrink-0 border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
                     aria-label={sentencePlaying ? t("listening") : t("listenSentence")}
-                    disabled={sentencePlaying}
+                    disabled={!soundPrefs.general || !soundPrefs.sentence || sentencePlaying}
                     onClick={onSpeakExample}
                   >
                     <Volume2 />

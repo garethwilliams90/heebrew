@@ -2,12 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Volume2 } from "lucide-react";
+import {
+  SoundControls,
+  useSoundPrefs,
+  type SoundChannel,
+} from "@/components/flashcards/sound-toggle";
 import { useTranslations } from "next-intl";
 import { FamiliaritySelect } from "@/components/flashcards/familiarity-select";
 import { MarkedText } from "@/components/flashcards/marked-text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { readDeckMastery, writeCardMastery } from "@/lib/flashcards/progress";
+import { Link } from "@/i18n/navigation";
+import { loadDeckMastery, writeCardMastery } from "@/lib/flashcards/progress";
 import type { Flashcard } from "@/lib/flashcards/types";
 
 const PAGE_SIZE = 20;
@@ -71,10 +77,14 @@ export function DeckBrowser({
   cards: Flashcard[];
 }) {
   const t = useTranslations("Flashcards");
+  const sound = useSoundPrefs();
+  const playingKindRef = useRef<"word" | "sentence" | null>(null);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<CardSort>("az");
   const [page, setPage] = useState(0);
   const [mastery, setMastery] = useState<Record<string, number>>({});
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [saveError, setSaveError] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [failedId, setFailedId] = useState<string | null>(null);
   const clips = useRef(new Map<string, HTMLAudioElement>());
@@ -83,7 +93,26 @@ export function DeckBrowser({
   const usesRecordedAudio = cards.some((card) => card.audioUrl);
 
   useEffect(() => {
-    setMastery(readDeckMastery(deckId));
+    let cancelled = false;
+
+    loadDeckMastery(deckId)
+      .then(({ signedIn: hasAccount, mastery: saved }) => {
+        if (cancelled) {
+          return;
+        }
+
+        setSignedIn(hasAccount);
+        setMastery(saved);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSaveError(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [deckId]);
 
   useEffect(() => {
@@ -118,10 +147,10 @@ export function DeckBrowser({
 
           clips.current.set(clip.text, audio);
 
-          if (pendingPlay.current?.key === clip.text) {
+          if (pendingPlay.current?.key === clip.text && sound.allows("word")) {
             const pending = pendingPlay.current;
             pendingPlay.current = null;
-            startClip(pending.id, audio);
+            startClip(pending.id, audio, "word");
           }
         }),
       );
@@ -197,22 +226,52 @@ export function DeckBrowser({
   const start = safePage * PAGE_SIZE;
   const visible = filtered.slice(start, start + PAGE_SIZE);
 
-  function startClip(id: string, audio: HTMLAudioElement) {
+  function stopClips() {
+    pendingPlay.current = null;
+    playingKindRef.current = null;
+
     for (const clip of clips.current.values()) {
       clip.pause();
       clip.currentTime = 0;
     }
 
-    audio.onended = () => setPlayingId((current) => (current === id ? null : current));
+    setPlayingId(null);
+  }
+
+  function toggleSound(channel: SoundChannel) {
+    const next = !sound.prefsRef.current[channel];
+    sound.setChannel(channel, next);
+    if (!next && (channel === "general" || channel === playingKindRef.current)) {
+      stopClips();
+    }
+  }
+
+  function startClip(id: string, audio: HTMLAudioElement, kind: "word" | "sentence") {
+    if (!sound.allows(kind)) {
+      pendingPlay.current = null;
+      return;
+    }
+
+    for (const clip of clips.current.values()) {
+      clip.pause();
+      clip.currentTime = 0;
+    }
+
+    playingKindRef.current = kind;
+    audio.onended = () => {
+      playingKindRef.current = null;
+      setPlayingId((current) => (current === id ? null : current));
+    };
     setFailedId(null);
     setPlayingId(id);
     void audio.play().catch(() => {
+      playingKindRef.current = null;
       setPlayingId(null);
       setFailedId(id);
     });
   }
 
-  function playUrl(id: string, url: string) {
+  function playUrl(id: string, url: string, kind: "word" | "sentence") {
     let audio = clips.current.get(url);
 
     if (!audio) {
@@ -222,15 +281,19 @@ export function DeckBrowser({
     }
 
     pendingPlay.current = null;
-    startClip(id, audio);
+    startClip(id, audio, kind);
   }
 
   function play(card: Flashcard) {
+    if (!sound.allows("word")) {
+      return;
+    }
+
     const key = card.audioUrl ?? card.hebrew;
     const audio = clips.current.get(key);
 
     if (!audio && card.audioUrl) {
-      playUrl(card.id, card.audioUrl);
+      playUrl(card.id, card.audioUrl, "word");
       return;
     }
 
@@ -242,7 +305,7 @@ export function DeckBrowser({
     }
 
     pendingPlay.current = null;
-    startClip(card.id, audio);
+    startClip(card.id, audio, "word");
   }
 
   return (
@@ -253,6 +316,21 @@ export function DeckBrowser({
           <p className="mt-2 text-sm text-emerald-900/70">
             {t("cardCount", { count: cards.length })}
           </p>
+          {signedIn === false ? (
+            <p className="mt-2 text-sm text-emerald-900/70">
+              <Link href="/login" className="text-emerald-800 underline underline-offset-2">
+                {t("signInToSave")}
+              </Link>
+            </p>
+          ) : null}
+          {saveError ? (
+            <p className="mt-2 text-sm text-red-800" role="alert">
+              {t("saveError")}
+            </p>
+          ) : null}
+          <div className="mt-3">
+            <SoundControls prefs={sound.prefs} onToggle={toggleSound} />
+          </div>
         </div>
         <div className="flex w-full flex-col gap-2 sm:max-w-md sm:flex-row">
           <select
@@ -339,8 +417,12 @@ export function DeckBrowser({
                     <FamiliaritySelect
                       level={level}
                       onChange={(next) => {
-                        writeCardMastery(deckId, card.id, next);
                         setMastery((current) => ({ ...current, [card.id]: next }));
+                        void writeCardMastery(deckId, card.id, next).then((result) => {
+                          if (result === "error") {
+                            setSaveError(true);
+                          }
+                        });
                       }}
                     />
                     <Button
@@ -349,7 +431,7 @@ export function DeckBrowser({
                       size="icon-lg"
                       className="border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
                       aria-label={playing ? t("listening") : t("listen")}
-                      disabled={playing}
+                      disabled={!sound.prefs.general || !sound.prefs.word || playing}
                       onClick={() => play(card)}
                     >
                       <Volume2 />
@@ -370,8 +452,12 @@ export function DeckBrowser({
                         aria-label={
                           playingId === `${card.id}:example` ? t("listening") : t("listenSentence")
                         }
-                        disabled={playingId === `${card.id}:example`}
-                        onClick={() => playUrl(`${card.id}:example`, card.exampleAudioUrl!)}
+                        disabled={
+                          !sound.prefs.general ||
+                          !sound.prefs.sentence ||
+                          playingId === `${card.id}:example`
+                        }
+                        onClick={() => playUrl(`${card.id}:example`, card.exampleAudioUrl!, "sentence")}
                       >
                         <Volume2 />
                       </Button>
