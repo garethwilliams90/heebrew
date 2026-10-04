@@ -24,6 +24,7 @@ Use only this stack unless the owner explicitly requests or approves a deviation
 - Supabase for authentication and the database
 - `use-sound` for sound effects
 - `next-intl` for interface languages
+- Azure AI Translator on the free F0 tier for English-to-Hebrew text, Azure AI Speech on the free F0 tier for speaking the Hebrew, and Dicta's free Nakdan for grammatical gender. Translator allows 2 million characters a month. Speech allows 0.5 million neural characters a month. Both stay free only while the Azure resources are on F0. Keys stay server-side in `.env.local` as `AZURE_TRANSLATOR_KEY`, `AZURE_TRANSLATOR_REGION`, `AZURE_SPEECH_KEY`, and `AZURE_SPEECH_REGION`. Do not expose them to the browser. Dicta Nakdan needs no key. Do not call the public Google Translate website.
 
 ## Language and direction
 
@@ -41,12 +42,24 @@ Build these in roughly this order. Feature 5 is low priority.
 
 ### 1. Flashcards with spaced repetition
 
-Learners study words on flashcards. Each word has a mastery level from 0 to 6:
+Study is a single large card on a calm screen, in the spirit of Reverso's flashcards: the word centered, a short part-of-speech label beside it, a speaker control, an example sentence, and a control to flip. Clicking the card or pressing Space flips it. A session shows progress across the cards that are due.
 
-- 0 is unknown
-- 6 is mastered
+The interface around the card stays left-to-right. English on the front is left-to-right. Hebrew on the back is `dir="rtl"` and `lang="he"`.
 
-A correct recall moves the word up one level. Intervals between reviews grow longer as the level rises.
+**Front.** The English word and its part of speech (noun, verb, adjective, adverb, and so on). An example sentence can sit under the word.
+
+**Back.** The Hebrew translation, a speaker control for the Hebrew, and the grammatical gender when the word has one: masculine or feminine.
+
+**Creating cards.** A learner can create a card. They enter the English word and part of speech. Azure Translator fills in the Hebrew translation (`from=en`, `to=he`). Dicta Nakdan then reads that Hebrew with morphology turned on and supplies masculine or feminine when the word has a gender. The learner can edit the translation and the gender before saving. Translator returns the translated string only. One unpointed Hebrew spelling can have more than one reading, so the saved gender is the one the learner confirms. Part of speech stays on the card record.
+
+**Audio.** Azure Speech speaks the Hebrew on the back, using the neural voice `he-IL-HilaNeural`. The front has no speaker. A voice's male or female setting is how the voice sounds. It is not the grammatical gender of the word.
+
+**Recall.** After the flip, the learner picks one of four grades. Each card keeps a mastery level from 0 (unknown) to 6 (mastered) and a next-review time. The grade changes that level, and a higher level means a longer wait before the card appears again.
+
+- Don't know: move the level down toward 0. Show the card again soon.
+- Know: move the level up by 1. Use a short gap.
+- Know well: move the level up by 2, never past 6. Use a longer gap.
+- Memorised totally: set the level to 6. Use the longest gap.
 
 ### 2. Training centre
 

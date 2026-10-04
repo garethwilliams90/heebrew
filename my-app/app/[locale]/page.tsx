@@ -1,73 +1,84 @@
-import Image from "next/image";
+import { Leaf } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { AuthButton } from "@/components/auth-button";
+import { DeckBrowser } from "@/components/flashcards/deck-browser";
+import { DeckPicker } from "@/components/flashcards/deck-picker";
+import { FlashcardSession } from "@/components/flashcards/flashcard-session";
+import { Link } from "@/i18n/navigation";
+import type { Flashcard } from "@/lib/flashcards/types";
+import { starterDeck } from "@/lib/flashcards/starter-deck";
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ deck?: string; view?: string }>;
+}) {
+  const t = await getTranslations("Flashcards");
+  const { deck, view } = await searchParams;
+  const cards = await cardsForDeck(deck);
+  const browsing = Boolean(cards && deck && view === "cards");
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <header className="flex w-full justify-end p-4">
+    <div className="relative flex min-h-dvh flex-1 flex-col overflow-hidden bg-[#f3f6f1] text-emerald-950">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 -left-24 size-80 rounded-full bg-emerald-200/50 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-0 bottom-0 size-96 rounded-full bg-lime-100/80 blur-3xl"
+      />
+      <header className="relative z-10 flex items-center justify-between gap-4 px-4 py-4 sm:px-8">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-2">
+            <Leaf className="size-5 text-emerald-800" aria-hidden />
+            <p className="text-lg font-semibold tracking-tight">{t("brand")}</p>
+          </Link>
+          {cards ? (
+            <Link href="/" className="text-sm text-emerald-800">
+              {t("decks")}
+            </Link>
+          ) : null}
+        </div>
         <AuthButton />
       </header>
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      <div className="relative z-10 flex flex-1 flex-col">
+        {browsing && deck && cards ? (
+          <DeckBrowser deckId={deck} title={deckTitle(deck, t)} cards={cards} />
+        ) : cards && deck ? (
+          <FlashcardSession key={deck} deckId={deck} cards={cards} />
+        ) : (
+          <DeckPicker />
+        )}
+      </div>
     </div>
   );
+}
+
+function deckTitle(
+  deck: string,
+  t: Awaited<ReturnType<typeof getTranslations<"Flashcards">>>,
+) {
+  if (deck === "nature") {
+    return t("natureTitle");
+  }
+
+  if (deck === "hebrew-from-scratch") {
+    return t("scratchTitle");
+  }
+
+  return t("viewCards");
+}
+
+async function cardsForDeck(deck: string | undefined): Promise<Flashcard[] | null> {
+  if (deck === "nature") {
+    return starterDeck;
+  }
+
+  if (deck === "hebrew-from-scratch") {
+    const { hebrewFromScratch } = await import("@/lib/flashcards/hebrew-from-scratch");
+    return hebrewFromScratch;
+  }
+
+  return null;
 }
