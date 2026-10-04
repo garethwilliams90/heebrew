@@ -23,8 +23,17 @@ Use only this stack unless the owner explicitly requests or approves a deviation
 - shadcn/ui for components
 - Supabase for authentication and the database
 - `use-sound` for sound effects
+- `next-intl` for interface languages
 
-Hebrew text must render correctly (right-to-left where the content is Hebrew). Keep the interface responsive on mobile and desktop.
+## Language and direction
+
+Interface languages are English, French, and Spanish, for learners in Europe. English is the default. The interface stays left-to-right for every interface language. Set `dir="ltr"` on the document and `lang` to the active locale (`en`, `fr`, or `es`).
+
+Use `next-intl` for interface copy. Locales and routing live in `i18n/routing.ts`. Messages live in `messages/en.json`, `messages/fr.json`, and `messages/es.json`. The default locale is served at `/`. French and Spanish use `/fr` and `/es`. Use the navigation helpers in `i18n/navigation.ts` for internal links so the locale prefix is kept.
+
+Hebrew study content (words, sentences, answers) is still right-to-left. Mark those strings with `dir="rtl"` and `lang="he"` on the element that contains them. Hebrew is not an interface language.
+
+Keep the interface responsive on mobile and desktop.
 
 ## Features
 
@@ -57,11 +66,11 @@ For masculine and feminine words on flashcards, generate images with AI. Example
 
 ### 6. Authentication
 
-Login, logout, and registration through Supabase. Support Google, phone, email, and GitHub (and similar providers as configured in Supabase).
+Login, logout, and registration through Supabase. Email and password are first: `/login`, `/sign-up`, and the confirmation callback at `/auth/confirm`. Google, phone, and GitHub come after those providers are configured in Supabase.
 
 ## Working agreements
 
 - Do not add libraries, services, or UI kits outside the stack above unless the owner asks for them or approves them first.
 - Prefer the existing Next.js App Router project. Read `node_modules/next/dist/docs/` before using Next.js APIs that may have changed.
 - Keep UI work consistent with the nature theme, smooth motion, and a clean modern look.
-- When a feature touches the database or auth, use Supabase.
+- When a feature touches the database or auth, use Supabase. Browser code uses `lib/supabase/client.ts`. Server Components, Server Actions, and Route Handlers use `lib/supabase/server.ts`. `proxy.ts` refreshes the auth session, then applies locale routing. Credentials live in `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Do not commit that file.

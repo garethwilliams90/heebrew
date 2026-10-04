@@ -1,0 +1,29 @@
+{
+  "Metadata": {
+    "title": "Webrew",
+    "description": "Une plateforme d'apprentissage de l'hébreu pour tous les niveaux"
+  },
+  "Auth": {
+    "loginTitle": "Connexion",
+    "loginDescription": "Utilisez votre e-mail et votre mot de passe.",
+    "signUpTitle": "Créer un compte",
+    "signUpDescription": "Inscrivez-vous avec votre e-mail et un mot de passe.",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "repeatPassword": "Confirmez le mot de passe",
+    "login": "Se connecter",
+    "loggingIn": "Connexion...",
+    "signUp": "S'inscrire",
+    "signingUp": "Création du compte...",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Vous avez déjà un compte ?",
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas.",
+    "genericError": "Une erreur s'est produite.",
+    "checkEmailTitle": "Vérifiez votre e-mail",
+    "checkEmailDescription": "Nous avons envoyé un lien de confirmation. Ouvrez-le pour terminer la création du compte, puis connectez-vous.",
+    "signedInAs": "Connecté en tant que {email}",
+    "logOut": "Se déconnecter",
+    "logIn": "Se connecter",
+    "backHome": "Retour à l'accueil"
+  }
+}

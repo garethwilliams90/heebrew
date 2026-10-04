@@ -1,0 +1,29 @@
+{
+  "Metadata": {
+    "title": "Webrew",
+    "description": "A Hebrew language learning platform for all levels"
+  },
+  "Auth": {
+    "loginTitle": "Log in",
+    "loginDescription": "Use your email and password.",
+    "signUpTitle": "Create an account",
+    "signUpDescription": "Register with your email and password.",
+    "email": "Email",
+    "password": "Password",
+    "repeatPassword": "Repeat password",
+    "login": "Log in",
+    "loggingIn": "Logging in...",
+    "signUp": "Sign up",
+    "signingUp": "Creating account...",
+    "noAccount": "No account yet?",
+    "hasAccount": "Already have an account?",
+    "passwordsDoNotMatch": "Passwords do not match.",
+    "genericError": "Something went wrong.",
+    "checkEmailTitle": "Check your email",
+    "checkEmailDescription": "We sent a confirmation link. Open it to finish creating your account, then log in.",
+    "signedInAs": "Signed in as {email}",
+    "logOut": "Log out",
+    "logIn": "Log in",
+    "backHome": "Back home"
+  }
+}

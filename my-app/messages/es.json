@@ -1,0 +1,29 @@
+{
+  "Metadata": {
+    "title": "Webrew",
+    "description": "Una plataforma para aprender hebreo, para todos los niveles"
+  },
+  "Auth": {
+    "loginTitle": "Iniciar sesión",
+    "loginDescription": "Usa tu correo y tu contraseña.",
+    "signUpTitle": "Crear una cuenta",
+    "signUpDescription": "Regístrate con tu correo y una contraseña.",
+    "email": "Correo",
+    "password": "Contraseña",
+    "repeatPassword": "Repite la contraseña",
+    "login": "Entrar",
+    "loggingIn": "Entrando...",
+    "signUp": "Registrarse",
+    "signingUp": "Creando la cuenta...",
+    "noAccount": "¿Aún no tienes cuenta?",
+    "hasAccount": "¿Ya tienes una cuenta?",
+    "passwordsDoNotMatch": "Las contraseñas no coinciden.",
+    "genericError": "Algo ha fallado.",
+    "checkEmailTitle": "Revisa tu correo",
+    "checkEmailDescription": "Hemos enviado un enlace de confirmación. Ábrelo para terminar de crear la cuenta y luego inicia sesión.",
+    "signedInAs": "Sesión iniciada como {email}",
+    "logOut": "Cerrar sesión",
+    "logIn": "Iniciar sesión",
+    "backHome": "Volver al inicio"
+  }
+}
