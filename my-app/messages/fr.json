@@ -24,6 +24,9 @@
     "signedInAs": "Connecté en tant que {email}",
     "logOut": "Se déconnecter",
     "logIn": "Se connecter",
-    "backHome": "Retour à l'accueil"
+    "backHome": "Retour à l'accueil",
+    "continueWithGoogle": "Continuer avec Google",
+    "continuingWithGoogle": "Redirection vers Google...",
+    "or": "ou"
   }
 }

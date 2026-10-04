@@ -66,7 +66,7 @@ For masculine and feminine words on flashcards, generate images with AI. Example
 
 ### 6. Authentication
 
-Login, logout, and registration through Supabase. Email and password are first: `/login`, `/sign-up`, and the confirmation callback at `/auth/confirm`. Google, phone, and GitHub come after those providers are configured in Supabase.
+Login, logout, and registration through Supabase. Email and password are at `/login` and `/sign-up`. Google uses the same screens and returns through `/auth/confirm`. Phone and GitHub come after those providers are configured in Supabase.
 
 ## Working agreements
 

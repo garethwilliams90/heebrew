@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { GoogleAuthButton } from "@/components/google-auth-button";
 import {
   Card,
   CardContent,
@@ -66,7 +67,9 @@ export function SignUpForm({ className }: { className?: string }) {
           <CardTitle>{t("signUpTitle")}</CardTitle>
           <CardDescription>{t("signUpDescription")}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-4">
+          <GoogleAuthButton disabled={isLoading} onError={setError} />
+          <p className="text-center text-xs text-muted-foreground">{t("or")}</p>
           <form className="flex flex-col gap-4" onSubmit={handleSignUp}>
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">{t("email")}</Label>

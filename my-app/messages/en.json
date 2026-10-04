@@ -24,6 +24,9 @@
     "signedInAs": "Signed in as {email}",
     "logOut": "Log out",
     "logIn": "Log in",
-    "backHome": "Back home"
+    "backHome": "Back home",
+    "continueWithGoogle": "Continue with Google",
+    "continuingWithGoogle": "Continuing to Google...",
+    "or": "or"
   }
 }

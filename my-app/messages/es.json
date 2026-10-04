@@ -24,6 +24,9 @@
     "signedInAs": "Sesión iniciada como {email}",
     "logOut": "Cerrar sesión",
     "logIn": "Iniciar sesión",
-    "backHome": "Volver al inicio"
+    "backHome": "Volver al inicio",
+    "continueWithGoogle": "Continuar con Google",
+    "continuingWithGoogle": "Redirigiendo a Google...",
+    "or": "o"
   }
 }
