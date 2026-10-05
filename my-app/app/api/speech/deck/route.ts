@@ -2,7 +2,7 @@ import { synthesizeHebrew } from "@/lib/azure/speech";
 
 const HEBREW = /\p{Script=Hebrew}/u;
 const MAX_TEXTS = 40;
-const MAX_CHARS = 80;
+const MAX_CHARS = 200;
 
 export async function POST(request: Request) {
   let texts: string[] = [];

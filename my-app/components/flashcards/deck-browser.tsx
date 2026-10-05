@@ -8,11 +8,15 @@ import {
   type SoundChannel,
 } from "@/components/flashcards/sound-toggle";
 import { useTranslations } from "next-intl";
+import { CardEditor } from "@/components/flashcards/card-editor";
+import { DeckHeading } from "@/components/flashcards/deck-heading";
 import { FamiliaritySelect } from "@/components/flashcards/familiarity-select";
 import { MarkedText } from "@/components/flashcards/marked-text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { removeCard } from "@/lib/flashcards/library";
+import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { loadDeckMastery, writeCardMastery } from "@/lib/flashcards/progress";
 import type { Flashcard } from "@/lib/flashcards/types";
 
@@ -70,13 +74,18 @@ function normalize(value: string) {
 export function DeckBrowser({
   deckId,
   title,
+  description,
+  kind,
   cards,
 }: {
   deckId: string;
   title: string;
+  description: string;
+  kind: "builtin" | "custom";
   cards: Flashcard[];
 }) {
   const t = useTranslations("Flashcards");
+  const router = useRouter();
   const sound = useSoundPrefs();
   const playingKindRef = useRef<"word" | "sentence" | null>(null);
   const [query, setQuery] = useState("");
@@ -87,6 +96,9 @@ export function DeckBrowser({
   const [saveError, setSaveError] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [failedId, setFailedId] = useState<string | null>(null);
+  const [editor, setEditor] = useState<Flashcard | "new" | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [libraryMessage, setLibraryMessage] = useState<"signed-out" | "error" | null>(null);
   const clips = useRef(new Map<string, HTMLAudioElement>());
   const pendingPlay = useRef<{ id: string; key: string } | null>(null);
 
@@ -122,7 +134,7 @@ export function DeckBrowser({
 
     const created: string[] = [];
     let cancelled = false;
-    const texts = [...new Set(cards.map((card) => card.hebrew).filter(Boolean))];
+    const texts = [...new Set(cards.map((card) => card.hebrew).filter(Boolean))].slice(0, 40);
 
     async function loadDeck() {
       const clipsForDeck = await requestDeck(texts);
@@ -301,6 +313,19 @@ export function DeckBrowser({
       pendingPlay.current = { id: card.id, key };
       setFailedId(null);
       setPlayingId(card.id);
+      if (usesRecordedAudio && !card.audioUrl) {
+        void loadSpeechClip(card.hebrew).then((loaded) => {
+          if (!loaded) {
+            setPlayingId(null);
+            setFailedId(card.id);
+            return;
+          }
+          clips.current.set(card.hebrew, loaded);
+          if (pendingPlay.current?.key === card.hebrew) {
+            startClip(card.id, loaded, "word");
+          }
+        });
+      }
       return;
     }
 
@@ -308,11 +333,35 @@ export function DeckBrowser({
     startClip(card.id, audio, "word");
   }
 
+  function refresh() {
+    setEditor(null);
+    setConfirmDelete(null);
+    setLibraryMessage(null);
+    router.refresh();
+  }
+
+  async function destroyCard(card: Flashcard) {
+    const result = await removeCard(deckId, card);
+    if (result === "ok") {
+      refresh();
+      return;
+    }
+    setLibraryMessage(result === "signed-out" ? "signed-out" : "error");
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-10 sm:px-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-row gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+          <DeckHeading
+            deckId={deckId}
+            title={title}
+            description={description}
+            canDelete={kind === "custom"}
+            level="h1"
+            titleClassName="text-3xl font-semibold tracking-tight"
+            descriptionClassName="mt-2 text-emerald-950/70"
+          />
           <p className="mt-2 text-sm text-emerald-900/70">
             {t("cardCount", { count: cards.length })}
           </p>
@@ -331,6 +380,26 @@ export function DeckBrowser({
           <div className="mt-3">
             <SoundControls prefs={sound.prefs} onToggle={toggleSound} />
           </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              className="h-10 bg-emerald-800 px-4 text-white hover:bg-emerald-900"
+              onClick={() => {
+                setEditor("new");
+                setConfirmDelete(null);
+              }}
+            >
+              {t("addCard")}
+            </Button>
+          </div>
+          {libraryMessage === "signed-out" ? (
+            <p className="mt-2 text-sm text-emerald-900/70">{t("signInToEdit")}</p>
+          ) : null}
+          {libraryMessage === "error" ? (
+            <p className="mt-2 text-sm text-red-800" role="alert">
+              {t("libraryError")}
+            </p>
+          ) : null}
         </div>
         <div className="flex w-full flex-col gap-2 sm:max-w-md sm:flex-row">
           <select
@@ -385,19 +454,49 @@ export function DeckBrowser({
         }}
       />
 
+      {editor === "new" ? (
+        <div className="mt-6">
+          <CardEditor
+            deckId={deckId}
+            card={null}
+            onClose={() => setEditor(null)}
+            onSaved={(result) => {
+              if (result === "ok") {
+                refresh();
+              }
+            }}
+          />
+        </div>
+      ) : null}
+
       {visible.length === 0 ? (
-        <p className="mt-8 text-emerald-900/70">{t("noMatches")}</p>
+        <p className="mt-8 text-emerald-900/70">{query ? t("noMatches") : t("emptyDeck")}</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-3">
           {visible.map((card) => {
             const level = mastery[card.id] ?? 0;
             const playing = playingId === card.id;
 
+            const editing = editor !== "new" && editor?.id === card.id;
+
             return (
               <li
                 key={card.id}
                 className="rounded-3xl border border-emerald-950/10 bg-white/90 p-5 shadow-[0_24px_60px_-40px_rgba(6,78,59,0.45)]"
               >
+                {editing ? (
+                  <CardEditor
+                    deckId={deckId}
+                    card={card}
+                    onClose={() => setEditor(null)}
+                    onSaved={(result) => {
+                      if (result === "ok") {
+                        refresh();
+                      }
+                    }}
+                  />
+                ) : (
+                <>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs font-medium tracking-[0.16em] text-emerald-800/70 uppercase">
@@ -438,40 +537,87 @@ export function DeckBrowser({
                     </Button>
                   </div>
                 </div>
-                <p dir="rtl" lang="he" className="mt-4 text-3xl font-semibold">
-                  {card.hebrew}
-                </p>
-                {card.hebrewExample ? (
-                  <div dir="rtl" lang="he" className="mt-2 flex items-start gap-2">
-                    {card.exampleAudioUrl ? (
+                    <p dir="rtl" lang="he" className="mt-4 text-3xl font-semibold">
+                      {card.hebrew}
+                    </p>
+                    {card.hebrewExample ? (
+                      <div dir="rtl" lang="he" className="mt-2 flex items-start gap-2">
+                        {card.exampleAudioUrl ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="mt-0.5 shrink-0 border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
+                            aria-label={
+                              playingId === `${card.id}:example` ? t("listening") : t("listenSentence")
+                            }
+                            disabled={
+                              !sound.prefs.general ||
+                              !sound.prefs.sentence ||
+                              playingId === `${card.id}:example`
+                            }
+                            onClick={() =>
+                              playUrl(`${card.id}:example`, card.exampleAudioUrl!, "sentence")
+                            }
+                          >
+                            <Volume2 />
+                          </Button>
+                        ) : null}
+                        <p className="text-emerald-950/70">
+                          <MarkedText text={card.hebrewExample} bold={card.hebrewExampleBold} />
+                        </p>
+                      </div>
+                    ) : null}
+                    {failedId === card.id || failedId === `${card.id}:example` ? (
+                      <p className="mt-3 text-sm text-red-800" role="alert">
+                        {t("speechError")}
+                      </p>
+                    ) : null}
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
                       <Button
                         type="button"
                         variant="outline"
-                        size="icon"
-                        className="mt-0.5 shrink-0 border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
-                        aria-label={
-                          playingId === `${card.id}:example` ? t("listening") : t("listenSentence")
-                        }
-                        disabled={
-                          !sound.prefs.general ||
-                          !sound.prefs.sentence ||
-                          playingId === `${card.id}:example`
-                        }
-                        onClick={() => playUrl(`${card.id}:example`, card.exampleAudioUrl!, "sentence")}
+                        className="h-9 border-emerald-900/10 bg-white text-emerald-950 hover:bg-emerald-50"
+                        onClick={() => {
+                          setEditor(card);
+                          setConfirmDelete(null);
+                        }}
                       >
-                        <Volume2 />
+                        {t("editCard")}
                       </Button>
-                    ) : null}
-                    <p className="text-emerald-950/70">
-                      <MarkedText text={card.hebrewExample} bold={card.hebrewExampleBold} />
-                    </p>
-                  </div>
-                ) : null}
-                {failedId === card.id || failedId === `${card.id}:example` ? (
-                  <p className="mt-3 text-sm text-red-800" role="alert">
-                    {t("speechError")}
-                  </p>
-                ) : null}
+                      {confirmDelete === card.id ? (
+                        <>
+                          <p className="text-sm text-emerald-900/70">{t("deleteCardConfirm")}</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-9 border-red-200 bg-white text-red-800 hover:bg-red-50"
+                            onClick={() => void destroyCard(card)}
+                          >
+                            {t("deleteCard")}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-9 border-emerald-900/10 bg-white hover:bg-emerald-50"
+                            onClick={() => setConfirmDelete(null)}
+                          >
+                            {t("cancel")}
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-9 border-red-200 bg-white text-red-800 hover:bg-red-50"
+                          onClick={() => setConfirmDelete(card.id)}
+                        >
+                          {t("deleteCard")}
+                        </Button>
+                      )}
+                    </div>
+                </>
+                )}
               </li>
             );
           })}

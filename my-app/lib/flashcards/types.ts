@@ -1,15 +1,22 @@
-export type PartOfSpeech =
-  | "noun"
-  | "verb"
-  | "adjective"
-  | "adverb"
-  | "pronoun"
-  | "preposition"
-  | "conjunction"
-  | "particle"
-  | "interjection"
-  | "phrase"
-  | "question";
+export const partsOfSpeech = [
+  "noun",
+  "verb",
+  "adjective",
+  "adverb",
+  "pronoun",
+  "preposition",
+  "conjunction",
+  "particle",
+  "interjection",
+  "phrase",
+  "question",
+] as const;
+
+export type PartOfSpeech = (typeof partsOfSpeech)[number];
+
+export function isPartOfSpeech(value: string): value is PartOfSpeech {
+  return (partsOfSpeech as readonly string[]).includes(value);
+}
 
 export type GrammaticalGender = "masculine" | "feminine";
 

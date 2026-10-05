@@ -9,6 +9,7 @@ import { FamiliaritySelect } from "@/components/flashcards/familiarity-select";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { loadDeckMastery, saveSessionProgress } from "@/lib/flashcards/progress";
+import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { buildStudySession, nextMastery } from "@/lib/flashcards/review";
 import type {
   Flashcard,
@@ -145,7 +146,7 @@ export function FlashcardSession({
     }
     const created: string[] = [];
     let cancelled = false;
-    const texts = [...new Set(deckKey.split("\n").filter(Boolean))];
+    const texts = [...new Set(deckKey.split("\n").filter(Boolean))].slice(0, 40);
 
     async function loadDeck() {
       const clipsForDeck = await requestDeck(texts);
@@ -259,6 +260,23 @@ export function FlashcardSession({
 
     if (!audio) {
       pendingPlay.current = { text, nextClip, kind };
+      if (usesRecordedAudio && !text.startsWith("/")) {
+        void loadSpeechClip(text).then((loaded) => {
+          if (!loaded) {
+            if (pendingPlay.current?.text === text) {
+              pendingPlay.current = null;
+              speakingKindRef.current = null;
+              setSpeakingClip(null);
+              setSpeechError(true);
+            }
+            return;
+          }
+          clips.current.set(text, loaded);
+          if (pendingPlay.current?.text === text) {
+            playClip(text, pendingPlay.current.nextClip, pendingPlay.current.kind);
+          }
+        });
+      }
       return;
     }
 
@@ -482,6 +500,14 @@ export function FlashcardSession({
           onFamiliarity={setFamiliarity}
           onGrade={applyGrade}
         />
+      ) : ready && cards.length === 0 ? (
+        <section className="flex flex-1 flex-col items-center justify-center text-center">
+          <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />
+          <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("emptyDeck")}</h1>
+          <Button asChild className="mt-8 h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900">
+            <Link href={`/?deck=${deckId}&view=cards`}>{t("addCard")}</Link>
+          </Button>
+        </section>
       ) : ready ? (
         <section className="flex flex-1 flex-col items-center justify-center text-center">
           <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />

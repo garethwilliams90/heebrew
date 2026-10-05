@@ -5,6 +5,9 @@ import { DeckBrowser } from "@/components/flashcards/deck-browser";
 import { DeckPicker } from "@/components/flashcards/deck-picker";
 import { FlashcardSession } from "@/components/flashcards/flashcard-session";
 import { Link } from "@/i18n/navigation";
+import { isBuiltinDeck } from "@/lib/flashcards/builtin";
+import { loadLibrary } from "@/lib/flashcards/catalog";
+import { mergeDeck } from "@/lib/flashcards/merge";
 import type { Flashcard } from "@/lib/flashcards/types";
 import { starterDeck } from "@/lib/flashcards/starter-deck";
 
@@ -15,8 +18,10 @@ export default async function Home({
 }) {
   const t = await getTranslations("Flashcards");
   const { deck, view } = await searchParams;
-  const cards = await cardsForDeck(deck);
-  const browsing = Boolean(cards && deck && view === "cards");
+  const library = await loadLibrary(deck);
+  const active = await activeDeck(deck, library, t);
+  const cards = active?.cards ?? null;
+  const browsing = Boolean(active && deck && view === "cards");
 
   return (
     <div className="relative flex min-h-dvh flex-1 flex-col overflow-hidden bg-[#f3f6f1] text-emerald-950">
@@ -43,42 +48,64 @@ export default async function Home({
         <AuthButton />
       </header>
       <div className="relative z-10 flex flex-1 flex-col">
-        {browsing && deck && cards ? (
-          <DeckBrowser deckId={deck} title={deckTitle(deck, t)} cards={cards} />
-        ) : cards && deck ? (
-          <FlashcardSession key={deck} deckId={deck} cards={cards} />
+        {browsing && active ? (
+          <DeckBrowser
+            deckId={active.id}
+            title={active.title}
+            description={active.description}
+            kind={active.kind}
+            cards={active.cards}
+          />
+        ) : active ? (
+          <FlashcardSession key={active.id} deckId={active.id} cards={active.cards} />
         ) : (
-          <DeckPicker />
+          <DeckPicker decks={library.decks} edits={library.edits} tallies={library.tallies} />
         )}
       </div>
     </div>
   );
 }
 
-function deckTitle(
-  deck: string,
+async function activeDeck(
+  deck: string | undefined,
+  library: Awaited<ReturnType<typeof loadLibrary>>,
   t: Awaited<ReturnType<typeof getTranslations<"Flashcards">>>,
 ) {
-  if (deck === "nature") {
-    return t("natureTitle");
+  if (!deck) {
+    return null;
   }
 
-  if (deck === "hebrew-from-scratch") {
-    return t("scratchTitle");
+  if (isBuiltinDeck(deck)) {
+    const base = await baseCards(deck);
+    const edit = library.edits[deck];
+    return {
+      id: deck,
+      kind: "builtin" as const,
+      title: edit?.title ?? (deck === "nature" ? t("natureTitle") : t("scratchTitle")),
+      description: edit?.description ?? (deck === "nature" ? t("natureDescription") : t("scratchDescription")),
+      cards: mergeDeck(base, library.storedCards),
+    };
   }
 
-  return t("viewCards");
+  const custom = library.decks.find((item) => item.id === deck);
+  if (!custom) {
+    return null;
+  }
+
+  return {
+    id: custom.id,
+    kind: "custom" as const,
+    title: custom.title,
+    description: custom.description,
+    cards: mergeDeck([], library.storedCards),
+  };
 }
 
-async function cardsForDeck(deck: string | undefined): Promise<Flashcard[] | null> {
+async function baseCards(deck: "nature" | "hebrew-from-scratch"): Promise<Flashcard[]> {
   if (deck === "nature") {
     return starterDeck;
   }
 
-  if (deck === "hebrew-from-scratch") {
-    const { hebrewFromScratch } = await import("@/lib/flashcards/hebrew-from-scratch");
-    return hebrewFromScratch;
-  }
-
-  return null;
+  const { hebrewFromScratch } = await import("@/lib/flashcards/hebrew-from-scratch");
+  return hebrewFromScratch;
 }
