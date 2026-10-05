@@ -63,7 +63,13 @@ The interface around the card stays left-to-right. English on the front is left-
 
 ### 2. Training centre
 
-A practice area for more nuanced Hebrew, including tenses and choosing the correct verb binyan (בניין). The learner sees a sentence with one or two words blank, plus three multiple-choice options for the correct response.
+A practice area for Hebrew grammar and sentence structure, separate from vocabulary study. A round is five questions.
+
+Each question shows one full Hebrew sentence with one or two blanks. The missing words are usually verbs: tense, person, gender, or binyan (בניין). They can also be other grammatical forms, such as possession (שֶׁלּוֹ, שֶׁלָּכֶם).
+
+Under the sentence, three choices appear as cards. Exactly one choice is correct. Choosing a card shows whether it was right, and the correct card stays marked. The learner then continues to the next question.
+
+A correct answer is worth 10 experience points. Points are added once, when the five-question round finishes, for every question answered correctly. Leaving before the round ends does not award points. The end of the round uses the same experience bar as a finished flashcard session.
 
 ### 3. Levels, experience, and a leaderboard
 
@@ -83,6 +89,7 @@ Login, logout, and registration through Supabase. Email and password are at `/lo
 
 ## Working agreements
 
+- Prioritise readable, easily editable code. Use logical function names. Add a short comment where the purpose is not obvious from the name. Keep components small and reusable, and put each one in its own file whenever that split stays clear.
 - Do not add libraries, services, or UI kits outside the stack above unless the owner asks for them or approves them first.
 - Prefer the existing Next.js App Router project. Read `node_modules/next/dist/docs/` before using Next.js APIs that may have changed.
 - Keep UI work consistent with the nature theme, smooth motion, and a clean modern look.

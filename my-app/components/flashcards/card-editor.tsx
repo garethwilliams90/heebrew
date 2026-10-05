@@ -215,6 +215,7 @@ export function CardEditor({
             id="card-english"
             value={english}
             maxLength={200}
+            autoFocus
             onChange={(event) => setEnglish(event.target.value)}
             className={fieldClass}
             required

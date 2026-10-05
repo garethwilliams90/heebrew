@@ -1,64 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Leaf, Volume2 } from "lucide-react";
-import { SoundControls, useSoundPrefs, type SoundChannel } from "@/components/flashcards/sound-toggle";
+import { Leaf } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { MarkedText } from "@/components/flashcards/marked-text";
-import { FamiliaritySelect } from "@/components/flashcards/familiarity-select";
+import { AccountNotice } from "@/components/flashcards/account-notice";
+import { ExperienceAward } from "@/components/flashcards/experience-award";
+import { useSoundPrefs, type SoundChannel } from "@/components/flashcards/sound-toggle";
+import { StudyCardView, type StudyCard } from "@/components/flashcards/study-card";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { prepareSpeechClip, requestDeckSpeech } from "@/lib/flashcards/deck-speech";
+import { addExperience, gradeExperience, loadExperience } from "@/lib/flashcards/experience";
 import { loadDeckMastery, saveSessionProgress } from "@/lib/flashcards/progress";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { buildStudySession, nextMastery } from "@/lib/flashcards/review";
-import type {
-  Flashcard,
-  RecallGrade,
-} from "@/lib/flashcards/types";
+import type { Flashcard, RecallGrade } from "@/lib/flashcards/types";
 
-type StudyCard = Flashcard & { mastery: number };
-
-const grades: RecallGrade[] = ["dontKnow", "know", "knowWell", "memorised"];
-
-const deckRequests = new Map<string, Promise<{ text: string; audio: string }[]>>();
-
-function requestDeck(texts: string[]) {
-  const key = texts.join("\n");
-  const existing = deckRequests.get(key);
-
-  if (existing) {
-    return existing;
-  }
-
-  const request = fetch("/api/speech/deck", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ texts }),
-  })
-    .then(async (response) => {
-      if (!response.ok) {
-        deckRequests.delete(key);
-        throw new Error("Speech failed");
-      }
-
-      const payload = (await response.json()) as {
-        clips?: { text?: unknown; audio?: unknown }[];
-      };
-
-      return (payload.clips ?? []).flatMap((clip) =>
-        typeof clip.text === "string" && typeof clip.audio === "string"
-          ? [{ text: clip.text, audio: clip.audio }]
-          : [],
-      );
-    })
-    .catch((error: unknown) => {
-      deckRequests.delete(key);
-      throw error;
-    });
-
-  deckRequests.set(key, request);
-  return request;
-}
+type StudyPhase = "learn" | "review" | "done";
 
 export function FlashcardSession({
   deckId,
@@ -72,10 +30,16 @@ export function FlashcardSession({
   const cardsRef = useRef(cards);
   const masteryRef = useRef<Record<string, number>>({});
   const updatesRef = useRef(new Map<string, { mastery: number; practices: number }>());
+  const weakRef = useRef<StudyCard[]>([]);
+  const phaseRef = useRef<StudyPhase>("learn");
+  const experienceRef = useRef(0);
+  const gainedRef = useRef(0);
+  const rewardedRef = useRef(false);
   const savedRef = useRef(false);
   const savingRef = useRef<Promise<"ok" | "signed-out" | "error"> | null>(null);
   const [queue, setQueue] = useState<StudyCard[]>([]);
   const [sessionTotal, setSessionTotal] = useState(0);
+  const [learnTotal, setLearnTotal] = useState(0);
   const [ready, setReady] = useState(false);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -85,6 +49,8 @@ export function FlashcardSession({
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [saveError, setSaveError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [phase, setPhase] = useState<StudyPhase>("learn");
+  const [reward, setReward] = useState<{ from: number; to: number } | null>(null);
   const clips = useRef(new Map<string, HTMLAudioElement>());
   const pendingPlay = useRef<{
     text: string;
@@ -110,17 +76,19 @@ export function FlashcardSession({
   useEffect(() => {
     let cancelled = false;
 
-    loadDeckMastery(deckId)
-      .then(({ signedIn: hasAccount, mastery }) => {
+    Promise.all([loadDeckMastery(deckId), loadExperience()])
+      .then(([{ signedIn: hasAccount, mastery }, experience]) => {
         if (cancelled) {
           return;
         }
 
         setSignedIn(hasAccount);
         masteryRef.current = mastery;
+        experienceRef.current = experience.experience;
         const next = buildStudySession(cardsRef.current, mastery);
         setQueue(next);
         setSessionTotal(next.length);
+        setLearnTotal(next.length);
         setReady(true);
       })
       .catch(() => {
@@ -131,6 +99,7 @@ export function FlashcardSession({
         const next = buildStudySession(cardsRef.current, masteryRef.current);
         setQueue(next);
         setSessionTotal(next.length);
+        setLearnTotal(next.length);
         setReady(true);
         setSaveError(true);
       });
@@ -149,21 +118,12 @@ export function FlashcardSession({
     const texts = [...new Set(deckKey.split("\n").filter(Boolean))].slice(0, 40);
 
     async function loadDeck() {
-      const clipsForDeck = await requestDeck(texts);
+      const clipsForDeck = await requestDeckSpeech(texts);
 
       await Promise.all(
         clipsForDeck.map(async (clip) => {
-          const bytes = Uint8Array.from(atob(clip.audio), (char) => char.charCodeAt(0));
-          const url = URL.createObjectURL(new Blob([bytes], { type: "audio/mpeg" }));
+          const { url, audio } = await prepareSpeechClip(clip.audio);
           created.push(url);
-          const audio = new Audio(url);
-          audio.preload = "auto";
-          await new Promise<void>((resolve, reject) => {
-            audio.addEventListener("canplaythrough", () => resolve(), { once: true });
-            audio.addEventListener("error", () => reject(new Error("audio")), {
-              once: true,
-            });
-          });
 
           if (cancelled) {
             return;
@@ -171,7 +131,7 @@ export function FlashcardSession({
 
           clips.current.set(clip.text, audio);
 
-          if (pendingPlay.current?.text === clip.text && flippedRef.current) {
+          if (pendingPlay.current?.text === clip.text && hebrewIsShowing()) {
             const pending = pendingPlay.current;
             pendingPlay.current = null;
             playClip(pending.text, pending.nextClip, pending.kind);
@@ -288,7 +248,7 @@ export function FlashcardSession({
     }
 
     audio.onended = () => {
-      if (nextClip && flippedRef.current && sound.allows("sentence")) {
+      if (nextClip && hebrewIsShowing() && sound.allows("sentence")) {
         playClip(nextClip, null, "sentence");
         return;
       }
@@ -319,22 +279,32 @@ export function FlashcardSession({
     setSpeakingClip(null);
   }
 
+  function hebrewIsShowing() {
+    return phaseRef.current === "review" ? !flippedRef.current : flippedRef.current;
+  }
+
   function flip() {
     const next = !flippedRef.current;
     flippedRef.current = next;
     setFlipped(next);
 
-    if (next && hebrewRef.current && sound.allows("word")) {
+    const showingHebrew = phaseRef.current === "review" ? !next : next;
+
+    if (showingHebrew && hebrewRef.current && sound.allows("word")) {
       playClip(hebrewRef.current, exampleAudioRef.current, "word");
       return;
     }
 
-    if (next && exampleAudioRef.current && sound.allows("sentence")) {
+    if (showingHebrew && exampleAudioRef.current && sound.allows("sentence")) {
       playClip(exampleAudioRef.current, null, "sentence");
       return;
     }
 
     stopClip();
+  }
+
+  function speakCard(item: StudyCard) {
+    playClip(item.audioUrl ?? item.hebrew, item.exampleAudioUrl ?? null, "word");
   }
 
   function applyGrade(grade: RecallGrade) {
@@ -349,27 +319,66 @@ export function FlashcardSession({
       practices: (previous?.practices ?? 0) + 1,
     });
     masteryRef.current = { ...masteryRef.current, [card.id]: updated.mastery };
+    gainedRef.current += gradeExperience[grade];
     const rest = queue.filter((_, itemIndex) => itemIndex !== index);
 
-    if (grade === "dontKnow") {
-      const insertAt = Math.min(index + 1, rest.length);
-      rest.splice(insertAt, 0, updated);
-      setQueue(rest);
-      setIndex(Math.min(index, rest.length - 1));
-    } else {
-      setCompleted((count) => count + 1);
-      setQueue(rest);
-      setIndex(rest.length === 0 ? 0 : Math.min(index, rest.length - 1));
-
-      if (rest.length === 0) {
-        void persistSession();
-      }
+    if (phaseRef.current === "learn" && (grade === "dontKnow" || grade === "know")) {
+      weakRef.current.push(updated);
     }
 
     setFlipped(false);
     flippedRef.current = false;
-    stopClip();
     setSpeechError(false);
+
+    if (rest.length > 0) {
+      const nextIndex = Math.min(index, rest.length - 1);
+      setCompleted((count) => count + 1);
+      setQueue(rest);
+      setIndex(nextIndex);
+      if (phaseRef.current === "review") {
+        speakCard(rest[nextIndex]);
+      } else {
+        stopClip();
+      }
+      return;
+    }
+
+    if (phaseRef.current === "learn" && weakRef.current.length > 0) {
+      const review = [...weakRef.current].reverse();
+      weakRef.current = [];
+      phaseRef.current = "review";
+      setPhase("review");
+      setQueue(review);
+      setSessionTotal(review.length);
+      setIndex(0);
+      setCompleted(0);
+      speakCard(review[0]);
+      return;
+    }
+
+    phaseRef.current = "done";
+    setPhase("done");
+    setCompleted((count) => count + 1);
+    setQueue(rest);
+    setIndex(0);
+    stopClip();
+    void finishSession();
+  }
+
+  async function finishSession() {
+    if (!rewardedRef.current) {
+      rewardedRef.current = true;
+      const from = experienceRef.current;
+      const to = from + gainedRef.current;
+      experienceRef.current = to;
+      setReward({ from, to });
+      const experienceResult = await addExperience(gainedRef.current);
+      if (experienceResult === "error") {
+        setSaveError(true);
+      }
+    }
+
+    await persistSession();
   }
 
   async function persistSession() {
@@ -416,10 +425,17 @@ export function FlashcardSession({
     }
 
     updatesRef.current.clear();
+    weakRef.current = [];
+    gainedRef.current = 0;
+    rewardedRef.current = false;
     savedRef.current = false;
+    phaseRef.current = "learn";
+    setPhase("learn");
+    setReward(null);
     const next = buildStudySession(cardsRef.current, masteryRef.current);
     setQueue(next);
     setSessionTotal(next.length);
+    setLearnTotal(next.length);
     setIndex(0);
     setCompleted(0);
     setFlipped(false);
@@ -472,28 +488,21 @@ export function FlashcardSession({
 
   return (
     <main className="flex flex-1 flex-col items-center px-4 pb-10 sm:px-8">
-      {signedIn === false ? (
-        <p className="mb-4 text-center text-sm text-emerald-900/70">
-          <Link href="/login" className="text-emerald-800 underline underline-offset-2">
-            {t("signInToSave")}
-          </Link>
-        </p>
-      ) : null}
-      {saveError ? (
-        <p className="mb-4 text-center text-sm text-red-800" role="alert">
-          {t("saveError")}
-        </p>
-      ) : null}
+      <AccountNotice signedOut={signedIn === false} saveError={saveError} />
       {ready && card ? (
         <StudyCardView
           card={card}
           flipped={flipped}
+          prompt={phase === "review" ? "hebrew" : "english"}
           speakingClip={speakingClip}
           speechError={speechError}
           soundPrefs={sound.prefs}
           onToggleSound={toggleSound}
-          completed={completed}
-          total={sessionTotal}
+          completed={phase === "review" ? learnTotal : completed}
+          total={learnTotal}
+          reviewCompleted={phase === "review" ? completed : 0}
+          reviewTotal={phase === "review" ? sessionTotal : 0}
+          progressLabel={phase === "review" ? "reviewProgress" : "progress"}
           onFlip={flip}
           onSpeak={speak}
           onSpeakExample={speakExample}
@@ -515,6 +524,7 @@ export function FlashcardSession({
             {t("completeTitle")}
           </h1>
           <p className="mt-3 max-w-sm text-emerald-900/70">{t("completeBody")}</p>
+          {reward ? <ExperienceAward from={reward.from} to={reward.to} /> : null}
           <Button
             className="mt-8 h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900"
             disabled={saving}
@@ -525,180 +535,5 @@ export function FlashcardSession({
         </section>
       ) : null}
     </main>
-  );
-}
-
-function StudyCardView({
-  card,
-  flipped,
-  speakingClip,
-  speechError,
-  soundPrefs,
-  onToggleSound,
-  completed,
-  total,
-  onFlip,
-  onSpeak,
-  onSpeakExample,
-  onFamiliarity,
-  onGrade,
-}: {
-  card: StudyCard;
-  flipped: boolean;
-  speakingClip: string | null;
-  speechError: boolean;
-  soundPrefs: { general: boolean; word: boolean; sentence: boolean };
-  onToggleSound: (channel: SoundChannel) => void;
-  completed: number;
-  total: number;
-  onFlip: () => void;
-  onSpeak: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  onSpeakExample: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  onFamiliarity: (level: number) => void;
-  onGrade: (grade: RecallGrade) => void;
-}) {
-  const t = useTranslations("Flashcards");
-  const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
-  const wordKey = card.audioUrl ?? card.hebrew;
-  const wordPlaying = speakingClip === wordKey;
-  const sentencePlaying = speakingClip === card.exampleAudioUrl;
-
-  return (
-    <div className="flex w-full max-w-xl flex-1 flex-col justify-center">
-      <div className="mb-4 flex items-center justify-between gap-4 text-sm text-emerald-900/70">
-        <p>{t("progress", { done: completed, total })}</p>
-        <FamiliaritySelect level={card.mastery} onChange={onFamiliarity} />
-      </div>
-      <div className="mb-4">
-        <SoundControls prefs={soundPrefs} onToggle={onToggleSound} />
-      </div>
-      <div
-        className="mb-6 h-1.5 overflow-hidden rounded-full bg-emerald-950/10"
-        aria-hidden
-      >
-        <div
-          className="h-full rounded-full bg-emerald-700 transition-[width] duration-500"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      <div className="perspective-distant">
-        <div
-          onClick={onFlip}
-          className={`relative h-80 transform-3d cursor-pointer rounded-[2rem] transition-transform duration-500 motion-reduce:transition-none sm:h-96 ${flipped ? "transform-[rotateY(180deg)]" : ""}`}
-        >
-          <CardFace className={flipped ? "pointer-events-none" : ""}>
-            <p className="text-xs font-medium tracking-[0.16em] text-emerald-800/70 uppercase">
-              {t(`pos.${card.partOfSpeech}`)}
-            </p>
-            <h1 className="mt-3 text-5xl font-semibold tracking-tight text-emerald-950 sm:text-6xl">
-              {card.english}
-            </h1>
-            {card.example ? (
-              <p className="mt-6 max-w-sm text-lg text-emerald-950/70">
-                <MarkedText text={card.example} bold={card.exampleBold} />
-              </p>
-            ) : null}
-          </CardFace>
-          <CardFace
-            className={`transform-[rotateY(180deg)] ${flipped ? "" : "pointer-events-none"}`}
-          >
-            <div className="flex items-center gap-3">
-              {card.gender ? (
-                <p className="text-xs font-medium tracking-[0.16em] text-emerald-800/70 uppercase">
-                  {t(card.gender)}
-                </p>
-              ) : null}
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-lg"
-                className="border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
-                aria-label={wordPlaying ? t("listening") : t("listen")}
-                disabled={!soundPrefs.general || !soundPrefs.word || wordPlaying}
-                onClick={onSpeak}
-              >
-                <Volume2 />
-              </Button>
-            </div>
-            <h2
-              dir="rtl"
-              lang="he"
-              className="mt-4 text-6xl font-semibold text-emerald-950"
-            >
-              {card.hebrew}
-            </h2>
-            {card.hebrewExample ? (
-              <div
-                dir="rtl"
-                lang="he"
-                className="mt-6 flex max-w-sm items-start justify-center gap-2"
-              >
-                {card.exampleAudioUrl ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="mt-0.5 shrink-0 border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
-                    aria-label={sentencePlaying ? t("listening") : t("listenSentence")}
-                    disabled={!soundPrefs.general || !soundPrefs.sentence || sentencePlaying}
-                    onClick={onSpeakExample}
-                  >
-                    <Volume2 />
-                  </Button>
-                ) : null}
-                <p className="text-lg text-emerald-950/70">
-                  <MarkedText text={card.hebrewExample} bold={card.hebrewExampleBold} />
-                </p>
-              </div>
-            ) : null}
-          </CardFace>
-        </div>
-      </div>
-
-      <p className="mt-4 text-center text-sm text-emerald-900/60">{t("flipHint")}</p>
-      {speechError ? (
-        <p className="mt-2 text-center text-sm text-red-800" role="alert">
-          {t("speechError")}
-        </p>
-      ) : null}
-
-      <div
-        className={`mt-4 grid grid-cols-2 gap-2 transition-opacity duration-300 sm:grid-cols-4 ${flipped ? "opacity-100" : "pointer-events-none opacity-0"}`}
-      >
-        {grades.map((grade) => (
-          <Button
-            key={grade}
-            type="button"
-            variant={grade === "memorised" ? "default" : "outline"}
-            className={
-              grade === "memorised"
-                ? "h-12 bg-emerald-800 text-white hover:bg-emerald-900"
-                : "h-12 border-emerald-900/10 bg-white text-emerald-950 hover:bg-emerald-50"
-            }
-            disabled={!flipped}
-            onClick={() => onGrade(grade)}
-          >
-            {t(grade)}
-          </Button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function CardFace({
-  className,
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`absolute inset-0 flex flex-col items-center justify-center rounded-[2rem] border border-emerald-950/10 bg-white/90 px-8 text-center shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)] backface-hidden ${className ?? ""}`}
-    >
-      {children}
-    </div>
   );
 }

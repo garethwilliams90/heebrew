@@ -86,16 +86,22 @@ const channels: {
 export function SoundControls({
   prefs,
   onToggle,
+  className,
 }: {
   prefs: SoundPrefs;
   onToggle: (channel: SoundChannel) => void;
+  className?: string;
 }) {
   const t = useTranslations("Flashcards");
   const [playOn] = useSound("/sounds/samples/pop-up-on.mp3", { volume: 0.5, interrupt: true });
   const [playOff] = useSound("/sounds/samples/pop-down.mp3", { volume: 0.5, interrupt: true });
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("soundGeneral")}>
+    <div
+      className={className ?? "flex flex-wrap items-center gap-1.5"}
+      role="group"
+      aria-label={t("soundGeneral")}
+    >
       {channels.map((channel) => {
         const enabled = prefs[channel.id];
         const Icon =

@@ -61,7 +61,7 @@ export async function DeckPicker({
         {[...builtin, ...custom].map((deck) => (
           <article
             key={deck.id}
-            className="flex flex-col rounded-3xl border border-emerald-950/10 bg-white/90 p-6 shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)] transition-transform hover:-translate-y-0.5"
+            className="flex flex-col rounded-3xl border border-emerald-950/10 bg-white/90 p-6 shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]"
           >
             <DeckHeading
               deckId={deck.id}
@@ -69,18 +69,22 @@ export async function DeckPicker({
               description={deck.description}
               canDelete={"kind" in deck && deck.kind === "custom"}
               level="h2"
-              opensDeck
-              titleClassName="cursor-pointer text-xl font-semibold"
-              descriptionClassName="mt-2 cursor-pointer text-emerald-950/70"
+              titleClassName="text-xl font-semibold"
+              descriptionClassName="mt-2 text-emerald-950/70"
             />
             <p className="mt-6 text-sm text-emerald-800">{t("cardCount", { count: deck.count })}</p>
-            <Button
-              asChild
-              variant="outline"
-              className="mt-4 h-11 border-emerald-900/10 bg-white text-emerald-950 hover:bg-emerald-50"
-            >
-              <Link href={`/?deck=${deck.id}&view=cards`}>{t("viewCards")}</Link>
-            </Button>
+            <div className="mt-4 flex gap-2">
+              <Button asChild className="h-11 flex-1 bg-emerald-800 text-white hover:bg-emerald-900">
+                <Link href={`/?deck=${deck.id}`}>{t("study")}</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="h-11 flex-1 border-emerald-900/10 bg-white text-emerald-950 hover:bg-emerald-50"
+              >
+                <Link href={`/?deck=${deck.id}&view=cards`}>{t("viewCards")}</Link>
+              </Button>
+            </div>
           </article>
         ))}
       </div>
