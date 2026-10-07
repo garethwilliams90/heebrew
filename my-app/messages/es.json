@@ -63,6 +63,7 @@
     "signInToSave": "Inicia sesión para guardar tu progreso.",
     "saveError": "No se pudo guardar tu progreso.",
     "speechError": "No se pudo reproducir el audio en hebreo.",
+    "loadingProgram": "Preparando las tarjetas...",
     "pos": {
       "noun": "sustantivo",
       "verb": "verbo",
@@ -153,5 +154,41 @@
     "completeTitle": "Ronda terminada",
     "completeBody": "Respondiste {correct} de {total} correctamente.",
     "trainAgain": "Practicar de nuevo"
+  },
+  "Home": {
+    "nav": "Inicio",
+    "levelLabel": "Nivel {level}",
+    "toNext": "{remaining} XP para el nivel {next}",
+    "experienceProgress": "{into} / {span} XP",
+    "chartTitle": "Tarjetas practicadas",
+    "cards": "Tarjetas",
+    "rangeLabel": "Periodo",
+    "range7": "Últimos 7 días",
+    "range30": "Últimos 30 días",
+    "range90": "Últimos 3 meses",
+    "summary7": "{count, plural, one {# tarjeta en los últimos 7 días} other {# tarjetas en los últimos 7 días}}",
+    "summary30": "{count, plural, one {# tarjeta en los últimos 30 días} other {# tarjetas en los últimos 30 días}}",
+    "summary90": "{count, plural, one {# tarjeta en los últimos 3 meses} other {# tarjetas en los últimos 3 meses}}",
+    "signInHint": "Inicia sesión para guardar este progreso en tu cuenta."
+  },
+  "AlephBet": {
+    "nav": "Aleph Bet",
+    "title": "Aleph Bet",
+    "description": "Aprende el alfabeto hebreo",
+    "start": "Empezar",
+    "flipAll": "Voltear todas",
+    "flipBack": "Volver al frente",
+    "scriptInfoLabel": "Sobre las escrituras hebreas",
+    "scriptInfoTitle": "Dos formas de escribir hebreo",
+    "scriptInfo": "El frente de cada tarjeta es la escritura estándar, las letras cuadradas de los libros y los letreros. El reverso es la cursiva, la forma manuscrita que se usa en las notas.",
+    "studyLetters": "Estudiar las letras",
+    "studyTitle": "Estudiar las letras",
+    "studySetup": "Las letras aparecen en un orden aleatorio. Voltea cada tarjeta e indica si conoces su nombre.",
+    "cursiveSetting": "Escritura cursiva",
+    "cursiveSettingHint": "Practica las letras manuscritas en lugar de la letra de imprenta.",
+    "backToAlphabet": "Volver al alfabeto",
+    "letterPrompt": "Letra hebrea",
+    "arrowHint": "Flecha izquierda: No lo sé. Flecha derecha: Lo sé.",
+    "loadingSounds": "Preparando las letras..."
   }
 }

@@ -57,7 +57,7 @@ export async function DeckPicker({
         <h1 className="text-3xl font-semibold tracking-tight">{t("chooseDeck")}</h1>
         <NewDeckForm />
       </div>
-      <div className="mt-8 grid w-full max-w-3xl gap-4 sm:grid-cols-2">
+      <div className="mt-8 grid w-full gap-4 sm:grid-cols-2">
         {[...builtin, ...custom].map((deck) => (
           <article
             key={deck.id}
@@ -73,16 +73,12 @@ export async function DeckPicker({
               descriptionClassName="mt-2 text-emerald-950/70"
             />
             <p className="mt-6 text-sm text-emerald-800">{t("cardCount", { count: deck.count })}</p>
-            <div className="mt-4 flex gap-2">
-              <Button asChild className="h-11 flex-1 bg-emerald-800 text-white hover:bg-emerald-900">
-                <Link href={`/?deck=${deck.id}`}>{t("study")}</Link>
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <Button asChild size="lg">
+                <Link href={`/decks?deck=${deck.id}`}>{t("study")}</Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="h-11 flex-1 border-emerald-900/10 bg-white text-emerald-950 hover:bg-emerald-50"
-              >
-                <Link href={`/?deck=${deck.id}&view=cards`}>{t("viewCards")}</Link>
+              <Button asChild variant="outline" size="lg">
+                <Link href={`/decks?deck=${deck.id}&view=cards`}>{t("viewCards")}</Link>
               </Button>
             </div>
           </article>

@@ -63,6 +63,7 @@
     "signInToSave": "Connectez-vous pour enregistrer votre progression.",
     "saveError": "Votre progression n'a pas pu être enregistrée.",
     "speechError": "La lecture en hébreu n'a pas abouti.",
+    "loadingProgram": "Préparation des cartes...",
     "pos": {
       "noun": "nom",
       "verb": "verbe",
@@ -153,5 +154,41 @@
     "completeTitle": "Série terminée",
     "completeBody": "Vous avez {correct} bonnes réponses sur {total}.",
     "trainAgain": "S'entraîner encore"
+  },
+  "Home": {
+    "nav": "Accueil",
+    "levelLabel": "Niveau {level}",
+    "toNext": "{remaining} XP avant le niveau {next}",
+    "experienceProgress": "{into} / {span} XP",
+    "chartTitle": "Cartes révisées",
+    "cards": "Cartes",
+    "rangeLabel": "Période",
+    "range7": "7 derniers jours",
+    "range30": "30 derniers jours",
+    "range90": "3 derniers mois",
+    "summary7": "{count, plural, one {# carte sur les 7 derniers jours} other {# cartes sur les 7 derniers jours}}",
+    "summary30": "{count, plural, one {# carte sur les 30 derniers jours} other {# cartes sur les 30 derniers jours}}",
+    "summary90": "{count, plural, one {# carte sur les 3 derniers mois} other {# cartes sur les 3 derniers mois}}",
+    "signInHint": "Connectez-vous pour garder cette progression sur votre compte."
+  },
+  "AlephBet": {
+    "nav": "Aleph Bet",
+    "title": "Aleph Bet",
+    "description": "Apprenez l'alphabet hébreu",
+    "start": "Commencer",
+    "flipAll": "Tout retourner",
+    "flipBack": "Tout remettre",
+    "scriptInfoLabel": "À propos des écritures hébraïques",
+    "scriptInfoTitle": "Deux façons d'écrire l'hébreu",
+    "scriptInfo": "Le recto de chaque carte est l'écriture standard, les lettres carrées des livres et des panneaux. Le verso est l'écriture cursive, la forme manuscrite utilisée pour les notes.",
+    "studyLetters": "Étudier les lettres",
+    "studyTitle": "Étudier les lettres",
+    "studySetup": "Les lettres apparaissent dans un ordre aléatoire. Retournez chaque carte, puis indiquez si vous connaissez son nom.",
+    "cursiveSetting": "Écriture cursive",
+    "cursiveSettingHint": "Pratiquez les lettres manuscrites plutôt que l'écriture d'imprimerie.",
+    "backToAlphabet": "Retour à l'alphabet",
+    "letterPrompt": "Lettre hébraïque",
+    "arrowHint": "Flèche gauche : Je ne sais pas. Flèche droite : Je sais.",
+    "loadingSounds": "Préparation des lettres..."
   }
 }

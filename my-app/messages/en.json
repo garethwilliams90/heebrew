@@ -63,6 +63,7 @@
     "signInToSave": "Sign in to save your progress.",
     "saveError": "Your progress could not be saved.",
     "speechError": "The Hebrew audio didn't play.",
+    "loadingProgram": "Preparing the cards...",
     "pos": {
       "noun": "noun",
       "verb": "verb",
@@ -153,5 +154,41 @@
     "completeTitle": "Round complete",
     "completeBody": "You answered {correct} of {total} correctly.",
     "trainAgain": "Train again"
+  },
+  "Home": {
+    "nav": "Home",
+    "levelLabel": "Level {level}",
+    "toNext": "{remaining} XP to level {next}",
+    "experienceProgress": "{into} / {span} XP",
+    "chartTitle": "Cards practiced",
+    "cards": "Cards",
+    "rangeLabel": "Time range",
+    "range7": "Last 7 days",
+    "range30": "Last 30 days",
+    "range90": "Last 3 months",
+    "summary7": "{count, plural, one {# card in the last 7 days} other {# cards in the last 7 days}}",
+    "summary30": "{count, plural, one {# card in the last 30 days} other {# cards in the last 30 days}}",
+    "summary90": "{count, plural, one {# card in the last 3 months} other {# cards in the last 3 months}}",
+    "signInHint": "Sign in to keep this progress on your account."
+  },
+  "AlephBet": {
+    "nav": "Aleph Bet",
+    "title": "Aleph Bet",
+    "description": "Learn the Hebrew alphabet",
+    "start": "Start",
+    "flipAll": "Flip all",
+    "flipBack": "Flip back",
+    "scriptInfoLabel": "About Hebrew scripts",
+    "scriptInfoTitle": "Two ways to write Hebrew",
+    "scriptInfo": "The front of each card is standard script, the square print letters used in books and on signs. The back is cursive, the handwritten form used for notes.",
+    "studyLetters": "Study letters",
+    "studyTitle": "Study letters",
+    "studySetup": "Letters appear in a random order. Flip each card, then mark whether you know its name.",
+    "cursiveSetting": "Cursive script",
+    "cursiveSettingHint": "Practice the handwritten letters instead of the standard print.",
+    "backToAlphabet": "Back to the alphabet",
+    "letterPrompt": "Hebrew letter",
+    "arrowHint": "Left arrow for Don't know, right arrow for Know.",
+    "loadingSounds": "Preparing the letters..."
   }
 }

@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { AuthButton } from "@/components/auth-button";
+import { Navbar } from "@/components/navbar";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -48,7 +50,7 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <Navbar auth={<AuthButton />}>{children}</Navbar>
         </NextIntlClientProvider>
       </body>
     </html>

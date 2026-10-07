@@ -68,7 +68,7 @@ export function DeckHeading({
       window.clearTimeout(openTimer.current);
     }
     openTimer.current = window.setTimeout(() => {
-      router.push(`/?deck=${deckId}`);
+      router.push(`/decks?deck=${deckId}`);
     }, 220);
   }
 
@@ -190,9 +190,9 @@ export function DeckHeading({
           <Button
             ref={deleteRef}
             type="button"
-            variant="ghost"
+            variant="destructive"
             size="icon"
-            className={`shrink-0 text-red-600 hover:bg-red-50 hover:text-red-700 ${armed ? "bg-red-50 ring-2 ring-red-200" : ""}`}
+            className={armed ? "ring-2 ring-destructive" : undefined}
             aria-label={armed ? t("deleteDeckConfirm") : t("deleteDeck")}
             onClick={(event) => {
               event.stopPropagation();

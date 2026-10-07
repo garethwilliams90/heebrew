@@ -31,7 +31,7 @@ export function NewDeckForm() {
     setSaving(false);
 
     if (typeof result === "object") {
-      router.push(`/?deck=${result.id}&view=cards`);
+      router.push(`/decks?deck=${result.id}&view=cards`);
       router.refresh();
       return;
     }
@@ -48,11 +48,7 @@ export function NewDeckForm() {
 
   return (
     <>
-      <Button
-        type="button"
-        className="h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900"
-        onClick={() => setOpen(true)}
-      >
+      <Button type="button" size="lg" onClick={() => setOpen(true)}>
         {t("newDeck")}
       </Button>
       {open ? (
@@ -103,19 +99,10 @@ export function NewDeckForm() {
               </p>
             ) : null}
             <div className="mt-4 flex gap-2">
-              <Button
-                type="submit"
-                className="h-10 bg-emerald-800 px-4 text-white hover:bg-emerald-900"
-                disabled={saving}
-              >
+              <Button type="submit" size="lg" disabled={saving}>
                 {saving ? t("saving") : t("createDeck")}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-10 border-emerald-900/10 bg-white hover:bg-emerald-50"
-                onClick={close}
-              >
+              <Button type="button" variant="outline" size="lg" onClick={close}>
                 {t("cancel")}
               </Button>
             </div>

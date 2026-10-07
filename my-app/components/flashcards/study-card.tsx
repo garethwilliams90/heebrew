@@ -55,7 +55,8 @@ export function StudyCardView({
   const reviewRatio = reviewTotal === 0 ? 0 : Math.round((reviewCompleted / reviewTotal) * 100);
   const wordKey = card.audioUrl ?? card.hebrew;
   const wordPlaying = speakingClip === wordKey;
-  const sentencePlaying = speakingClip === card.exampleAudioUrl;
+  const sentenceKey = card.exampleAudioUrl || card.hebrewExample;
+  const sentencePlaying = speakingClip === sentenceKey;
   const englishFace = (
     <>
       <p className="text-xs font-medium tracking-[0.16em] text-emerald-800/70 uppercase">
@@ -96,19 +97,17 @@ export function StudyCardView({
       </h2>
       {card.hebrewExample ? (
         <div dir="rtl" lang="he" className="mt-6 flex max-w-sm items-start justify-center gap-2">
-          {card.exampleAudioUrl ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="mt-0.5 shrink-0 border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
-              aria-label={sentencePlaying ? t("listening") : t("listenSentence")}
-              disabled={!soundPrefs.general || !soundPrefs.sentence || sentencePlaying}
-              onClick={onSpeakExample}
-            >
-              <Volume2 />
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="mt-0.5 shrink-0 border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
+            aria-label={sentencePlaying ? t("listening") : t("listenSentence")}
+            disabled={!soundPrefs.general || !soundPrefs.sentence || sentencePlaying}
+            onClick={onSpeakExample}
+          >
+            <Volume2 />
+          </Button>
           <p className="text-lg text-emerald-950/70">
             <MarkedText text={card.hebrewExample} bold={card.hebrewExampleBold} />
           </p>
