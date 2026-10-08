@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Info, Volume2, VolumeX } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Popover } from "radix-ui";
@@ -9,10 +9,13 @@ import { cursiveFont } from "@/components/alephbet/cursive-font";
 import { LetterStudy } from "@/components/alephbet/letter-study";
 import { useSoundPrefs } from "@/components/flashcards/sound-toggle";
 import { Button } from "@/components/ui/button";
-import { letters, spokenNames } from "@/lib/alephbet/letters";
+import { letterDeckId, letters, spokenNames } from "@/lib/alephbet/letters";
+import { loadDeckMastery } from "@/lib/flashcards/progress";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { Progress } from "@/components/ui/progress";
 
 const columns = { mobile: 3, desktop: 5 } as const;
+const maxMastery = 6;
 
 type Join = "start" | "end" | null;
 type Side = "right" | "below";
@@ -137,8 +140,32 @@ export function AlephBetSession() {
   const [failed, setFailed] = useState(false);
   const [studying, setStudying] = useState(false);
   const [flippedLetters, setFlippedLetters] = useState<ReadonlySet<string>>(() => new Set());
+  const [mastery, setMastery] = useState<Record<string, number>>({});
   const soundOn = prefs.general;
   const allFlipped = cells.every((cell) => flippedLetters.has(cell.letter));
+
+  useEffect(() => {
+    if (studying) {
+      return;
+    }
+
+    let current = true;
+    loadDeckMastery(letterDeckId)
+      .then((loaded) => {
+        if (current) {
+          setMastery(loaded.mastery);
+        }
+      })
+      .catch(() => {
+        if (current) {
+          setMastery({});
+        }
+      });
+
+    return () => {
+      current = false;
+    };
+  }, [studying]);
 
   function stopClips() {
     for (const clip of clips.current.values()) {
@@ -291,6 +318,7 @@ export function AlephBetSession() {
             key={cell.letter}
             {...cell}
             flipped={flippedLetters.has(cell.letter)}
+            mastery={mastery[cell.letter] ?? 0}
             onFlip={() => toggleLetter(cell.letter)}
             onPlay={playLetter}
           />
@@ -306,10 +334,13 @@ function AlephBetCard({
   index,
   join,
   flipped,
+  mastery,
   onFlip,
   onPlay,
-}: Cell & { flipped: boolean; onFlip: () => void; onPlay: (letter: string) => void }) {
+}: Cell & { flipped: boolean; mastery: number; onFlip: () => void; onPlay: (letter: string) => void }) {
+  const flashcards = useTranslations("Flashcards");
   const { position, shape } = placement(index, join);
+  const masteryLabel = flashcards("mastery", { level: mastery });
 
   function activate() {
     onFlip();
@@ -322,7 +353,7 @@ function AlephBetCard({
         <button
           type="button"
           aria-pressed={flipped}
-          aria-label={phonetic}
+          aria-label={`${phonetic}, ${masteryLabel}`}
           onClick={activate}
           className={cn(
             "relative h-full w-full transform-3d cursor-pointer border-0 bg-transparent p-0 transition-transform duration-500 motion-reduce:transition-none",
@@ -336,6 +367,11 @@ function AlephBetCard({
             <LetterFace letter={letter} phonetic={phonetic} cursive />
           </LetterSide>
         </button>
+        <Progress
+          value={(mastery / maxMastery) * 100}
+          aria-hidden
+          className="pointer-events-none absolute inset-x-3 bottom-2 z-10 h-1 w-auto bg-emerald-950/10"
+        />
       </div>
     </div>
   );

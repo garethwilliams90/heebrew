@@ -10,6 +10,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Webrew
 
+##This file should be the source of truth for this project and should be reffered to always.
+
 Webrew is an interactive, modern, fully responsive web app for Hebrew learners at every level, from total beginners to advanced speakers. It should feel easy and intuitive: a sleek UI, clean smooth animations, and a subtle nature theme that shows up in logos, icons, and sound effects.
 
 The app lives in this Next.js project (`my-app`). The repo root README describes it as a Hebrew language learning platform for all levels.

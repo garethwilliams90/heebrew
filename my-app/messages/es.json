@@ -190,5 +190,9 @@
     "letterPrompt": "Letra hebrea",
     "arrowHint": "Flecha izquierda: No lo sé. Flecha derecha: Lo sé.",
     "loadingSounds": "Preparando las letras..."
+  },
+  "Social": {
+    "github": "GitHub",
+    "linkedin": "LinkedIn"
   }
 }

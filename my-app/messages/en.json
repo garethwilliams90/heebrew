@@ -190,5 +190,9 @@
     "letterPrompt": "Hebrew letter",
     "arrowHint": "Left arrow for Don't know, right arrow for Know.",
     "loadingSounds": "Preparing the letters..."
+  },
+  "Social": {
+    "github": "GitHub",
+    "linkedin": "LinkedIn"
   }
 }

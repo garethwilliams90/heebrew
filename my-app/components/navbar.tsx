@@ -2,6 +2,7 @@
 
 import { Leaf } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { SocialLinks } from "@/components/social-links";
 import { Link, usePathname } from "@/i18n/navigation";
 
 export function Navbar({
@@ -56,7 +57,10 @@ export function Navbar({
             );
           })}
         </div>
-        {auth}
+        <div className="ml-auto flex items-center gap-2">
+          {auth}
+          <SocialLinks />
+        </div>
       </header>
       <div className="relative z-10 flex flex-1 flex-col">{children}</div>
     </div>

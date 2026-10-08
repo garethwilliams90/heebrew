@@ -15,12 +15,12 @@ export async function WelcomeCard() {
     <Card className={cardClassName}>
       <CardHeader>
         <CardTitle>Welcome { email }</CardTitle>
+        </CardHeader>
         <CardContent className="flex justify-center mt-4">
             <Button asChild>
                 <Link href="/decks">Start Learning</Link>
             </Button>
         </CardContent>
-      </CardHeader>
     </Card>
   );
 }

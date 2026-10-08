@@ -81,6 +81,22 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --gradient: linear-gradient(
+    215deg,
+    hsl(240deg 97% 77%) 0%,
+    hsl(229deg 90% 77%) 19%,
+    hsl(217deg 84% 76%) 31%,
+    hsl(206deg 78% 76%) 39%,
+    hsl(195deg 73% 75%) 46%,
+    hsl(183deg 67% 75%) 52%,
+    hsl(172deg 62% 74%) 57%,
+    hsl(161deg 57% 73%) 62%,
+    hsl(149deg 53% 73%) 67%,
+    hsl(138deg 48% 72%) 72%,
+    hsl(127deg 44% 72%) 77%,
+    hsl(115deg 41% 71%) 83%,
+    hsl(104deg 37% 70%) 100%
+  );
 }
 
 .dark {
@@ -127,4 +143,29 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Gradient ring. The mask leaves the button fill and paints only the border. */
+[data-slot="button"] {
+  position: relative;
+  border-color: transparent;
+}
+
+[data-slot="button"]::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--gradient);
+  pointer-events: none;
+  mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-repeat: no-repeat;
+}
+
+[data-slot="button"].border-r-0::before {
+  right: 0;
+  padding-right: 0;
 }

@@ -4,6 +4,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { AuthButton } from "@/components/auth-button";
+import { MotionProvider } from "@/components/motion-provider";
 import { Navbar } from "@/components/navbar";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
@@ -49,9 +50,11 @@ export default async function LocaleLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <Navbar auth={<AuthButton />}>{children}</Navbar>
-        </NextIntlClientProvider>
+        <MotionProvider>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <Navbar auth={<AuthButton />}>{children}</Navbar>
+          </NextIntlClientProvider>
+        </MotionProvider>
       </body>
     </html>
   );
