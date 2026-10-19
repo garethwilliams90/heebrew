@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { MarkedText } from "@/components/flashcards/marked-text";
 import { MasteryRing } from "@/components/flashcards/mastery-ring";
 import { Button } from "@/components/ui/button";
-import type { Flashcard } from "@/lib/flashcards/types";
+import type { Flashcard, GrammaticalGender } from "@/lib/flashcards/types";
+import { GenderMark } from "./gender-mark";
 
 export function BrowserCard({
   card,
@@ -44,13 +45,14 @@ export function BrowserCard({
     <li className="rounded-3xl border border-emerald-950/10 bg-white/90 p-5 shadow-[0_24px_60px_-40px_rgba(6,78,59,0.45)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-medium tracking-[0.16em] text-emerald-800/70 uppercase">
+          <p className="text-xs font-medium tracking-[0.16em] text-emerald-800/70 uppercase flex items-center gap-1">
             {t(`pos.${card.partOfSpeech}`)}
-            {card.gender ? ` · ${t(card.gender)}` : ""}
+            {card.gender ? ` · ` : ""}
+            <GenderMark gender={card.gender as GrammaticalGender} />
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">{card.english}</h2>
           {card.example ? (
-            <p className="mt-2 text-emerald-950/70">
+            <p className="mt-2 text-slate-500 italic font-extralight">
               <MarkedText text={card.example} bold={card.exampleBold} />
             </p>
           ) : null}
@@ -88,7 +90,7 @@ export function BrowserCard({
               <Volume2 />
             </Button>
           ) : null}
-          <p className="text-emerald-950/70">
+          <p className="text-slate-500 italic font-extralight">
             <MarkedText text={card.hebrewExample} bold={card.hebrewExampleBold} />
           </p>
         </div>
