@@ -6,8 +6,6 @@ import { cn } from "cn"
 import { motion } from "motion/react"
 import { Slot } from "radix-ui"
 
-const MotionSlot = motion.create(Slot.Root)
-
 const buttonHover = {
   scale: 1.04,
   transition: { type: "spring" as const, bounce: 0.2, visualDuration: 0.2 },
@@ -25,7 +23,7 @@ const buttonTransition = {
 }
 
 const buttonVariants = cva(
-  "group/button relative inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button relative cursor-pointer inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -92,7 +90,27 @@ function Button({
   }
 
   if (asChild) {
-    return <MotionSlot {...shared} {...props} />
+    // Slot has to receive the child directly. motion.create() memoizes
+    // children, which turns a server-rendered child into something Slot
+    // cannot merge onto.
+    return (
+      <motion.span
+        className="inline-flex shrink-0"
+        whileHover={buttonHover}
+        whileTap={buttonTap}
+        transition={buttonTransition}
+        // whileTap would otherwise turn this wrapper into a tab stop
+        tabIndex={-1}
+      >
+        <Slot.Root
+          data-slot="button"
+          data-variant={variant}
+          data-size={size}
+          className={cn(buttonVariants({ variant, size, className }))}
+          {...props}
+        />
+      </motion.span>
+    )
   }
 
   return <motion.button {...shared} {...props} />

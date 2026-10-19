@@ -1,6 +1,6 @@
 "use client";
 
-import { Volume2 } from "lucide-react";
+import { Pencil, Trash2, Volume2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { MarkedText } from "@/components/flashcards/marked-text";
 import { MasteryRing } from "@/components/flashcards/mastery-ring";
@@ -105,7 +105,7 @@ export function BrowserCard({
           className="h-9 border-emerald-900/10 bg-white text-emerald-950 hover:bg-emerald-50"
           onClick={onEdit}
         >
-          {t("editCard")}
+          <Pencil />
         </Button>
         {confirmingDelete ? (
           <>
@@ -134,7 +134,7 @@ export function BrowserCard({
             className="h-9 border-red-200 bg-white text-red-800 hover:bg-red-50"
             onClick={onAskDelete}
           >
-            {t("deleteCard")}
+            <Trash2 />
           </Button>
         )}
       </div>
