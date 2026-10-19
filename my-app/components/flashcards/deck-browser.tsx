@@ -365,7 +365,7 @@ export function DeckBrowser({
       {visible.length === 0 ? (
         <p className="mt-8 text-emerald-900/70">{query ? t("noMatches") : t("emptyDeck")}</p>
       ) : (
-        <ul className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ul className="mt-6 flex flex-col gap-4">
           {visible.map((card) => (
             <BrowserCard
               key={card.id}

@@ -42,14 +42,14 @@ export function GenderMark({ gender }: { gender: GrammaticalGender }) {
       <span className="inline-flex items-center gap-1">
         <IconSlot
           active={gender === "masculine"}
-          color="text-blue-600"
+          color={gender === "masculine" ? "text-blue-600" : "text-grey-500"}
           iconRef={gender === "masculine" ? activeIcon : undefined}
         >
           <Mars aria-hidden />
         </IconSlot>
         <IconSlot
           active={gender === "feminine"}
-          color="text-pink-500"
+          color={gender === "feminine" ? "text-pink-500" : "text-grey-500"}
           iconRef={gender === "feminine" ? activeIcon : undefined}
         >
           <Venus aria-hidden />
