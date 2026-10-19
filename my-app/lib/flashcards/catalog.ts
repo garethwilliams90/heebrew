@@ -55,7 +55,7 @@ export async function loadLibrary(activeDeckId?: string): Promise<Library> {
       ? supabase
           .from("cards")
           .select(
-            "id, source_card_id, english, part_of_speech, example, hebrew, hebrew_example, gender, hidden, created_at",
+            "id, source_card_id, english, part_of_speech, example, hebrew, hebrew_example, gender, hidden, created_at, audio_url, example_audio_url",
           )
           .eq("user_id", data.user.id)
           .eq("deck_id", activeDeckId)

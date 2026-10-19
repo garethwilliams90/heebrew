@@ -76,7 +76,29 @@ export async function loadDeckMastery(deckId: string): Promise<{
   return { signedIn: true, mastery };
 }
 
-export async function loadDeckMemory(deckId: string): Promise<{
+const deckMemoryLoads = new Map<string, Promise<{ signedIn: boolean; memory: Record<string, CardMemory> }>>();
+
+export function loadDeckMemory(deckId: string) {
+  const existing = deckMemoryLoads.get(deckId);
+
+  if (existing) {
+    return existing;
+  }
+
+  const request = readDeckMemory(deckId).catch((error: unknown) => {
+    deckMemoryLoads.delete(deckId);
+    throw error;
+  });
+
+  deckMemoryLoads.set(deckId, request);
+  return request;
+}
+
+function invalidateDeckMemory(deckId: string) {
+  deckMemoryLoads.delete(deckId);
+}
+
+async function readDeckMemory(deckId: string): Promise<{
   signedIn: boolean;
   memory: Record<string, CardMemory>;
 }> {
@@ -162,6 +184,10 @@ export async function writeCardMastery(
     { onConflict: "user_id,deck_id,card_id", defaultToNull: false },
   );
 
+  if (!error) {
+    invalidateDeckMemory(deckId);
+  }
+
   return error ? "error" : "ok";
 }
 
@@ -224,6 +250,10 @@ export async function saveSessionProgress(
     })),
     { onConflict: "user_id,deck_id,card_id" },
   );
+
+  if (!error) {
+    invalidateDeckMemory(deckId);
+  }
 
   return error ? "error" : "ok";
 }

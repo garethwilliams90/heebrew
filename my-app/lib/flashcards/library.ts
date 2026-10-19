@@ -155,6 +155,12 @@ export async function deleteDeck(deckId: string): Promise<SaveResult> {
     return "error";
   }
 
+  try {
+    await removeStoredAudio(auth.supabase, auth.userId, deckId);
+  } catch {
+    // The deck is still removed when the recording bucket is unavailable.
+  }
+
   const deck = await auth.supabase.from("decks").delete().eq("user_id", auth.userId).eq("id", deckId);
   return deck.error ? "error" : "ok";
 }
@@ -224,6 +230,13 @@ export async function removeCard(deckId: string, card: Flashcard): Promise<SaveR
       .delete()
       .eq("user_id", auth.userId)
       .eq("id", card.id);
+    if (!error) {
+      try {
+        await removeAudioUrls(auth.supabase, auth.userId, [card.audioUrl, card.exampleAudioUrl]);
+      } catch {
+        // The card row is already gone.
+      }
+    }
     return error ? "error" : "ok";
   }
 
@@ -247,4 +260,62 @@ export async function removeCard(deckId: string, card: Flashcard): Promise<SaveR
     { onConflict: "user_id,deck_id,source_card_id" },
   );
   return error ? "error" : "ok";
+}
+
+const AUDIO_BUCKET = "card-audio";
+const AUDIO_MARKER = "/storage/v1/object/public/card-audio/";
+
+type AudioStorage = {
+  storage: {
+    from: (bucket: string) => {
+      list: (path: string, options?: { limit?: number }) => Promise<{ data: { name: string }[] | null }>;
+      remove: (paths: string[]) => Promise<unknown>;
+    };
+  };
+};
+
+async function removeStoredAudio(storage: AudioStorage, userId: string, deckId: string) {
+  const folder = `${userId}/${deckId}`;
+  for (let round = 0; round < 50; round += 1) {
+    const listed = await storage.storage.from(AUDIO_BUCKET).list(folder, { limit: 100 });
+    const names = listed.data?.map((file) => file.name).filter((name) => name.length > 0) ?? [];
+    if (names.length === 0) {
+      return;
+    }
+
+    await storage.storage.from(AUDIO_BUCKET).remove(names.map((name) => `${folder}/${name}`));
+    if (names.length < 100) {
+      return;
+    }
+  }
+}
+
+async function removeAudioUrls(storage: AudioStorage, userId: string, urls: (string | undefined)[]) {
+  const paths = urls.flatMap((url) => {
+    const path = audioObjectPath(url, userId);
+    return path ? [path] : [];
+  });
+  if (paths.length === 0) {
+    return;
+  }
+
+  await storage.storage.from(AUDIO_BUCKET).remove(paths);
+}
+
+function audioObjectPath(url: string | undefined, userId: string) {
+  if (!url) {
+    return null;
+  }
+
+  const index = url.indexOf(AUDIO_MARKER);
+  if (index === -1) {
+    return null;
+  }
+
+  const path = decodeURIComponent(url.slice(index + AUDIO_MARKER.length));
+  if (!path.startsWith(`${userId}/`) || path.includes("..")) {
+    return null;
+  }
+
+  return path;
 }

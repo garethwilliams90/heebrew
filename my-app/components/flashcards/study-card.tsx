@@ -13,6 +13,7 @@ import { StudyTools, type CardDisplay } from "@/components/flashcards/study-tool
 import { Button } from "@/components/ui/button";
 import { withoutNiqqud } from "@/lib/flashcards/bold";
 import type { CardMemory, FlashcardGrade } from "@/lib/flashcards/schedule";
+import { TRIAL_SECONDS } from "@/lib/flashcards/study-plan";
 import type { Flashcard } from "@/lib/flashcards/types";
 
 export type StudyCard = Flashcard & { memory: CardMemory; repeats: number };
@@ -40,6 +41,7 @@ export function StudyCardView({
   onSpeakExample,
   onReplay,
   onGrade,
+  trial = null,
 }: {
   card: StudyCard;
   flipped: boolean;
@@ -56,6 +58,7 @@ export function StudyCardView({
   onSpeakExample: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onReplay: () => "word" | "sentence" | null;
   onGrade: (grade: FlashcardGrade) => void;
+  trial?: { secondsLeft: number; multiplier: number } | null;
 }) {
   const t = useTranslations("Flashcards");
   const [direction, setDirection] = useState<SwipeDirection>(1);
@@ -69,7 +72,12 @@ export function StudyCardView({
   const [replayOn, setReplayOn] = useState(false);
   const replayTimer = useRef<number | null>(null);
   const appearance = `${card.id}:${card.repeats}:${card.memory.dueAt ?? "new"}`;
-  const ratio = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const clockSeconds = trial ? Math.max(0, Math.ceil(trial.secondsLeft)) : 0;
+  const ratio = trial
+    ? Math.max(0, Math.min(100, (trial.secondsLeft / TRIAL_SECONDS) * 100))
+    : total === 0
+      ? 0
+      : Math.round((completed / total) * 100);
   const wordKey = card.audioUrl ?? card.hebrew;
   const wordPlaying = speakingClip === wordKey;
   const sentenceKey = card.exampleAudioUrl || card.hebrewExample;
@@ -255,7 +263,22 @@ export function StudyCardView({
   return (
     <div className="flex min-h-0 w-full max-w-6xl flex-1 flex-col">
       <div className="mb-4 flex items-center justify-between gap-4 text-sm text-emerald-900/70">
-        <p>{t("progress", { done: completed, total })}</p>
+        {trial ? (
+          <p className={clockSeconds <= 10 ? "font-semibold text-orange-700 tabular-nums" : "tabular-nums"}>
+            {t("trialClock", { seconds: clockSeconds })}
+            <motion.span
+              key={trial.multiplier}
+              className="ms-3 inline-block font-semibold text-emerald-800"
+              initial={{ scale: 1.28 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", bounce: 0.35, visualDuration: 0.22 }}
+            >
+              {t("trialMultiplier", { multiplier: trial.multiplier })}
+            </motion.span>
+          </p>
+        ) : (
+          <p>{t("progress", { done: completed, total })}</p>
+        )}
         <MasteryRing level={card.memory.mastery} />
       </div>
       <div className="mb-4">
@@ -269,11 +292,13 @@ export function StudyCardView({
       <div className="mb-6">
         <ProgressMeter
           className="h-1.5 rounded-full"
-          label={t("progress", { done: completed, total })}
-          value={completed}
-          max={Math.max(total, 1)}
+          label={trial ? t("trialClock", { seconds: clockSeconds }) : t("progress", { done: completed, total })}
+          value={trial ? clockSeconds : completed}
+          max={trial ? TRIAL_SECONDS : Math.max(total, 1)}
           ratio={ratio}
-          sections={total}
+          sections={trial ? undefined : total}
+          pace={trial ? "tick" : "glide"}
+          barClassName={trial && clockSeconds <= 10 ? "bg-orange-600" : "bg-emerald-700"}
         />
       </div>
 

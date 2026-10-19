@@ -5,6 +5,8 @@ export function ProgressMeter({
   ratio,
   sections,
   className,
+  pace = "glide",
+  barClassName = "bg-emerald-700",
 }: {
   label: string;
   value: number;
@@ -12,6 +14,8 @@ export function ProgressMeter({
   ratio: number;
   sections?: number;
   className?: string;
+  pace?: "glide" | "tick";
+  barClassName?: string;
 }) {
   const marks = sections && sections > 0 ? Math.round(sections) : 0;
 
@@ -26,7 +30,9 @@ export function ProgressMeter({
     >
       <div className="h-full overflow-hidden rounded-full bg-emerald-950/10">
         <div
-          className="h-full rounded-full bg-emerald-700 transition-[width] duration-500"
+          className={`h-full rounded-full ${barClassName} ${
+            pace === "tick" ? "transition-[width] duration-100 ease-linear" : "transition-[width] duration-500"
+          }`}
           style={{ width: `${ratio}%` }}
         />
       </div>

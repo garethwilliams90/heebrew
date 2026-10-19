@@ -68,7 +68,7 @@ export function DeckHeading({
       window.clearTimeout(openTimer.current);
     }
     openTimer.current = window.setTimeout(() => {
-      router.push(`/decks?deck=${deckId}`);
+      router.push(`/decks?deck=${deckId}&view=setup`);
     }, 220);
   }
 

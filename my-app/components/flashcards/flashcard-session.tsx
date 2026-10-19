@@ -5,8 +5,8 @@ import { Leaf } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { ProgramLoader } from "@/components/program-loader";
 import { AccountNotice } from "@/components/flashcards/account-notice";
-import { ExperienceAward } from "@/components/flashcards/experience-award";
 import { useSoundPrefs, type SoundChannel } from "@/components/flashcards/sound-toggle";
+import { SessionSummary, type SessionCardResult } from "@/components/flashcards/session-summary";
 import { StudyCardView, type StudyCard } from "@/components/flashcards/study-card";
 import { useCardDisplay } from "@/components/flashcards/study-tools";
 import { Button } from "@/components/ui/button";
@@ -17,23 +17,37 @@ import { addExperience, flashcardExperience, loadExperience } from "@/lib/flashc
 import { loadDeckMemory, saveSessionProgress } from "@/lib/flashcards/progress";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import {
-  buildDueSession,
+  freshMemory,
   gradeMemory,
   returnsSoon,
   soonestDue,
   type CardMemory,
   type FlashcardGrade,
 } from "@/lib/flashcards/schedule";
+import {
+  buildPlannedSession,
+  MAX_STUDY_COUNT,
+  TRIAL_SECONDS,
+  type StudyMode,
+} from "@/lib/flashcards/study-plan";
 import type { Flashcard } from "@/lib/flashcards/types";
+
+function isStoredAudio(value: string) {
+  return value.startsWith("/") || value.startsWith("https://") || value.startsWith("http://");
+}
 
 type StudyPhase = "study" | "done" | "caught-up";
 
 export function FlashcardSession({
   deckId,
   cards,
+  mode,
+  count,
 }: {
   deckId: string;
   cards: Flashcard[];
+  mode: StudyMode;
+  count: number;
 }) {
   const t = useTranslations("Flashcards");
   const locale = useLocale();
@@ -62,6 +76,20 @@ export function FlashcardSession({
   const [phase, setPhase] = useState<StudyPhase>("study");
   const [nextDue, setNextDue] = useState<string | null>(null);
   const [reward, setReward] = useState<{ from: number; to: number } | null>(null);
+  const [summary, setSummary] = useState<SessionCardResult[]>([]);
+  const [secondsLeft, setSecondsLeft] = useState(TRIAL_SECONDS);
+  const [multiplier, setMultiplier] = useState(1);
+  const [trialStats, setTrialStats] = useState({ correct: 0, best: 1 });
+  const phaseRef = useRef<StudyPhase>("study");
+  const baselinesRef = useRef(new Map<string, CardMemory>());
+  const studiedRef = useRef(new Map<string, SessionCardResult>());
+  const trialIdsRef = useRef<string[]>([]);
+  const passRef = useRef(1);
+  const endedRef = useRef(false);
+  const multiplierRef = useRef(1);
+  const bestRef = useRef(1);
+  const correctRef = useRef(0);
+  const endTrialRef = useRef<() => void>(() => {});
   const clips = useRef(new Map<string, HTMLAudioElement>());
   const clipUrls = useRef<string[]>([]);
   const pendingPlay = useRef<{
@@ -78,6 +106,7 @@ export function FlashcardSession({
   const cleared = Math.max(0, sessionTotal - new Set(queue.map((item) => item.id)).size);
   const usesRecordedAudio = cards.some((item) => item.audioUrl);
   flippedRef.current = flipped;
+  phaseRef.current = phase;
   hebrewRef.current = card?.audioUrl ?? card?.hebrew ?? null;
   exampleAudioRef.current = card?.exampleAudioUrl || card?.hebrewExample || null;
 
@@ -86,10 +115,10 @@ export function FlashcardSession({
 
     async function prepare() {
       const now = new Date();
-      let next = buildDueSession(cardsRef.current, memoriesRef.current, now);
+      let memory = memoriesRef.current;
 
       try {
-        const [{ signedIn: hasAccount, memory }, experience] = await Promise.all([
+        const [{ signedIn: hasAccount, memory: saved }, experience] = await Promise.all([
           loadDeckMemory(deckId),
           loadExperience(),
         ]);
@@ -98,9 +127,9 @@ export function FlashcardSession({
         }
 
         setSignedIn(hasAccount);
-        memoriesRef.current = memory;
+        memory = saved;
+        memoriesRef.current = saved;
         experienceRef.current = experience.experience;
-        next = buildDueSession(cardsRef.current, memory, now);
       } catch {
         if (cancelled) {
           return;
@@ -109,11 +138,17 @@ export function FlashcardSession({
         setSaveError(true);
       }
 
+      const next = buildPlannedSession(cardsRef.current, memory, mode, count, now);
+      if (mode === "trial") {
+        trialIdsRef.current = next.map((card) => card.id);
+        passRef.current = 1;
+      }
       setQueue(next);
       setSessionTotal(next.length);
       if (next.length === 0 && cardsRef.current.length > 0) {
+        phaseRef.current = "caught-up";
         setPhase("caught-up");
-        setNextDue(soonestDue(Object.values(memoriesRef.current)));
+        setNextDue(soonestDue(Object.values(memory)));
       }
 
       if (next.length > 0) {
@@ -142,10 +177,28 @@ export function FlashcardSession({
       }
       clipUrls.current = [];
     };
-  }, [deckId]);
+  }, [count, deckId, mode]);
+
+  useEffect(() => {
+    if (!ready || mode !== "trial" || phase !== "study") {
+      return;
+    }
+
+    const start = performance.now();
+    const id = window.setInterval(() => {
+      const left = Math.max(0, TRIAL_SECONDS - (performance.now() - start) / 1000);
+      setSecondsLeft(left);
+      if (left <= 0) {
+        window.clearInterval(id);
+        endTrialRef.current();
+      }
+    }, 100);
+
+    return () => window.clearInterval(id);
+  }, [mode, phase, ready]);
 
   function sessionNeedsAudio(session: Flashcard[]) {
-    return session.some((item) => {
+    return session.slice(0, MAX_STUDY_COUNT).some((item) => {
       const word = item.audioUrl ?? item.hebrew;
       const sentence = item.exampleAudioUrl || item.hebrewExample;
       return (
@@ -178,12 +231,13 @@ export function FlashcardSession({
   }
 
   async function loadSessionSounds(session: Flashcard[], isCancelled: () => boolean) {
-    const recorded = session.flatMap((item) =>
+    const upcoming = session.slice(0, MAX_STUDY_COUNT);
+    const recorded = upcoming.flatMap((item) =>
       [item.audioUrl, item.exampleAudioUrl].filter((url): url is string => Boolean(url)),
     );
     const spoken = [
       ...new Set(
-        session.flatMap((item) => [
+        upcoming.flatMap((item) => [
           item.audioUrl ? "" : item.hebrew,
           item.exampleAudioUrl ? "" : item.hebrewExample,
         ]),
@@ -195,7 +249,7 @@ export function FlashcardSession({
       return;
     }
 
-    const texts = spoken.filter((text) => !clips.current.has(text)).slice(0, 40);
+    const texts = spoken.filter((text) => !clips.current.has(text)).slice(0, MAX_STUDY_COUNT * 2);
     if (texts.length === 0) {
       return;
     }
@@ -233,7 +287,7 @@ export function FlashcardSession({
       return;
     }
 
-    if (!clips.current.has(text) && text.startsWith("/deck-media/")) {
+    if (!clips.current.has(text) && isStoredAudio(text)) {
       const audio = new Audio(text);
       audio.preload = "auto";
       clips.current.set(text, audio);
@@ -328,13 +382,66 @@ export function FlashcardSession({
     stopClip();
   }
 
+  function studiedSnapshot() {
+    return [...studiedRef.current.values()].sort((a, b) => Number(b.missed) - Number(a.missed));
+  }
+
+  function refillTrial() {
+    const byId = new Map(cardsRef.current.map((item) => [item.id, item]));
+    const pass = passRef.current;
+    passRef.current += 1;
+
+    return shuffleIds(trialIdsRef.current).flatMap((id) => {
+      const source = byId.get(id);
+      if (!source) {
+        return [];
+      }
+
+      return [
+        {
+          ...source,
+          memory: memoriesRef.current[id] ?? freshMemory(),
+          repeats: pass,
+        },
+      ];
+    });
+  }
+
+  function finishStudy() {
+    if (phaseRef.current === "done") {
+      return;
+    }
+
+    endedRef.current = true;
+    phaseRef.current = "done";
+    setSummary(studiedSnapshot());
+    setTrialStats({ correct: correctRef.current, best: bestRef.current });
+    setPhase("done");
+    setQueue([]);
+    setIndex(0);
+    stopClip();
+    void finishSession();
+  }
+
+  endTrialRef.current = () => {
+    if (phaseRef.current !== "study") {
+      return;
+    }
+
+    finishStudy();
+  };
+
   function applyGrade(grade: FlashcardGrade) {
-    if (!card) {
+    if (!card || phaseRef.current !== "study" || endedRef.current) {
       return;
     }
 
     const now = new Date();
-    const memory = gradeMemory(card.memory, grade, now);
+    if (!baselinesRef.current.has(card.id)) {
+      baselinesRef.current.set(card.id, card.memory);
+    }
+    const baseline = baselinesRef.current.get(card.id) ?? card.memory;
+    const memory = gradeMemory(mode === "trial" ? baseline : card.memory, grade, now);
     const repeats = grade === "dontKnow" ? card.repeats + 1 : card.repeats;
     const updated = { ...card, memory, repeats };
     const previous = updatesRef.current.get(card.id);
@@ -344,14 +451,38 @@ export function FlashcardSession({
       memory,
     });
     memoriesRef.current = { ...memoriesRef.current, [card.id]: memory };
-    gainedRef.current += flashcardExperience[grade];
+    const studied = studiedRef.current.get(card.id);
+    studiedRef.current.set(card.id, {
+      id: card.id,
+      english: card.english,
+      hebrew: card.hebrew,
+      partOfSpeech: card.partOfSpeech,
+      from: studied?.from ?? baseline.mastery,
+      to: memory.mastery,
+      missed: (studied?.missed ?? false) || grade === "dontKnow",
+    });
+    if (mode === "trial") {
+      if (grade === "dontKnow") {
+        gainedRef.current += flashcardExperience[grade];
+        multiplierRef.current = 1;
+        setMultiplier(1);
+      } else {
+        gainedRef.current += flashcardExperience[grade] * multiplierRef.current;
+        multiplierRef.current += 1;
+        bestRef.current = Math.max(bestRef.current, multiplierRef.current);
+        correctRef.current += 1;
+        setMultiplier(multiplierRef.current);
+      }
+    } else {
+      gainedRef.current += flashcardExperience[grade];
+    }
     void recordDailyCards(1).then((result) => {
       if (result === "error") {
         setSaveError(true);
       }
     });
     const rest = queue.filter((_, itemIndex) => itemIndex !== index);
-    const bringBack = grade === "dontKnow" && returnsSoon(memory, now) && repeats < 3;
+    const bringBack = mode !== "trial" && grade === "dontKnow" && returnsSoon(memory, now) && repeats < 3;
 
     setFlipped(false);
     flippedRef.current = false;
@@ -365,6 +496,14 @@ export function FlashcardSession({
       return;
     }
 
+    if (mode === "trial" && rest.length === 0) {
+      const more = refillTrial();
+      setQueue(more);
+      setIndex(0);
+      stopClip();
+      return;
+    }
+
     if (rest.length > 0) {
       setQueue(rest);
       setIndex(Math.min(index, rest.length - 1));
@@ -372,11 +511,7 @@ export function FlashcardSession({
       return;
     }
 
-    setPhase("done");
-    setQueue(rest);
-    setIndex(0);
-    stopClip();
-    void finishSession();
+    finishStudy();
   }
 
   async function finishSession() {
@@ -440,13 +575,28 @@ export function FlashcardSession({
     }
 
     updatesRef.current.clear();
+    baselinesRef.current.clear();
+    studiedRef.current.clear();
     gainedRef.current = 0;
     rewardedRef.current = false;
     savedRef.current = false;
+    endedRef.current = false;
+    multiplierRef.current = 1;
+    bestRef.current = 1;
+    correctRef.current = 0;
     setReward(null);
+    setSummary([]);
+    setMultiplier(1);
+    setSecondsLeft(TRIAL_SECONDS);
+    setTrialStats({ correct: 0, best: 1 });
     const now = new Date();
-    const next = buildDueSession(cardsRef.current, memoriesRef.current, now);
+    const next = buildPlannedSession(cardsRef.current, memoriesRef.current, mode, count, now);
+    if (mode === "trial") {
+      trialIdsRef.current = next.map((item) => item.id);
+      passRef.current = 1;
+    }
     const caughtUp = next.length === 0 && cardsRef.current.length > 0;
+    phaseRef.current = caughtUp ? "caught-up" : "study";
     setPhase(caughtUp ? "caught-up" : "study");
     setNextDue(caughtUp ? soonestDue(Object.values(memoriesRef.current)) : null);
     setQueue(next);
@@ -516,7 +666,7 @@ export function FlashcardSession({
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col items-center overflow-x-clip px-4 pt-2 pb-4 sm:px-8">
+    <main className="flex min-h-0 flex-1 flex-col items-center overflow-x-clip overflow-y-auto px-4 pt-2 pb-8 sm:px-8">
       <AccountNotice signedOut={signedIn === false} saveError={saveError} />
       {!ready ? (
         <ProgramLoader label={t("loadingProgram")} />
@@ -537,6 +687,7 @@ export function FlashcardSession({
           onSpeakExample={speakExample}
           onReplay={replay}
           onGrade={applyGrade}
+          trial={mode === "trial" ? { secondsLeft, multiplier } : null}
         />
       ) : phase === "caught-up" ? (
         <section className="flex flex-1 flex-col items-center justify-center text-center">
@@ -554,6 +705,9 @@ export function FlashcardSession({
                 })
               : t("caughtUpSoon")}
           </p>
+          <Button asChild variant="outline" size="lg" className="mt-8">
+            <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
+          </Button>
         </section>
       ) : cards.length === 0 ? (
         <section className="flex flex-1 flex-col items-center justify-center text-center">
@@ -564,18 +718,33 @@ export function FlashcardSession({
           </Button>
         </section>
       ) : (
-        <section className="flex flex-1 flex-col items-center justify-center text-center">
-          <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />
-          <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">
-            {t("completeTitle")}
-          </h1>
-          <p className="mt-3 max-w-sm text-emerald-900/70">{t("completeBody")}</p>
-          {reward ? <ExperienceAward from={reward.from} to={reward.to} /> : null}
-          <Button size="lg" className="mt-8" disabled={saving} onClick={studyAgain}>
-            {t("studyAgain")}
-          </Button>
-        </section>
+        <SessionSummary
+          title={mode === "trial" ? t("trialTitle") : t("completeTitle")}
+          body={
+            mode === "trial"
+              ? t("trialResult", { correct: trialStats.correct, multiplier: trialStats.best })
+              : t("completeBody")
+          }
+          cards={summary}
+          reward={reward}
+          saving={saving}
+          deckId={deckId}
+          onStudyAgain={() => void studyAgain()}
+        />
       )}
     </main>
   );
+}
+
+function shuffleIds(ids: string[]) {
+  const next = [...ids];
+
+  for (let index = next.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    const current = next[index];
+    next[index] = next[swap];
+    next[swap] = current;
+  }
+
+  return next;
 }

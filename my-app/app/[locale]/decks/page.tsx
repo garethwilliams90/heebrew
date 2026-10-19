@@ -2,36 +2,62 @@ import { getTranslations } from "next-intl/server";
 import { DeckBrowser } from "@/components/flashcards/deck-browser";
 import { DeckPicker } from "@/components/flashcards/deck-picker";
 import { FlashcardSession } from "@/components/flashcards/flashcard-session";
+import { StudySetup } from "@/components/flashcards/study-setup";
 import { isBuiltinDeck } from "@/lib/flashcards/builtin";
 import { loadLibrary } from "@/lib/flashcards/catalog";
 import { mergeDeck } from "@/lib/flashcards/merge";
 import type { Flashcard } from "@/lib/flashcards/types";
 import { starterDeck } from "@/lib/flashcards/starter-deck";
+import { parseStudyCount, parseStudyMode } from "@/lib/flashcards/study-plan";
 
 export default async function DecksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ deck?: string; view?: string }>;
+  searchParams: Promise<{ deck?: string; view?: string; mode?: string; count?: string }>;
 }) {
   const t = await getTranslations("Flashcards");
-  const { deck, view } = await searchParams;
+  const { deck, view, mode, count } = await searchParams;
   const library = await loadLibrary(deck);
   const active = await activeDeck(deck, library, t);
-  const browsing = Boolean(active && deck && view === "cards");
 
-  return browsing && active ? (
-    <DeckBrowser
-      deckId={active.id}
-      title={active.title}
-      description={active.description}
-      kind={active.kind}
-      cards={active.cards}
-    />
-  ) : active ? (
-    <FlashcardSession key={active.id} deckId={active.id} cards={active.cards} />
-  ) : (
-    <DeckPicker decks={library.decks} edits={library.edits} tallies={library.tallies} />
-  );
+  if (!active) {
+    return (
+      <DeckPicker
+        decks={library.decks}
+        edits={library.edits}
+        tallies={library.tallies}
+        signedIn={library.signedIn}
+      />
+    );
+  }
+
+  if (view === "cards") {
+    return (
+      <DeckBrowser
+        deckId={active.id}
+        title={active.title}
+        description={active.description}
+        kind={active.kind}
+        cards={active.cards}
+      />
+    );
+  }
+
+  if (view === "study") {
+    const studyMode = parseStudyMode(mode);
+    const studyCount = parseStudyCount(count);
+    return (
+      <FlashcardSession
+        key={`${active.id}:${studyMode}:${studyCount}`}
+        deckId={active.id}
+        cards={active.cards}
+        mode={studyMode}
+        count={studyCount}
+      />
+    );
+  }
+
+  return <StudySetup deckId={active.id} title={active.title} cards={active.cards} />;
 }
 
 async function activeDeck(

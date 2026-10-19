@@ -293,7 +293,10 @@ export function DeckBrowser({
             </p>
           ) : null}
         </div>
-        <div className="flex w-full items-center gap-2 lg:w-auto">
+        <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
+          <Button asChild className="h-11 bg-emerald-800 px-4 text-white hover:bg-emerald-900">
+            <Link href={`/decks?deck=${deckId}&view=setup`}>{t("study")}</Link>
+          </Button>
           <Input
             value={query}
             onChange={(event) => {
@@ -306,7 +309,8 @@ export function DeckBrowser({
           />
           <Button
             type="button"
-            className="h-11 bg-emerald-800 px-4 text-white hover:bg-emerald-900"
+            variant="outline"
+            className="h-11 border-emerald-900/10 bg-white px-4 text-emerald-950 hover:bg-emerald-50"
             onClick={() => {
               setEditor("new");
               setConfirmDelete(null);

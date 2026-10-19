@@ -53,7 +53,20 @@ function writeLocalExperience(experience: number) {
   window.localStorage.setItem(STORAGE_KEY, String(experience));
 }
 
-export async function loadExperience(): Promise<{ signedIn: boolean; experience: number }> {
+let experienceLoad: Promise<{ signedIn: boolean; experience: number }> | null = null;
+
+export function loadExperience() {
+  if (!experienceLoad) {
+    experienceLoad = readExperience().catch((error: unknown) => {
+      experienceLoad = null;
+      throw error;
+    });
+  }
+
+  return experienceLoad;
+}
+
+async function readExperience(): Promise<{ signedIn: boolean; experience: number }> {
   const supabase = createClient();
   const { data, error } = await supabase.auth.getUser();
 
@@ -78,6 +91,8 @@ export async function loadExperience(): Promise<{ signedIn: boolean; experience:
 }
 
 export async function addExperience(gained: number): Promise<"ok" | "signed-out" | "error"> {
+  experienceLoad = null;
+
   if (gained <= 0) {
     return "ok";
   }

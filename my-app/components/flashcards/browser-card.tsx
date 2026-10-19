@@ -48,7 +48,7 @@ export function BrowserCard({
           <p className="text-xs font-medium tracking-[0.16em] text-emerald-800/70 uppercase flex items-center gap-1">
             {t(`pos.${card.partOfSpeech}`)}
             {card.gender ? ` · ` : ""}
-            <GenderMark gender={card.gender as GrammaticalGender} />
+            {card.gender ? <GenderMark gender={card.gender as GrammaticalGender} /> : null}
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">{card.english}</h2>
           {card.example ? (

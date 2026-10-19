@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { AnkiImport } from "@/components/flashcards/anki-import";
 import { DeckHeading } from "@/components/flashcards/deck-heading";
 import { NewDeckForm } from "@/components/flashcards/new-deck-form";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,12 @@ export async function DeckPicker({
   decks,
   edits,
   tallies,
+  signedIn,
 }: {
   decks: CustomDeck[];
   edits: Partial<Record<BuiltinDeckId, DeckEdit>>;
   tallies: Partial<Record<string, CardTally>>;
+  signedIn: boolean;
 }) {
   const t = await getTranslations("Flashcards");
 
@@ -55,7 +58,10 @@ export async function DeckPicker({
     <main className="flex flex-1 flex-col px-4 py-8 sm:px-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold tracking-tight">{t("chooseDeck")}</h1>
-        <NewDeckForm />
+        <div className="flex flex-wrap gap-2">
+          <AnkiImport signedIn={signedIn} />
+          <NewDeckForm />
+        </div>
       </div>
       <div className="mt-8 grid w-full gap-4 sm:grid-cols-2">
         {[...builtin, ...custom].map((deck) => (
@@ -75,7 +81,7 @@ export async function DeckPicker({
             <p className="mt-6 text-sm text-emerald-800">{t("cardCount", { count: deck.count })}</p>
             <div className="mt-4 flex flex-wrap justify-end gap-2">
               <Button asChild size="lg">
-                <Link href={`/decks?deck=${deck.id}`}>{t("study")}</Link>
+                <Link href={`/decks?deck=${deck.id}&view=setup`}>{t("study")}</Link>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <Link href={`/decks?deck=${deck.id}&view=cards`}>{t("viewCards")}</Link>

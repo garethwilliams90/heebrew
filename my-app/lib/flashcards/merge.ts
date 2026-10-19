@@ -12,6 +12,8 @@ export type StoredCard = {
   gender: GrammaticalGender | null;
   hidden: boolean;
   createdAt: string;
+  audioUrl?: string;
+  exampleAudioUrl?: string;
 };
 
 function stripNiqqud(value: string) {
@@ -36,8 +38,8 @@ export function cardFromStored(row: StoredCard, original?: Flashcard): Flashcard
     hebrewExample: row.hebrewExample,
     hebrewExampleBold: hebrewBold(row.hebrewExample, row.hebrew),
     gender: row.gender,
-    audioUrl: hebrewChanged ? undefined : original?.audioUrl,
-    exampleAudioUrl: exampleChanged ? undefined : original?.exampleAudioUrl,
+    audioUrl: original ? (hebrewChanged ? undefined : original.audioUrl) : row.audioUrl,
+    exampleAudioUrl: original ? (exampleChanged ? undefined : original.exampleAudioUrl) : row.exampleAudioUrl,
   };
 }
 
@@ -79,6 +81,8 @@ export function readStoredCard(row: {
   gender?: unknown;
   hidden?: unknown;
   created_at?: unknown;
+  audio_url?: unknown;
+  example_audio_url?: unknown;
 }): StoredCard | null {
   if (
     typeof row.id !== "string" ||
@@ -103,5 +107,7 @@ export function readStoredCard(row: {
     gender,
     hidden: row.hidden === true,
     createdAt: typeof row.created_at === "string" ? row.created_at : "",
+    audioUrl: typeof row.audio_url === "string" ? row.audio_url : undefined,
+    exampleAudioUrl: typeof row.example_audio_url === "string" ? row.example_audio_url : undefined,
   };
 }
