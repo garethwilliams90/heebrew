@@ -8,6 +8,28 @@ export function hasNiqqud(value: string) {
   return NIQQUD.test(value);
 }
 
+export function withoutNiqqud(text: string, bold?: [number, number][]) {
+  const shown = stripNiqqud(text);
+  if (!bold?.length) {
+    return { text: shown, bold: undefined as [number, number][] | undefined };
+  }
+
+  const at: number[] = [];
+  let plain = 0;
+  for (let index = 0; index <= text.length; index += 1) {
+    at[index] = plain;
+    if (index < text.length && !NIQQUD.test(text[index] ?? "")) {
+      plain += 1;
+    }
+  }
+
+  const next = bold
+    .map(([start, end]) => [at[start] ?? 0, at[end] ?? shown.length] as [number, number])
+    .filter(([start, end]) => end > start);
+
+  return { text: shown, bold: next.length > 0 ? next : undefined };
+}
+
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

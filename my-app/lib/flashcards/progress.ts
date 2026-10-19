@@ -1,4 +1,10 @@
 import { createClient } from "@/lib/supabase/client";
+import {
+  isCardPhase,
+  memoryForStage,
+  normalizeMemory,
+  type CardMemory,
+} from "@/lib/flashcards/schedule";
 
 const PAGE_SIZE = 1000;
 
@@ -70,6 +76,71 @@ export async function loadDeckMastery(deckId: string): Promise<{
   return { signedIn: true, mastery };
 }
 
+export async function loadDeckMemory(deckId: string): Promise<{
+  signedIn: boolean;
+  memory: Record<string, CardMemory>;
+}> {
+  const auth = await requireUser();
+
+  if (!auth) {
+    return { signedIn: false, memory: {} };
+  }
+
+  const memory: Record<string, CardMemory> = {};
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await auth.supabase
+      .from("card_progress")
+      .select("card_id, ease, interval_minutes, due_at, reps, lapses, learning_step, card_state")
+      .eq("user_id", auth.userId)
+      .eq("deck_id", deckId)
+      .order("card_id", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      throw error;
+    }
+
+    const rows = data ?? [];
+
+    for (const row of rows) {
+      if (typeof row.card_id !== "string" || !isCardPhase(row.card_state)) {
+        continue;
+      }
+
+      memory[row.card_id] = normalizeMemory({
+        phase: row.card_state,
+        ease: typeof row.ease === "number" ? row.ease : undefined,
+        intervalMinutes: typeof row.interval_minutes === "number" ? row.interval_minutes : undefined,
+        dueAt: typeof row.due_at === "string" ? row.due_at : null,
+        reps: typeof row.reps === "number" ? row.reps : undefined,
+        lapses: typeof row.lapses === "number" ? row.lapses : undefined,
+        learningStep: typeof row.learning_step === "number" ? row.learning_step : undefined,
+      });
+    }
+
+    if (rows.length < PAGE_SIZE) {
+      break;
+    }
+  }
+
+  return { signedIn: true, memory };
+}
+
+function scheduleColumns(level: number) {
+  const memory = memoryForStage(level);
+  return {
+    mastery: memory.mastery,
+    ease: memory.ease,
+    interval_minutes: memory.intervalMinutes,
+    due_at: memory.dueAt,
+    reps: memory.reps,
+    lapses: memory.lapses,
+    learning_step: memory.learningStep,
+    card_state: memory.phase,
+  };
+}
+
 export async function writeCardMastery(
   deckId: string,
   cardId: string,
@@ -86,7 +157,7 @@ export async function writeCardMastery(
       user_id: auth.userId,
       deck_id: deckId,
       card_id: cardId,
-      mastery: level,
+      ...scheduleColumns(level),
     },
     { onConflict: "user_id,deck_id,card_id", defaultToNull: false },
   );
@@ -96,7 +167,7 @@ export async function writeCardMastery(
 
 export async function saveSessionProgress(
   deckId: string,
-  updates: { cardId: string; mastery: number; practices: number }[],
+  updates: { cardId: string; mastery: number; practices: number; memory?: CardMemory }[],
 ): Promise<SaveResult> {
   if (updates.length === 0) {
     return "ok";
@@ -139,6 +210,17 @@ export async function saveSessionProgress(
       mastery: item.mastery,
       last_practiced_at: practicedAt,
       practice_count: (counts.get(item.cardId) ?? 0) + item.practices,
+      ...(item.memory
+        ? {
+            ease: item.memory.ease,
+            interval_minutes: item.memory.intervalMinutes,
+            due_at: item.memory.dueAt,
+            reps: item.memory.reps,
+            lapses: item.memory.lapses,
+            learning_step: item.memory.learningStep,
+            card_state: item.memory.phase,
+          }
+        : {}),
     })),
     { onConflict: "user_id,deck_id,card_id" },
   );

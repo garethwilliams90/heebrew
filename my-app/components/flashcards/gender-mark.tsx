@@ -40,10 +40,18 @@ export function GenderMark({ gender }: { gender: GrammaticalGender }) {
   return (
     <motion.span className="inline-flex items-center gap-2" onHoverStart={() => void liftAndSpin()}>
       <span className="inline-flex items-center gap-1">
-        <IconSlot active={gender === "masculine"} iconRef={gender === "masculine" ? activeIcon : undefined}>
+        <IconSlot
+          active={gender === "masculine"}
+          color="text-blue-600"
+          iconRef={gender === "masculine" ? activeIcon : undefined}
+        >
           <Mars aria-hidden />
         </IconSlot>
-        <IconSlot active={gender === "feminine"} iconRef={gender === "feminine" ? activeIcon : undefined}>
+        <IconSlot
+          active={gender === "feminine"}
+          color="text-pink-500"
+          iconRef={gender === "feminine" ? activeIcon : undefined}
+        >
           <Venus aria-hidden />
         </IconSlot>
       </span>
@@ -54,17 +62,19 @@ export function GenderMark({ gender }: { gender: GrammaticalGender }) {
 
 function IconSlot({
   active,
+  color,
   iconRef,
   children,
 }: {
   active: boolean;
+  color: string;
   iconRef?: React.Ref<HTMLSpanElement>;
   children: React.ReactNode;
 }) {
   return (
     <span
       ref={iconRef}
-      className={cn("inline-flex [&_svg]:size-5", active ? "text-primary" : "text-muted-foreground/35")}
+      className={cn("inline-flex [&_svg]:size-5", color, active ? "opacity-100" : "opacity-30")}
     >
       {children}
     </span>

@@ -2,8 +2,8 @@
 
 import { Volume2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { FamiliaritySelect } from "@/components/flashcards/familiarity-select";
 import { MarkedText } from "@/components/flashcards/marked-text";
+import { MasteryRing } from "@/components/flashcards/mastery-ring";
 import { Button } from "@/components/ui/button";
 import type { Flashcard } from "@/lib/flashcards/types";
 
@@ -16,7 +16,6 @@ export function BrowserCard({
   wordEnabled,
   sentenceEnabled,
   confirmingDelete,
-  onFamiliarity,
   onPlayWord,
   onPlaySentence,
   onEdit,
@@ -32,7 +31,6 @@ export function BrowserCard({
   wordEnabled: boolean;
   sentenceEnabled: boolean;
   confirmingDelete: boolean;
-  onFamiliarity: (level: number) => void;
   onPlayWord: () => void;
   onPlaySentence: () => void;
   onEdit: () => void;
@@ -58,7 +56,7 @@ export function BrowserCard({
           ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <FamiliaritySelect level={level} onChange={onFamiliarity} />
+          <MasteryRing level={level} />
           <Button
             type="button"
             variant="outline"

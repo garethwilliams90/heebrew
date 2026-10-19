@@ -1,165 +1,291 @@
 "use client";
 
-import { Volume2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
+import { AnimatePresence, motion, usePresenceData } from "motion/react";
 import { useTranslations } from "next-intl";
-import { FamiliaritySelect } from "@/components/flashcards/familiarity-select";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { GenderMark } from "@/components/flashcards/gender-mark";
 import { MarkedText } from "@/components/flashcards/marked-text";
+import { MasteryRing } from "@/components/flashcards/mastery-ring";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
-import { SoundControls, type SoundChannel, type SoundPrefs } from "@/components/flashcards/sound-toggle";
+import { type SoundChannel, type SoundPrefs } from "@/components/flashcards/sound-toggle";
+import { StudyTools, type CardDisplay } from "@/components/flashcards/study-tools";
 import { Button } from "@/components/ui/button";
-import type { Flashcard, RecallGrade } from "@/lib/flashcards/types";
+import { withoutNiqqud } from "@/lib/flashcards/bold";
+import type { CardMemory, FlashcardGrade } from "@/lib/flashcards/schedule";
+import type { Flashcard } from "@/lib/flashcards/types";
 
-export type StudyCard = Flashcard & { mastery: number };
+export type StudyCard = Flashcard & { memory: CardMemory; repeats: number };
 
-const grades: RecallGrade[] = ["dontKnow", "know", "knowWell", "memorised"];
+type SwipeDirection = -1 | 0 | 1;
+
+const swipeSpring = { type: "spring" as const, bounce: 0.15, visualDuration: 0.32 };
+const flipSpring = { type: "spring" as const, bounce: 0.08, visualDuration: 0.26 };
+const revealSpring = { type: "spring" as const, bounce: 0.12, visualDuration: 0.28 };
+const nikudFade = { duration: 0.22, ease: "easeOut" as const };
 
 export function StudyCardView({
   card,
   flipped,
-  prompt,
   speakingClip,
   speechError,
   soundPrefs,
   onToggleSound,
+  display,
+  onToggleDisplay,
   completed,
   total,
-  reviewCompleted,
-  reviewTotal,
-  progressLabel,
   onFlip,
   onSpeak,
   onSpeakExample,
-  onFamiliarity,
+  onReplay,
   onGrade,
 }: {
   card: StudyCard;
   flipped: boolean;
-  prompt: "english" | "hebrew";
   speakingClip: string | null;
   speechError: boolean;
   soundPrefs: SoundPrefs;
   onToggleSound: (channel: SoundChannel) => void;
+  display: CardDisplay;
+  onToggleDisplay: (key: keyof CardDisplay) => void;
   completed: number;
   total: number;
-  reviewCompleted: number;
-  reviewTotal: number;
-  progressLabel: "progress" | "reviewProgress";
   onFlip: () => void;
   onSpeak: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onSpeakExample: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  onFamiliarity: (level: number) => void;
-  onGrade: (grade: RecallGrade) => void;
+  onReplay: () => "word" | "sentence" | null;
+  onGrade: (grade: FlashcardGrade) => void;
 }) {
   const t = useTranslations("Flashcards");
-  const learnRatio = total === 0 ? 0 : Math.round((completed / total) * 100);
-  const reviewRatio = reviewTotal === 0 ? 0 : Math.round((reviewCompleted / reviewTotal) * 100);
+  const [direction, setDirection] = useState<SwipeDirection>(1);
+  const flippedRef = useRef(flipped);
+  const busyRef = useRef(false);
+  const flipRef = useRef(onFlip);
+  const requestRef = useRef<(grade: FlashcardGrade) => void>(() => {});
+  const replayRef = useRef<() => void>(() => {});
+  const [replayTick, setReplayTick] = useState(0);
+  const [replayTarget, setReplayTarget] = useState<"word" | "sentence" | null>(null);
+  const [replayOn, setReplayOn] = useState(false);
+  const replayTimer = useRef<number | null>(null);
+  const appearance = `${card.id}:${card.repeats}:${card.memory.dueAt ?? "new"}`;
+  const ratio = total === 0 ? 0 : Math.round((completed / total) * 100);
   const wordKey = card.audioUrl ?? card.hebrew;
   const wordPlaying = speakingClip === wordKey;
   const sentenceKey = card.exampleAudioUrl || card.hebrewExample;
   const sentencePlaying = speakingClip === sentenceKey;
+
+  flippedRef.current = flipped;
+  flipRef.current = onFlip;
+
+  useEffect(() => {
+    busyRef.current = false;
+  }, [appearance]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest("input, textarea, select")) {
+        return;
+      }
+
+      if (event.repeat || busyRef.current) {
+        return;
+      }
+
+      if (event.key === " " || event.code === "Space") {
+        if (target instanceof HTMLElement && target.closest("button, a")) {
+          return;
+        }
+
+        event.preventDefault();
+        flipRef.current();
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        requestRef.current("dontKnow");
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        requestRef.current("know");
+        return;
+      }
+
+      if (event.key === "r" || event.key === "R") {
+        event.preventDefault();
+        replayRef.current();
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  function grade(next: FlashcardGrade) {
+    if (!flippedRef.current || busyRef.current) {
+      return;
+    }
+
+    busyRef.current = true;
+    setDirection(next === "dontKnow" ? -1 : next === "know" ? 1 : 0);
+    onGrade(next);
+  }
+
+  requestRef.current = grade;
+
+  function replay() {
+    const played = onReplay();
+    if (!played) {
+      return;
+    }
+
+    setReplayTarget(played);
+    setReplayTick((tick) => tick + 1);
+    setReplayOn(true);
+    if (replayTimer.current !== null) {
+      window.clearTimeout(replayTimer.current);
+    }
+    replayTimer.current = window.setTimeout(() => setReplayOn(false), 450);
+  }
+
+  replayRef.current = replay;
+
+  const hebrewWord = display.nikud ? { text: card.hebrew } : withoutNiqqud(card.hebrew);
+  const hebrewSentence = display.nikud
+    ? { text: card.hebrewExample, bold: card.hebrewExampleBold }
+    : withoutNiqqud(card.hebrewExample, card.hebrewExampleBold);
+
   const englishFace = (
     <>
-      <p className="text-xs font-medium tracking-[0.16em] text-emerald-800/70 uppercase">
+      <p className="text-xs font-medium tracking-[0.16em] text-emerald-800/70 uppercase sm:text-sm">
         {t(`pos.${card.partOfSpeech}`)}
       </p>
-      <h1 className="mt-3 text-5xl font-semibold tracking-tight text-emerald-950 sm:text-6xl">
+      <h1 className="mt-4 text-5xl font-semibold tracking-tight text-emerald-950 sm:text-7xl lg:text-8xl">
         {card.english}
       </h1>
-      {card.example ? (
-        <p className="mt-6 max-w-sm text-lg text-emerald-950/70">
+      <Reveal show={Boolean(display.example && card.example)}>
+        <p className="mt-8 max-w-xl text-xl text-emerald-950/70 sm:text-2xl">
           <MarkedText text={card.example} bold={card.exampleBold} />
         </p>
-      ) : null}
+      </Reveal>
     </>
   );
   const hebrewFace = (
     <>
       <div className="flex items-center gap-3">
         {card.gender ? <GenderMark gender={card.gender} /> : null}
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-lg"
-          className="border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
-          aria-label={wordPlaying ? t("listening") : t("listen")}
-          disabled={!soundPrefs.general || !soundPrefs.word || wordPlaying}
-          onClick={onSpeak}
-        >
-          <Volume2 />
-        </Button>
-      </div>
-      <h2 dir="rtl" lang="he" className="mt-4 text-6xl font-semibold text-emerald-950">
-        {card.hebrew}
-      </h2>
-      {card.hebrewExample ? (
-        <div dir="rtl" lang="he" className="mt-6 flex max-w-sm items-start justify-center gap-2">
+        <span className="relative">
           <Button
             type="button"
             variant="outline"
-            size="icon"
-            className="mt-0.5 shrink-0 border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
-            aria-label={sentencePlaying ? t("listening") : t("listenSentence")}
-            disabled={!soundPrefs.general || !soundPrefs.sentence || sentencePlaying}
-            onClick={onSpeakExample}
+            size="icon-lg"
+            className={`border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50 ${
+              replayOn && replayTarget === "word" ? "ring-2 ring-emerald-500" : ""
+            }`}
+            aria-keyshortcuts="R"
+            aria-label={wordPlaying ? t("listening") : t("listen")}
+            disabled={!soundPrefs.general || !soundPrefs.word || wordPlaying}
+            onClick={onSpeak}
           >
             <Volume2 />
           </Button>
-          <p className="text-lg text-emerald-950/70">
-            <MarkedText text={card.hebrewExample} bold={card.hebrewExampleBold} />
+          <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-emerald-800 text-[9px] font-semibold text-white">
+            R
+          </span>
+          {replayTarget === "word" ? (
+            <motion.span
+              key={replayTick}
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-full border-2 border-emerald-600"
+              initial={{ opacity: 0.75, scale: 1 }}
+              animate={{ opacity: 0, scale: 1.5 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              style={{ willChange: "transform, opacity" }}
+            />
+          ) : null}
+        </span>
+      </div>
+      <h2 dir="rtl" lang="he" className="mt-4 text-6xl font-semibold text-emerald-950 sm:text-7xl lg:text-8xl">
+        <NikudSwap show={display.nikud} pointed={card.hebrew} plain={hebrewWord.text} />
+      </h2>
+      <Reveal show={Boolean(display.example && card.hebrewExample)}>
+        <div dir="rtl" lang="he" className="mt-8 flex max-w-xl items-start justify-center gap-3">
+          <span className="relative mt-0.5 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className={`border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50 ${
+                replayOn && replayTarget === "sentence" ? "ring-2 ring-emerald-500" : ""
+              }`}
+              aria-label={sentencePlaying ? t("listening") : t("listenSentence")}
+              disabled={!soundPrefs.general || !soundPrefs.sentence || sentencePlaying}
+              onClick={onSpeakExample}
+            >
+              <Volume2 />
+            </Button>
+            {replayTarget === "sentence" ? (
+              <motion.span
+                key={replayTick}
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-full border-2 border-emerald-600"
+                initial={{ opacity: 0.75, scale: 1 }}
+                animate={{ opacity: 0, scale: 1.5 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                style={{ willChange: "transform, opacity" }}
+              />
+            ) : null}
+          </span>
+          <p className="text-xl text-emerald-950/70 sm:text-2xl">
+            <NikudSwap
+              show={display.nikud}
+              pointed={<MarkedText text={card.hebrewExample} bold={card.hebrewExampleBold} />}
+              plain={<MarkedText text={hebrewSentence.text} bold={hebrewSentence.bold} />}
+            />
           </p>
         </div>
-      ) : null}
+      </Reveal>
     </>
   );
-  const front = prompt === "hebrew" ? hebrewFace : englishFace;
-  const back = prompt === "hebrew" ? englishFace : hebrewFace;
 
   return (
-    <div className="flex w-full max-w-xl flex-1 flex-col justify-center">
+    <div className="flex min-h-0 w-full max-w-6xl flex-1 flex-col">
       <div className="mb-4 flex items-center justify-between gap-4 text-sm text-emerald-900/70">
-        <p>
-          {t(progressLabel, {
-            done: progressLabel === "reviewProgress" ? reviewCompleted : completed,
-            total: progressLabel === "reviewProgress" ? reviewTotal : total,
-          })}
-        </p>
-        <FamiliaritySelect level={card.mastery} onChange={onFamiliarity} />
+        <p>{t("progress", { done: completed, total })}</p>
+        <MasteryRing level={card.memory.mastery} />
       </div>
-      {prompt === "hebrew" ? (
-        <p className="mb-3 text-sm text-emerald-800">{t("reviewHint")}</p>
-      ) : null}
       <div className="mb-4">
-        <SoundControls prefs={soundPrefs} onToggle={onToggleSound} />
+        <StudyTools
+          soundPrefs={soundPrefs}
+          onToggleSound={onToggleSound}
+          display={display}
+          onToggleDisplay={onToggleDisplay}
+        />
       </div>
-      <div className="mb-6 flex gap-1.5">
+      <div className="mb-6">
         <ProgressMeter
-          className="h-1.5 flex-1 overflow-hidden rounded-full bg-emerald-950/10"
+          className="h-1.5 rounded-full"
           label={t("progress", { done: completed, total })}
           value={completed}
           max={Math.max(total, 1)}
-          ratio={learnRatio}
-        />
-        <ProgressMeter
-          className="h-1.5 flex-1 overflow-hidden rounded-full bg-emerald-950/10"
-          label={t("reviewProgress", { done: reviewCompleted, total: reviewTotal })}
-          value={reviewCompleted}
-          max={Math.max(reviewTotal, 1)}
-          ratio={reviewRatio}
+          ratio={ratio}
+          sections={total}
         />
       </div>
 
-      <div className="perspective-distant">
-        <div
-          onClick={onFlip}
-          key={card.id}
-          className={`relative h-80 transform-3d cursor-pointer rounded-[2rem] transition-transform duration-500 motion-reduce:transition-none sm:h-96 ${flipped ? "transform-[rotateY(180deg)]" : ""}`}
-        >
-          <CardFace className={flipped ? "pointer-events-none" : ""}>{front}</CardFace>
-          <CardFace className={`transform-[rotateY(180deg)] ${flipped ? "" : "pointer-events-none"}`}>
-            {back}
-          </CardFace>
-        </div>
+      <div className="relative min-h-0 w-full flex-1 basis-0">
+        <AnimatePresence mode="wait" initial={false} custom={direction}>
+          <SwipeCard key={appearance} flipped={flipped} onFlip={onFlip}>
+            <CardFace className={flipped ? "pointer-events-none" : ""}>{englishFace}</CardFace>
+            <CardFace className={`transform-[rotateY(180deg)] ${flipped ? "" : "pointer-events-none"}`}>
+              {hebrewFace}
+            </CardFace>
+          </SwipeCard>
+        </AnimatePresence>
       </div>
 
       <p className="mt-4 text-center text-sm text-emerald-900/60">{t("flipHint")}</p>
@@ -170,26 +296,148 @@ export function StudyCardView({
       ) : null}
 
       <div
-        className={`mt-4 grid grid-cols-2 gap-2 transition-opacity duration-300 sm:grid-cols-4 ${flipped ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`mt-4 transition-opacity duration-200 ${flipped ? "opacity-100" : "pointer-events-none opacity-0"}`}
       >
-        {grades.map((grade) => (
+        <div className="grid grid-cols-2 gap-3">
           <Button
-            key={grade}
             type="button"
-            variant={grade === "memorised" ? "default" : "outline"}
-            className={
-              grade === "memorised"
-                ? "h-12 bg-emerald-800 text-white hover:bg-emerald-900"
-                : "h-12 border-emerald-900/10 bg-white text-emerald-950 hover:bg-emerald-50"
-            }
+            variant="outline"
+            className="h-14 border-red-200 bg-white text-red-800 hover:bg-red-50"
             disabled={!flipped}
-            onClick={() => onGrade(grade)}
+            onClick={() => grade("dontKnow")}
           >
-            {t(grade)}
+            {t("dontKnow")}
+            <ArrowLeft className="size-5" strokeWidth={3} />
           </Button>
-        ))}
+          <Button
+            type="button"
+            variant="outline"
+            className="h-14 border-emerald-300 bg-white text-emerald-900 hover:bg-emerald-50"
+            disabled={!flipped}
+            onClick={() => grade("know")}
+          >
+            {t("know")}
+            <ArrowRight className="size-5" strokeWidth={3} />
+          </Button>
+        </div>
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            className="mt-3 h-12 w-2/3 bg-emerald-800 text-white hover:bg-emerald-900"
+            disabled={!flipped}
+            onClick={() => grade("mastered")}
+            >
+            {t("mastered")}
+          </Button>
+          </div>
       </div>
     </div>
+  );
+}
+
+const SwipeCard = forwardRef(function SwipeCard(
+  {
+    flipped,
+    onFlip,
+    children,
+  }: {
+    flipped: boolean;
+    onFlip: () => void;
+    children: React.ReactNode;
+  },
+  ref: React.Ref<HTMLDivElement>,
+) {
+  const direction = (usePresenceData() ?? 1) as SwipeDirection;
+  const tint = direction < 0 ? "#dc2626" : "#16a34a";
+
+  return (
+    <motion.div
+      ref={ref}
+      className="absolute inset-0"
+      style={{ willChange: "transform" }}
+      initial={{ opacity: 0, x: direction === 0 ? 0 : direction * -48 }}
+      animate={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
+      exit={{
+        x: direction * 640,
+        y: direction === 0 ? -56 : 0,
+        rotate: direction * 6,
+        opacity: direction === 0 ? 0 : 1,
+        scale: direction === 0 ? 0.96 : 1,
+      }}
+      transition={swipeSpring}
+    >
+      <div className="perspective-distant h-full">
+        <motion.div
+          className="relative h-full w-full cursor-pointer transform-3d"
+          animate={{ rotateY: flipped ? 180 : 0 }}
+          transition={flipSpring}
+          style={{ transformStyle: "preserve-3d" }}
+          onClick={onFlip}
+        >
+          {children}
+        </motion.div>
+      </div>
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-10 rounded-[2rem]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0 }}
+        exit={{ opacity: direction === 0 ? 0 : 0.38 }}
+        style={{ backgroundColor: tint }}
+      />
+    </motion.div>
+  );
+});
+
+function Reveal({ show, children }: { show: boolean; children: React.ReactNode }) {
+  return (
+    <AnimatePresence initial={false}>
+      {show ? (
+        <motion.div
+          key="shown"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={revealSpring}
+          style={{ overflow: "hidden", willChange: "height, opacity" }}
+        >
+          {children}
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
+function NikudSwap({
+  show,
+  pointed,
+  plain,
+}: {
+  show: boolean;
+  pointed: React.ReactNode;
+  plain: React.ReactNode;
+}) {
+  return (
+    <span className="inline-grid justify-items-center">
+      <motion.span
+        className="col-start-1 row-start-1"
+        animate={{ opacity: show ? 1 : 0 }}
+        transition={nikudFade}
+        aria-hidden={!show}
+        style={{ willChange: "opacity" }}
+      >
+        {pointed}
+      </motion.span>
+      <motion.span
+        className="col-start-1 row-start-1"
+        animate={{ opacity: show ? 0 : 1 }}
+        transition={nikudFade}
+        aria-hidden={show}
+        style={{ willChange: "opacity" }}
+      >
+        {plain}
+      </motion.span>
+    </span>
   );
 }
 
@@ -202,7 +450,7 @@ function CardFace({
 }) {
   return (
     <div
-      className={`absolute inset-0 flex flex-col items-center justify-center rounded-[2rem] border border-emerald-950/10 bg-white/90 px-8 text-center shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)] backface-hidden ${className ?? ""}`}
+      className={`absolute inset-0 flex flex-col items-center justify-center rounded-[2rem] border border-emerald-950/10 bg-white/90 px-10 text-center shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)] backface-hidden ${className ?? ""}`}
     >
       {children}
     </div>

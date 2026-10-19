@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import type { FlashcardGrade } from "@/lib/flashcards/schedule";
 import type { RecallGrade } from "@/lib/flashcards/types";
 
 const STORAGE_KEY = "webrew.experience";
@@ -8,6 +9,12 @@ export const gradeExperience: Record<RecallGrade, number> = {
   know: 6,
   knowWell: 10,
   memorised: 15,
+};
+
+export const flashcardExperience: Record<FlashcardGrade, number> = {
+  dontKnow: 2,
+  know: 6,
+  mastered: 15,
 };
 
 export function spanForLevel(level: number) {

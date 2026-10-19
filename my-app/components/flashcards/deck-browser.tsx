@@ -15,7 +15,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { prepareSpeechClip, requestDeckSpeech } from "@/lib/flashcards/deck-speech";
 import { removeCard } from "@/lib/flashcards/library";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
-import { loadDeckMastery, writeCardMastery } from "@/lib/flashcards/progress";
+import { loadDeckMastery } from "@/lib/flashcards/progress";
 import { sortCards, type CardSort } from "@/lib/flashcards/sort-cards";
 import type { Flashcard } from "@/lib/flashcards/types";
 
@@ -377,14 +377,6 @@ export function DeckBrowser({
               wordEnabled={sound.prefs.general && sound.prefs.word}
               sentenceEnabled={sound.prefs.general && sound.prefs.sentence}
               confirmingDelete={confirmDelete === card.id}
-              onFamiliarity={(next) => {
-                setMastery((current) => ({ ...current, [card.id]: next }));
-                void writeCardMastery(deckId, card.id, next).then((result) => {
-                  if (result === "error") {
-                    setSaveError(true);
-                  }
-                });
-              }}
               onPlayWord={() => play(card)}
               onPlaySentence={() => playUrl(`${card.id}:example`, card.exampleAudioUrl ?? "", "sentence")}
               onEdit={() => {

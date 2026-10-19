@@ -2,23 +2,31 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Leaf } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ProgramLoader } from "@/components/program-loader";
 import { AccountNotice } from "@/components/flashcards/account-notice";
 import { ExperienceAward } from "@/components/flashcards/experience-award";
 import { useSoundPrefs, type SoundChannel } from "@/components/flashcards/sound-toggle";
 import { StudyCardView, type StudyCard } from "@/components/flashcards/study-card";
+import { useCardDisplay } from "@/components/flashcards/study-tools";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { prepareSpeechClip, requestDeckSpeech } from "@/lib/flashcards/deck-speech";
 import { recordDailyCards } from "@/lib/flashcards/daily-practice";
-import { addExperience, gradeExperience, loadExperience } from "@/lib/flashcards/experience";
-import { loadDeckMastery, saveSessionProgress } from "@/lib/flashcards/progress";
+import { addExperience, flashcardExperience, loadExperience } from "@/lib/flashcards/experience";
+import { loadDeckMemory, saveSessionProgress } from "@/lib/flashcards/progress";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
-import { buildStudySession, nextMastery } from "@/lib/flashcards/review";
-import type { Flashcard, RecallGrade } from "@/lib/flashcards/types";
+import {
+  buildDueSession,
+  gradeMemory,
+  returnsSoon,
+  soonestDue,
+  type CardMemory,
+  type FlashcardGrade,
+} from "@/lib/flashcards/schedule";
+import type { Flashcard } from "@/lib/flashcards/types";
 
-type StudyPhase = "learn" | "review" | "done";
+type StudyPhase = "study" | "done" | "caught-up";
 
 export function FlashcardSession({
   deckId,
@@ -28,12 +36,14 @@ export function FlashcardSession({
   cards: Flashcard[];
 }) {
   const t = useTranslations("Flashcards");
+  const locale = useLocale();
   const sound = useSoundPrefs();
+  const display = useCardDisplay();
   const cardsRef = useRef(cards);
-  const masteryRef = useRef<Record<string, number>>({});
-  const updatesRef = useRef(new Map<string, { mastery: number; practices: number }>());
-  const weakRef = useRef<StudyCard[]>([]);
-  const phaseRef = useRef<StudyPhase>("learn");
+  const memoriesRef = useRef<Record<string, CardMemory>>({});
+  const updatesRef = useRef(
+    new Map<string, { mastery: number; practices: number; memory: CardMemory }>(),
+  );
   const experienceRef = useRef(0);
   const gainedRef = useRef(0);
   const rewardedRef = useRef(false);
@@ -41,17 +51,16 @@ export function FlashcardSession({
   const savingRef = useRef<Promise<"ok" | "signed-out" | "error"> | null>(null);
   const [queue, setQueue] = useState<StudyCard[]>([]);
   const [sessionTotal, setSessionTotal] = useState(0);
-  const [learnTotal, setLearnTotal] = useState(0);
   const [ready, setReady] = useState(false);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const [completed, setCompleted] = useState(0);
   const [speakingClip, setSpeakingClip] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState(false);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [saveError, setSaveError] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [phase, setPhase] = useState<StudyPhase>("learn");
+  const [phase, setPhase] = useState<StudyPhase>("study");
+  const [nextDue, setNextDue] = useState<string | null>(null);
   const [reward, setReward] = useState<{ from: number; to: number } | null>(null);
   const clips = useRef(new Map<string, HTMLAudioElement>());
   const clipUrls = useRef<string[]>([]);
@@ -61,14 +70,13 @@ export function FlashcardSession({
     kind: "word" | "sentence";
   } | null>(null);
   const speakingKindRef = useRef<"word" | "sentence" | null>(null);
-  const hasCard = useRef(false);
   const flippedRef = useRef(false);
   const hebrewRef = useRef<string | null>(null);
   const exampleAudioRef = useRef<string | null>(null);
 
   const card = queue[index];
+  const cleared = Math.max(0, sessionTotal - new Set(queue.map((item) => item.id)).size);
   const usesRecordedAudio = cards.some((item) => item.audioUrl);
-  hasCard.current = Boolean(card);
   flippedRef.current = flipped;
   hebrewRef.current = card?.audioUrl ?? card?.hebrew ?? null;
   exampleAudioRef.current = card?.exampleAudioUrl || card?.hebrewExample || null;
@@ -77,11 +85,12 @@ export function FlashcardSession({
     let cancelled = false;
 
     async function prepare() {
-      let next = buildStudySession(cardsRef.current, masteryRef.current);
+      const now = new Date();
+      let next = buildDueSession(cardsRef.current, memoriesRef.current, now);
 
       try {
-        const [{ signedIn: hasAccount, mastery }, experience] = await Promise.all([
-          loadDeckMastery(deckId),
+        const [{ signedIn: hasAccount, memory }, experience] = await Promise.all([
+          loadDeckMemory(deckId),
           loadExperience(),
         ]);
         if (cancelled) {
@@ -89,9 +98,9 @@ export function FlashcardSession({
         }
 
         setSignedIn(hasAccount);
-        masteryRef.current = mastery;
+        memoriesRef.current = memory;
         experienceRef.current = experience.experience;
-        next = buildStudySession(cardsRef.current, mastery);
+        next = buildDueSession(cardsRef.current, memory, now);
       } catch {
         if (cancelled) {
           return;
@@ -102,7 +111,10 @@ export function FlashcardSession({
 
       setQueue(next);
       setSessionTotal(next.length);
-      setLearnTotal(next.length);
+      if (next.length === 0 && cardsRef.current.length > 0) {
+        setPhase("caught-up");
+        setNextDue(soonestDue(Object.values(memoriesRef.current)));
+      }
 
       if (next.length > 0) {
         try {
@@ -131,32 +143,6 @@ export function FlashcardSession({
       clipUrls.current = [];
     };
   }, [deckId]);
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== " " && event.code !== "Space") {
-        return;
-      }
-
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        target.closest("button, a, input, textarea, select")
-      ) {
-        return;
-      }
-
-      if (!hasCard.current) {
-        return;
-      }
-
-      event.preventDefault();
-      flip();
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   function sessionNeedsAudio(session: Flashcard[]) {
     return session.some((item) => {
@@ -317,7 +303,7 @@ export function FlashcardSession({
   }
 
   function hebrewIsShowing() {
-    return phaseRef.current === "review" ? !flippedRef.current : flippedRef.current;
+    return flippedRef.current;
   }
 
   function flip() {
@@ -325,82 +311,68 @@ export function FlashcardSession({
     flippedRef.current = next;
     setFlipped(next);
 
-    const showingHebrew = phaseRef.current === "review" ? !next : next;
+    const showingHebrew = next;
+
+    const sentence = display.displayRef.current.example ? exampleAudioRef.current : null;
 
     if (showingHebrew && hebrewRef.current && sound.allows("word")) {
-      playClip(hebrewRef.current, exampleAudioRef.current, "word");
+      playClip(hebrewRef.current, sentence, "word");
       return;
     }
 
-    if (showingHebrew && exampleAudioRef.current && sound.allows("sentence")) {
-      playClip(exampleAudioRef.current, null, "sentence");
+    if (showingHebrew && sentence && sound.allows("sentence")) {
+      playClip(sentence, null, "sentence");
       return;
     }
 
     stopClip();
   }
 
-  function speakCard(item: StudyCard) {
-    playClip(item.audioUrl ?? item.hebrew, item.exampleAudioUrl ?? null, "word");
-  }
-
-  function applyGrade(grade: RecallGrade) {
+  function applyGrade(grade: FlashcardGrade) {
     if (!card) {
       return;
     }
 
-    const updated = { ...card, mastery: nextMastery(card.mastery, grade) };
+    const now = new Date();
+    const memory = gradeMemory(card.memory, grade, now);
+    const repeats = grade === "dontKnow" ? card.repeats + 1 : card.repeats;
+    const updated = { ...card, memory, repeats };
     const previous = updatesRef.current.get(card.id);
     updatesRef.current.set(card.id, {
-      mastery: updated.mastery,
+      mastery: memory.mastery,
       practices: (previous?.practices ?? 0) + 1,
+      memory,
     });
-    masteryRef.current = { ...masteryRef.current, [card.id]: updated.mastery };
-    gainedRef.current += gradeExperience[grade];
+    memoriesRef.current = { ...memoriesRef.current, [card.id]: memory };
+    gainedRef.current += flashcardExperience[grade];
     void recordDailyCards(1).then((result) => {
       if (result === "error") {
         setSaveError(true);
       }
     });
     const rest = queue.filter((_, itemIndex) => itemIndex !== index);
-
-    if (phaseRef.current === "learn" && (grade === "dontKnow" || grade === "know")) {
-      weakRef.current.push(updated);
-    }
+    const bringBack = grade === "dontKnow" && returnsSoon(memory, now) && repeats < 3;
 
     setFlipped(false);
     flippedRef.current = false;
     setSpeechError(false);
 
+    if (bringBack) {
+      const nextQueue = [...rest, updated];
+      setQueue(nextQueue);
+      setIndex(index < rest.length ? index : 0);
+      stopClip();
+      return;
+    }
+
     if (rest.length > 0) {
-      const nextIndex = Math.min(index, rest.length - 1);
-      setCompleted((count) => count + 1);
       setQueue(rest);
-      setIndex(nextIndex);
-      if (phaseRef.current === "review") {
-        speakCard(rest[nextIndex]);
-      } else {
-        stopClip();
-      }
+      setIndex(Math.min(index, rest.length - 1));
+      stopClip();
       return;
     }
 
-    if (phaseRef.current === "learn" && weakRef.current.length > 0) {
-      const review = [...weakRef.current].reverse();
-      weakRef.current = [];
-      phaseRef.current = "review";
-      setPhase("review");
-      setQueue(review);
-      setSessionTotal(review.length);
-      setIndex(0);
-      setCompleted(0);
-      speakCard(review[0]);
-      return;
-    }
-
-    phaseRef.current = "done";
     setPhase("done");
-    setCompleted((count) => count + 1);
     setQueue(rest);
     setIndex(0);
     stopClip();
@@ -436,6 +408,7 @@ export function FlashcardSession({
       cardId,
       mastery: value.mastery,
       practices: value.practices,
+      memory: value.memory,
     }));
 
     const request = saveSessionProgress(deckId, updates).then((result) => {
@@ -467,19 +440,18 @@ export function FlashcardSession({
     }
 
     updatesRef.current.clear();
-    weakRef.current = [];
     gainedRef.current = 0;
     rewardedRef.current = false;
     savedRef.current = false;
-    phaseRef.current = "learn";
-    setPhase("learn");
     setReward(null);
-    const next = buildStudySession(cardsRef.current, masteryRef.current);
+    const now = new Date();
+    const next = buildDueSession(cardsRef.current, memoriesRef.current, now);
+    const caughtUp = next.length === 0 && cardsRef.current.length > 0;
+    setPhase(caughtUp ? "caught-up" : "study");
+    setNextDue(caughtUp ? soonestDue(Object.values(memoriesRef.current)) : null);
     setQueue(next);
     setSessionTotal(next.length);
-    setLearnTotal(next.length);
     setIndex(0);
-    setCompleted(0);
     setFlipped(false);
     flippedRef.current = false;
     stopClip();
@@ -496,28 +468,32 @@ export function FlashcardSession({
     }
   }
 
-  function setFamiliarity(level: number) {
-    if (!card) {
-      return;
-    }
-
-    const graded = updatesRef.current.get(card.id);
-    if (graded) {
-      updatesRef.current.set(card.id, { ...graded, mastery: level });
-    }
-
-    masteryRef.current = { ...masteryRef.current, [card.id]: level };
-    setQueue((current) =>
-      current.map((item) => (item.id === card.id ? { ...item, mastery: level } : item)),
-    );
-  }
-
   function toggleSound(channel: SoundChannel) {
     const next = !sound.prefsRef.current[channel];
     sound.setChannel(channel, next);
     if (!next && (channel === "general" || channel === speakingKindRef.current)) {
       stopClip();
     }
+  }
+
+  function replay() {
+    if (!hebrewIsShowing()) {
+      return null;
+    }
+
+    const sentence = display.displayRef.current.example ? exampleAudioRef.current : null;
+
+    if (hebrewRef.current && sound.allows("word")) {
+      playClip(hebrewRef.current, sentence, "word");
+      return "word" as const;
+    }
+
+    if (sentence && sound.allows("sentence")) {
+      playClip(sentence, null, "sentence");
+      return "sentence" as const;
+    }
+
+    return null;
   }
 
   function speak(event: React.MouseEvent<HTMLButtonElement>) {
@@ -540,7 +516,7 @@ export function FlashcardSession({
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center px-4 pb-10 sm:px-8">
+    <main className="flex min-h-0 flex-1 flex-col items-center overflow-x-clip px-4 pt-2 pb-4 sm:px-8">
       <AccountNotice signedOut={signedIn === false} saveError={saveError} />
       {!ready ? (
         <ProgramLoader label={t("loadingProgram")} />
@@ -548,22 +524,37 @@ export function FlashcardSession({
         <StudyCardView
           card={card}
           flipped={flipped}
-          prompt={phase === "review" ? "hebrew" : "english"}
           speakingClip={speakingClip}
           speechError={speechError}
           soundPrefs={sound.prefs}
           onToggleSound={toggleSound}
-          completed={phase === "review" ? learnTotal : completed}
-          total={learnTotal}
-          reviewCompleted={phase === "review" ? completed : 0}
-          reviewTotal={phase === "review" ? sessionTotal : 0}
-          progressLabel={phase === "review" ? "reviewProgress" : "progress"}
+          display={display.display}
+          onToggleDisplay={display.toggle}
+          completed={cleared}
+          total={sessionTotal}
           onFlip={flip}
           onSpeak={speak}
           onSpeakExample={speakExample}
-          onFamiliarity={setFamiliarity}
+          onReplay={replay}
           onGrade={applyGrade}
         />
+      ) : phase === "caught-up" ? (
+        <section className="flex flex-1 flex-col items-center justify-center text-center">
+          <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />
+          <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">
+            {t("caughtUpTitle")}
+          </h1>
+          <p className="mt-3 max-w-sm text-emerald-900/70">
+            {nextDue
+              ? t("caughtUpBody", {
+                  when: new Intl.DateTimeFormat(locale, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }).format(new Date(nextDue)),
+                })
+              : t("caughtUpSoon")}
+          </p>
+        </section>
       ) : cards.length === 0 ? (
         <section className="flex flex-1 flex-col items-center justify-center text-center">
           <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />

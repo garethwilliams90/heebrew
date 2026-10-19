@@ -50,18 +50,19 @@ The interface around the card stays left-to-right. English on the front is left-
 
 **Front.** The English word and its part of speech (noun, verb, adjective, adverb, and so on). An example sentence can sit under the word.
 
-**Back.** The Hebrew translation, a speaker control for the Hebrew, and the grammatical gender when the word has one: masculine or feminine.
+**Back.** The Hebrew translation, a speaker control for the Hebrew, and the grammatical gender when the word has one. The masculine mark is blue and the feminine mark is pink.
 
 **Creating cards.** A learner can create a card. They enter the English word and part of speech. Azure Translator fills in the Hebrew translation (`from=en`, `to=he`). Dicta Nakdan then reads that Hebrew with morphology turned on and supplies masculine or feminine when the word has a gender. The learner can edit the translation and the gender before saving. Translator returns the translated string only. One unpointed Hebrew spelling can have more than one reading, so the saved gender is the one the learner confirms. Part of speech stays on the card record.
 
-**Audio.** Azure Speech speaks the Hebrew on the back, using the neural voice `he-IL-HilaNeural`. The front has no speaker. A voice's male or female setting is how the voice sounds. It is not the grammatical gender of the word.
+**Audio.** Azure Speech speaks the Hebrew on the back, using the neural voice `he-IL-HilaNeural`. The front has no speaker. Pressing R on the back replays that audio, and the speaker shows an R mark. A voice's male or female setting is how the voice sounds. It is not the grammatical gender of the word.
 
-**Recall.** After the flip, the learner picks one of four grades. Each card keeps a mastery level from 0 (unknown) to 6 (mastered) and a next-review time. The grade changes that level, and a higher level means a longer wait before the card appears again.
+A gear beside the card opens a row of icon toggles to the right: word sound, general sound, sentence sound, nikud, and the example sentence. Each toggle has a tooltip that names it. Showing or hiding nikud fades the vowel marks, and showing or hiding the example sentence opens and closes that line. The session bar marks the end of each card with a blue dot.
 
-- Don't know: move the level down toward 0. Show the card again soon.
-- Know: move the level up by 1. Use a short gap.
-- Know well: move the level up by 2, never past 6. Use a longer gap.
-- Memorised totally: set the level to 6. Use the longest gap.
+**Recall.** After the flip, the learner marks the card. Vocabulary cards use Anki's SM-2 scheduler: learning steps of 1 minute and 10 minutes, then a 1-day graduate interval. A remembered review multiplies the interval by the card's ease, starting at 2.5 and never below 1.3. Missing a review drops ease by 0.2 and sends the card through a 10-minute relearn. Ease does not change during the first learning steps. Reviewing a card late lengthens the next interval. The ring shows six stages read from that schedule, from empty (new) to a solid circle with a star (mastered, about 50 days or the mastered button). Hovering the ring explains those stages and credits Anki's spaced repetition. The deck's card list shows the same ring. A session is the cards that are due, up to 10, with new cards filling any remaining space. Letter practice stays a linear 0–6 ladder and does not use this scheduler.
+
+- Don't know: the Again grade. Show the card again soon.
+- Know: the Good grade. Move to the next step, or lengthen the review interval.
+- Mastered: a separate control. Set the card to stage 6 and wait about 120 days.
 
 ### 2. Training centre
 

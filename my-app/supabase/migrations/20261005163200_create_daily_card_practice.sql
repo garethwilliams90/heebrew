@@ -56,9 +56,11 @@ begin
   end if;
 
   -- Allow a day either side of UTC so a local date near midnight still counts.
+  -- current_date is a keyword, so it stays valid with an empty search_path.
+  -- pg_catalog.current_date is not: Postgres reads pg_catalog as a table name.
   if practice_date is null
-    or practice_date < (pg_catalog.current_date - 1)
-    or practice_date > (pg_catalog.current_date + 1) then
+    or practice_date < (current_date - 1)
+    or practice_date > (current_date + 1) then
     raise exception 'invalid date';
   end if;
 

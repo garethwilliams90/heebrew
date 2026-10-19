@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { AuthButton } from "@/components/auth-button";
 import { MotionProvider } from "@/components/motion-provider";
 import { Navbar } from "@/components/navbar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -51,9 +52,11 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col">
         <MotionProvider>
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            <Navbar auth={<AuthButton />}>{children}</Navbar>
-          </NextIntlClientProvider>
+          <TooltipProvider delayDuration={300}>
+            <NextIntlClientProvider locale={locale} messages={messages}>
+              <Navbar auth={<AuthButton />}>{children}</Navbar>
+            </NextIntlClientProvider>
+          </TooltipProvider>
         </MotionProvider>
       </body>
     </html>
