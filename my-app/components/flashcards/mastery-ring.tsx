@@ -78,7 +78,7 @@ const guideStages = [
   { level: 6, label: "mastered" },
 ] as const;
 
-export function MasteryRing({ level }: { level: number }) {
+export function MasteryRing({ level, size = "md" }: { level: number; size?: "sm" | "md" }) {
   const t = useTranslations("Flashcards");
   const stage = Math.min(SEGMENTS, Math.max(0, Math.round(level)));
   const label =
@@ -90,7 +90,7 @@ export function MasteryRing({ level }: { level: number }) {
         aria-label={label}
         className="inline-flex rounded-full bg-transparent p-0 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <MasteryMark level={level} />
+        <MasteryMark level={level} size={size} />
       </TooltipTrigger>
       <TooltipContent side="bottom" sideOffset={8} className="w-72 flex-col items-stretch gap-3 py-3">
         <p>{t("masteryGuide")}</p>

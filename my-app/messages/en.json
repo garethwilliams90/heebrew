@@ -240,7 +240,7 @@
   "AlephBet": {
     "nav": "Aleph Bet",
     "title": "Aleph Bet",
-    "description": "Learn the Hebrew alphabet",
+    "description": "Letters, sounds, and handwritten forms.",
     "start": "Start",
     "flipAll": "Flip all",
     "flipBack": "Flip back",
@@ -255,7 +255,209 @@
     "backToAlphabet": "Back to the alphabet",
     "letterPrompt": "Hebrew letter",
     "arrowHint": "Left arrow for Don't know, right arrow for Know.",
-    "loadingSounds": "Preparing the letters..."
+    "loadingSounds": "Preparing the letters...",
+    "closeLetter": "Close",
+    "printScript": "Standard",
+    "cursiveScript": "Cursive",
+    "letterOfAlphabet": "Letter {number} of 22",
+    "finalForm": "Final form of letter {number}",
+    "numberValue": "Value {value}",
+    "examplesTitle": "Words with this letter",
+    "loanMark": "Loan",
+    "loanNote": "This is not one of the 22 letters. Hebrew uses it to spell sounds borrowed from other languages.",
+    "sofitTip": "Final letters are used a little like capital letters in English, but they come at the end of a word instead of at the start of a sentence.",
+    "sofitTipLabel": "About final letters",
+    "hearLetter": "Hear the letter",
+    "facts": {
+      "aleph": {
+        "description": "Aleph has no consonant sound. You pronounce the vowel written with it.",
+        "note": "It can carry any vowel, so these words do not all start with the same sound.",
+        "example1": "dad",
+        "example2": "lake",
+        "example3": "to"
+      },
+      "bet": {
+        "description": "Bet says b with a dot inside, and v without one.",
+        "example1": "house",
+        "example2": "but",
+        "example3": "star"
+      },
+      "gimel": {
+        "description": "Gimel says g, as in go.",
+        "example1": "camel",
+        "example2": "garden",
+        "example3": "big"
+      },
+      "dalet": {
+        "description": "Dalet says d.",
+        "example1": "fish",
+        "example2": "door",
+        "example3": "bear"
+      },
+      "he": {
+        "description": "He says h. At the end of a word it is often silent.",
+        "example1": "mountain",
+        "example2": "they",
+        "example3": "what"
+      },
+      "vav": {
+        "description": "Vav says v. It also writes the vowels o and u.",
+        "example1": "rose",
+        "example2": "peace",
+        "example3": "wind"
+      },
+      "zayin": {
+        "description": "Zayin says z.",
+        "example1": "olive",
+        "example2": "gold",
+        "example3": "time"
+      },
+      "chet": {
+        "description": "Chet says kh, a rough sound in the back of the throat, like the ch in the Scottish loch.",
+        "note": "In modern Israeli Hebrew this is the same sound as kaf without a dot.",
+        "example1": "cat",
+        "example2": "bread",
+        "example3": "happy"
+      },
+      "tet": {
+        "description": "Tet says t. In modern Hebrew it sounds the same as tav.",
+        "example1": "good",
+        "example2": "airplane",
+        "example3": "small"
+      },
+      "yod": {
+        "description": "Yod says y, as in yes. It also writes the vowel i.",
+        "example1": "hand",
+        "example2": "sea",
+        "example3": "house"
+      },
+      "kaf": {
+        "description": "Kaf says k with a dot inside, and kh without one.",
+        "example1": "dog",
+        "example2": "yes",
+        "example3": "ate"
+      },
+      "kafSofit": {
+        "description": "This is kaf at the end of a word. Final kaf usually says kh.",
+        "note": "Its value is 20, the same as kaf. In gematria this final form can also count as 500.",
+        "example1": "king",
+        "example2": "road",
+        "example3": "walks"
+      },
+      "lamed": {
+        "description": "Lamed says l.",
+        "example1": "heart",
+        "example2": "bread",
+        "example3": "night"
+      },
+      "mem": {
+        "description": "Mem says m.",
+        "example1": "water",
+        "example2": "mom",
+        "example3": "king"
+      },
+      "memSofit": {
+        "description": "This is mem at the end of a word. It says m.",
+        "note": "Its value is 40, the same as mem. In gematria this final form can also count as 600.",
+        "example1": "peace",
+        "example2": "person",
+        "example3": "day"
+      },
+      "nun": {
+        "description": "Nun says n.",
+        "example1": "candle",
+        "example2": "snake",
+        "example3": "river"
+      },
+      "nunSofit": {
+        "description": "This is nun at the end of a word. It says n.",
+        "note": "Its value is 50, the same as nun. In gematria this final form can also count as 700.",
+        "example1": "time",
+        "example2": "yes",
+        "example3": "musician"
+      },
+      "samekh": {
+        "description": "Samekh says s, the same sound as sin, the s-form of shin.",
+        "example1": "horse",
+        "example2": "book",
+        "example3": "money"
+      },
+      "ayin": {
+        "description": "Ayin is silent in modern Hebrew. You pronounce only the vowel written with it.",
+        "note": "Older Hebrew had a deep sound in the throat here.",
+        "example1": "eye",
+        "example2": "bird",
+        "example3": "tree"
+      },
+      "pe": {
+        "description": "Pe says p with a dot inside, and f without one.",
+        "example1": "mouth",
+        "example2": "flower",
+        "example3": "book"
+      },
+      "peSofit": {
+        "description": "This is pe at the end of a word. Final pe usually says f.",
+        "note": "Its value is 80, the same as pe. In gematria this final form can also count as 800.",
+        "example1": "end",
+        "example2": "money",
+        "example3": "nose"
+      },
+      "tsadi": {
+        "description": "Tsadi says ts, as at the end of bits.",
+        "example1": "color",
+        "example2": "yellow",
+        "example3": "bird"
+      },
+      "tsadiSofit": {
+        "description": "This is tsadi at the end of a word. It says ts.",
+        "note": "Its value is 90, the same as tsadi. In gematria this final form can also count as 900.",
+        "example1": "tree",
+        "example2": "summer",
+        "example3": "land"
+      },
+      "kuf": {
+        "description": "Kuf says k, the same sound as kaf with a dot.",
+        "example1": "voice",
+        "example2": "small",
+        "example3": "cold"
+      },
+      "reish": {
+        "description": "Reish says r. In Israeli Hebrew it is made at the back of the mouth.",
+        "example1": "head",
+        "example2": "light",
+        "example3": "city"
+      },
+      "shin": {
+        "description": "Shin says sh when the dot is on the upper right. With the dot on the upper left it is sin, and it says s.",
+        "example1": "peace",
+        "example2": "sun",
+        "example3": "field"
+      },
+      "tav": {
+        "description": "Tav says t.",
+        "example1": "thanks",
+        "example2": "strawberry",
+        "example3": "house"
+      },
+      "gimelGeresh": {
+        "description": "Gimel with a geresh, the small mark beside it, says j as in jeans.",
+        "example1": "jeans",
+        "example2": "jungle",
+        "example3": "giraffe"
+      },
+      "zayinGeresh": {
+        "description": "Zayin with a geresh says zh, the sound in measure, or the French j.",
+        "example1": "jacket",
+        "example2": "beige",
+        "example3": "genre"
+      },
+      "tsadiGeresh": {
+        "description": "Tsadi with a geresh says ch as in chips.",
+        "example1": "chips",
+        "example2": "check",
+        "example3": "chat"
+      }
+    }
   },
   "Social": {
     "github": "GitHub",

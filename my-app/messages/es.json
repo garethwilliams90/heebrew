@@ -240,7 +240,7 @@
   "AlephBet": {
     "nav": "Aleph Bet",
     "title": "Aleph Bet",
-    "description": "Aprende el alfabeto hebreo",
+    "description": "Las letras, sus sonidos y la letra manuscrita.",
     "start": "Empezar",
     "flipAll": "Voltear todas",
     "flipBack": "Volver al frente",
@@ -255,7 +255,209 @@
     "backToAlphabet": "Volver al alfabeto",
     "letterPrompt": "Letra hebrea",
     "arrowHint": "Flecha izquierda: No lo sé. Flecha derecha: Lo sé.",
-    "loadingSounds": "Preparando las letras..."
+    "loadingSounds": "Preparando las letras...",
+    "closeLetter": "Cerrar",
+    "printScript": "Estándar",
+    "cursiveScript": "Cursiva",
+    "letterOfAlphabet": "Letra {number} de 22",
+    "finalForm": "Forma final de la letra {number}",
+    "numberValue": "Valor {value}",
+    "examplesTitle": "Palabras con esta letra",
+    "loanMark": "Préstamo",
+    "loanNote": "No es una de las 22 letras. El hebreo la usa para escribir sonidos tomados de otras lenguas.",
+    "sofitTip": "Las letras finales funcionan un poco como las mayúsculas en inglés, pero van al final de una palabra y no al principio de una frase.",
+    "sofitTipLabel": "Sobre las letras finales",
+    "hearLetter": "Escuchar la letra",
+    "facts": {
+      "aleph": {
+        "description": "Álef no tiene sonido de consonante. Se pronuncia la vocal escrita con él.",
+        "note": "Puede llevar cualquier vocal, así que estas palabras no empiezan todas con el mismo sonido.",
+        "example1": "papá",
+        "example2": "lago",
+        "example3": "a"
+      },
+      "bet": {
+        "description": "Bet suena b con un punto dentro, y v sin ese punto.",
+        "example1": "casa",
+        "example2": "pero",
+        "example3": "estrella"
+      },
+      "gimel": {
+        "description": "Guímel suena g, como en gato.",
+        "example1": "camello",
+        "example2": "jardín",
+        "example3": "grande"
+      },
+      "dalet": {
+        "description": "Dálet suena d.",
+        "example1": "pez",
+        "example2": "puerta",
+        "example3": "oso"
+      },
+      "he": {
+        "description": "He suena h. Al final de una palabra suele ser muda.",
+        "example1": "montaña",
+        "example2": "ellos",
+        "example3": "qué"
+      },
+      "vav": {
+        "description": "Vav suena v. También escribe las vocales o y u.",
+        "example1": "rosa",
+        "example2": "paz",
+        "example3": "viento"
+      },
+      "zayin": {
+        "description": "Záyin suena z.",
+        "example1": "aceituna",
+        "example2": "oro",
+        "example3": "tiempo"
+      },
+      "chet": {
+        "description": "Chet suena kh, un sonido áspero al fondo de la garganta, como la j de jamón.",
+        "note": "En el hebreo israelí moderno es el mismo sonido que kaf sin punto.",
+        "example1": "gato",
+        "example2": "pan",
+        "example3": "feliz"
+      },
+      "tet": {
+        "description": "Tet suena t. En el hebreo moderno suena igual que tav.",
+        "example1": "bueno",
+        "example2": "avión",
+        "example3": "pequeño"
+      },
+      "yod": {
+        "description": "Yod suena y, como en yo. También escribe la vocal i.",
+        "example1": "mano",
+        "example2": "mar",
+        "example3": "casa"
+      },
+      "kaf": {
+        "description": "Kaf suena k con un punto dentro, y kh sin ese punto.",
+        "example1": "perro",
+        "example2": "sí",
+        "example3": "comió"
+      },
+      "kafSofit": {
+        "description": "Es kaf al final de una palabra. La kaf final suele sonar kh.",
+        "note": "Su valor es 20, el mismo que kaf. En gematría esta forma final también puede valer 500.",
+        "example1": "rey",
+        "example2": "camino",
+        "example3": "camina"
+      },
+      "lamed": {
+        "description": "Lámed suena l.",
+        "example1": "corazón",
+        "example2": "pan",
+        "example3": "noche"
+      },
+      "mem": {
+        "description": "Mem suena m.",
+        "example1": "agua",
+        "example2": "mamá",
+        "example3": "rey"
+      },
+      "memSofit": {
+        "description": "Es mem al final de una palabra. Suena m.",
+        "note": "Su valor es 40, el mismo que mem. En gematría esta forma final también puede valer 600.",
+        "example1": "paz",
+        "example2": "persona",
+        "example3": "día"
+      },
+      "nun": {
+        "description": "Nun suena n.",
+        "example1": "vela",
+        "example2": "serpiente",
+        "example3": "río"
+      },
+      "nunSofit": {
+        "description": "Es nun al final de una palabra. Suena n.",
+        "note": "Su valor es 50, el mismo que nun. En gematría esta forma final también puede valer 700.",
+        "example1": "tiempo",
+        "example2": "sí",
+        "example3": "músico"
+      },
+      "samekh": {
+        "description": "Sámej suena s, el mismo sonido que sin, la forma de shin que dice s.",
+        "example1": "caballo",
+        "example2": "libro",
+        "example3": "dinero"
+      },
+      "ayin": {
+        "description": "Ayin es muda en el hebreo moderno. Solo se pronuncia la vocal escrita con ella.",
+        "note": "El hebreo antiguo tenía aquí un sonido profundo en la garganta.",
+        "example1": "ojo",
+        "example2": "pájaro",
+        "example3": "árbol"
+      },
+      "pe": {
+        "description": "Pe suena p con un punto dentro, y f sin ese punto.",
+        "example1": "boca",
+        "example2": "flor",
+        "example3": "libro"
+      },
+      "peSofit": {
+        "description": "Es pe al final de una palabra. La pe final suele sonar f.",
+        "note": "Su valor es 80, el mismo que pe. En gematría esta forma final también puede valer 800.",
+        "example1": "fin",
+        "example2": "dinero",
+        "example3": "nariz"
+      },
+      "tsadi": {
+        "description": "Tsadi suena ts, como al final de bits.",
+        "example1": "color",
+        "example2": "amarillo",
+        "example3": "pájaro"
+      },
+      "tsadiSofit": {
+        "description": "Es tsadi al final de una palabra. Suena ts.",
+        "note": "Su valor es 90, el mismo que tsadi. En gematría esta forma final también puede valer 900.",
+        "example1": "árbol",
+        "example2": "verano",
+        "example3": "tierra"
+      },
+      "kuf": {
+        "description": "Kuf suena k, el mismo sonido que kaf con punto.",
+        "example1": "voz",
+        "example2": "pequeño",
+        "example3": "frío"
+      },
+      "reish": {
+        "description": "Reish suena r. En el hebreo israelí se articula al fondo de la boca.",
+        "example1": "cabeza",
+        "example2": "luz",
+        "example3": "ciudad"
+      },
+      "shin": {
+        "description": "Shin suena sh cuando el punto está arriba a la derecha. Con el punto arriba a la izquierda es sin, y suena s.",
+        "example1": "paz",
+        "example2": "sol",
+        "example3": "campo"
+      },
+      "tav": {
+        "description": "Tav suena t.",
+        "example1": "gracias",
+        "example2": "fresa",
+        "example3": "casa"
+      },
+      "gimelGeresh": {
+        "description": "Guímel con un geresh, la marquita de al lado, suena j como en jeans.",
+        "example1": "vaqueros",
+        "example2": "jungla",
+        "example3": "jirafa"
+      },
+      "zayinGeresh": {
+        "description": "Záyin con un geresh suena zh, el sonido del francés journal.",
+        "example1": "chaqueta",
+        "example2": "beige",
+        "example3": "género"
+      },
+      "tsadiGeresh": {
+        "description": "Tsadi con un geresh suena ch como en chips.",
+        "example1": "patatas",
+        "example2": "cheque",
+        "example3": "chat"
+      }
+    }
   },
   "Social": {
     "github": "GitHub",

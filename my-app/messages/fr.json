@@ -240,7 +240,7 @@
   "AlephBet": {
     "nav": "Aleph Bet",
     "title": "Aleph Bet",
-    "description": "Apprenez l'alphabet hébreu",
+    "description": "Les lettres, leurs sons et l'écriture manuscrite.",
     "start": "Commencer",
     "flipAll": "Tout retourner",
     "flipBack": "Tout remettre",
@@ -255,7 +255,209 @@
     "backToAlphabet": "Retour à l'alphabet",
     "letterPrompt": "Lettre hébraïque",
     "arrowHint": "Flèche gauche : Je ne sais pas. Flèche droite : Je sais.",
-    "loadingSounds": "Préparation des lettres..."
+    "loadingSounds": "Préparation des lettres...",
+    "closeLetter": "Fermer",
+    "printScript": "Standard",
+    "cursiveScript": "Cursive",
+    "letterOfAlphabet": "Lettre {number} sur 22",
+    "finalForm": "Forme finale de la lettre {number}",
+    "numberValue": "Valeur {value}",
+    "examplesTitle": "Mots avec cette lettre",
+    "loanMark": "Emprunt",
+    "loanNote": "Ce n'est pas une des 22 lettres. L'hébreu s'en sert pour écrire des sons venus d'autres langues.",
+    "sofitTip": "Les lettres finales servent un peu comme les majuscules en anglais : elles marquent la fin d'un mot, et non le début d'une phrase.",
+    "sofitTipLabel": "À propos des lettres finales",
+    "hearLetter": "Écouter la lettre",
+    "facts": {
+      "aleph": {
+        "description": "Aleph n'a pas de son de consonne. On prononce la voyelle écrite avec lui.",
+        "note": "Il peut porter n'importe quelle voyelle, donc ces mots ne commencent pas tous par le même son.",
+        "example1": "papa",
+        "example2": "lac",
+        "example3": "à"
+      },
+      "bet": {
+        "description": "Bet se prononce b avec un point à l'intérieur, et v sans ce point.",
+        "example1": "maison",
+        "example2": "mais",
+        "example3": "étoile"
+      },
+      "gimel": {
+        "description": "Gimel se prononce g, comme dans gare.",
+        "example1": "chameau",
+        "example2": "jardin",
+        "example3": "grand"
+      },
+      "dalet": {
+        "description": "Dalet se prononce d.",
+        "example1": "poisson",
+        "example2": "porte",
+        "example3": "ours"
+      },
+      "he": {
+        "description": "He se prononce h. En fin de mot, il est souvent muet.",
+        "example1": "montagne",
+        "example2": "ils",
+        "example3": "quoi"
+      },
+      "vav": {
+        "description": "Vav se prononce v. Il sert aussi à écrire les voyelles o et u.",
+        "example1": "rose",
+        "example2": "paix",
+        "example3": "vent"
+      },
+      "zayin": {
+        "description": "Zayin se prononce z.",
+        "example1": "olive",
+        "example2": "or",
+        "example3": "temps"
+      },
+      "chet": {
+        "description": "Chet se prononce kh, un son rauque au fond de la gorge, comme le ch de l'allemand Bach.",
+        "note": "En hébreu israélien moderne, c'est le même son que kaf sans point.",
+        "example1": "chat",
+        "example2": "pain",
+        "example3": "heureux"
+      },
+      "tet": {
+        "description": "Tet se prononce t. En hébreu moderne, il sonne comme tav.",
+        "example1": "bon",
+        "example2": "avion",
+        "example3": "petit"
+      },
+      "yod": {
+        "description": "Yod se prononce y, comme dans yoga. Il sert aussi à écrire la voyelle i.",
+        "example1": "main",
+        "example2": "mer",
+        "example3": "maison"
+      },
+      "kaf": {
+        "description": "Kaf se prononce k avec un point à l'intérieur, et kh sans ce point.",
+        "example1": "chien",
+        "example2": "oui",
+        "example3": "a mangé"
+      },
+      "kafSofit": {
+        "description": "C'est kaf à la fin d'un mot. Le kaf final se prononce en général kh.",
+        "note": "Sa valeur est 20, comme kaf. En gematria, cette forme finale peut aussi valoir 500.",
+        "example1": "roi",
+        "example2": "route",
+        "example3": "marche"
+      },
+      "lamed": {
+        "description": "Lamed se prononce l.",
+        "example1": "cœur",
+        "example2": "pain",
+        "example3": "nuit"
+      },
+      "mem": {
+        "description": "Mem se prononce m.",
+        "example1": "eau",
+        "example2": "maman",
+        "example3": "roi"
+      },
+      "memSofit": {
+        "description": "C'est mem à la fin d'un mot. Il se prononce m.",
+        "note": "Sa valeur est 40, comme mem. En gematria, cette forme finale peut aussi valoir 600.",
+        "example1": "paix",
+        "example2": "personne",
+        "example3": "jour"
+      },
+      "nun": {
+        "description": "Nun se prononce n.",
+        "example1": "bougie",
+        "example2": "serpent",
+        "example3": "fleuve"
+      },
+      "nunSofit": {
+        "description": "C'est nun à la fin d'un mot. Il se prononce n.",
+        "note": "Sa valeur est 50, comme nun. En gematria, cette forme finale peut aussi valoir 700.",
+        "example1": "temps",
+        "example2": "oui",
+        "example3": "musicien"
+      },
+      "samekh": {
+        "description": "Samekh se prononce s, le même son que sin, le shin qui dit s.",
+        "example1": "cheval",
+        "example2": "livre",
+        "example3": "argent"
+      },
+      "ayin": {
+        "description": "Ayin est muet en hébreu moderne. On prononce seulement la voyelle écrite avec lui.",
+        "note": "L'hébreu ancien avait ici un son profond dans la gorge.",
+        "example1": "œil",
+        "example2": "oiseau",
+        "example3": "arbre"
+      },
+      "pe": {
+        "description": "Pe se prononce p avec un point à l'intérieur, et f sans ce point.",
+        "example1": "bouche",
+        "example2": "fleur",
+        "example3": "livre"
+      },
+      "peSofit": {
+        "description": "C'est pe à la fin d'un mot. Le pe final se prononce en général f.",
+        "note": "Sa valeur est 80, comme pe. En gematria, cette forme finale peut aussi valoir 800.",
+        "example1": "fin",
+        "example2": "argent",
+        "example3": "nez"
+      },
+      "tsadi": {
+        "description": "Tsadi se prononce ts, comme à la fin de bits.",
+        "example1": "couleur",
+        "example2": "jaune",
+        "example3": "oiseau"
+      },
+      "tsadiSofit": {
+        "description": "C'est tsadi à la fin d'un mot. Il se prononce ts.",
+        "note": "Sa valeur est 90, comme tsadi. En gematria, cette forme finale peut aussi valoir 900.",
+        "example1": "arbre",
+        "example2": "été",
+        "example3": "pays"
+      },
+      "kuf": {
+        "description": "Kuf se prononce k, le même son que kaf avec un point.",
+        "example1": "voix",
+        "example2": "petit",
+        "example3": "froid"
+      },
+      "reish": {
+        "description": "Reish se prononce r. En hébreu israélien, il se forme au fond de la bouche.",
+        "example1": "tête",
+        "example2": "lumière",
+        "example3": "ville"
+      },
+      "shin": {
+        "description": "Shin se prononce sh quand le point est en haut à droite. Avec le point en haut à gauche, c'est sin, et il se prononce s.",
+        "example1": "paix",
+        "example2": "soleil",
+        "example3": "champ"
+      },
+      "tav": {
+        "description": "Tav se prononce t.",
+        "example1": "merci",
+        "example2": "fraise",
+        "example3": "maison"
+      },
+      "gimelGeresh": {
+        "description": "Gimel avec un geresh, le petit signe à côté, se prononce j comme dans jeans.",
+        "example1": "jean",
+        "example2": "jungle",
+        "example3": "girafe"
+      },
+      "zayinGeresh": {
+        "description": "Zayin avec un geresh se prononce zh, le son du milieu de measure, ou le j français.",
+        "example1": "veste",
+        "example2": "beige",
+        "example3": "genre"
+      },
+      "tsadiGeresh": {
+        "description": "Tsadi avec un geresh se prononce ch comme dans chips.",
+        "example1": "frites",
+        "example2": "chèque",
+        "example3": "tchat"
+      }
+    }
   },
   "Social": {
     "github": "GitHub",
