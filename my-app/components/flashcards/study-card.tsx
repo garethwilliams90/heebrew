@@ -3,6 +3,7 @@
 import { Volume2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { FamiliaritySelect } from "@/components/flashcards/familiarity-select";
+import { GenderMark } from "@/components/flashcards/gender-mark";
 import { MarkedText } from "@/components/flashcards/marked-text";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { SoundControls, type SoundChannel, type SoundPrefs } from "@/components/flashcards/sound-toggle";
@@ -75,11 +76,7 @@ export function StudyCardView({
   const hebrewFace = (
     <>
       <div className="flex items-center gap-3">
-        {card.gender ? (
-          <p className="text-xs font-medium tracking-[0.16em] text-emerald-800/70 uppercase">
-            {t(card.gender)}
-          </p>
-        ) : null}
+        {card.gender ? <GenderMark gender={card.gender} /> : null}
         <Button
           type="button"
           variant="outline"

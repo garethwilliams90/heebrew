@@ -18,34 +18,36 @@ function genderFromText(value: string): GrammaticalGender | null {
   return null;
 }
 
-function genderFromValue(value: unknown, depth = 0): GrammaticalGender | null {
-  if (depth > 5 || value == null) {
+// Nakdan's top reading stores morphology as a bitmask, not a label.
+// Bit 21 is masculine and bit 22 is feminine. Both set means the reading is common gender.
+function genderFromMorphCode(code: unknown): GrammaticalGender | null {
+  if (typeof code === "string" && !/^\d+$/.test(code)) {
+    return genderFromText(code);
+  }
+
+  const value = typeof code === "number" ? code : typeof code === "string" ? Number(code) : Number.NaN;
+  if (!Number.isFinite(value) || value < 0 || !Number.isSafeInteger(value)) {
     return null;
   }
-  if (typeof value === "string") {
-    return genderFromText(value);
-  }
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const found = genderFromValue(item, depth + 1);
-      if (found) {
-        return found;
-      }
-    }
+
+  const masculine = Math.floor(value / 2 ** 21) % 2 === 1;
+  const feminine = Math.floor(value / 2 ** 22) % 2 === 1;
+  if (masculine === feminine) {
     return null;
   }
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    for (const key of ["gender", "Gender", "gen", "morph", "feats", "morphology"]) {
-      if (key in record) {
-        const found = genderFromValue(record[key], depth + 1);
-        if (found) {
-          return found;
-        }
-      }
-    }
+  return masculine ? "masculine" : "feminine";
+}
+
+function genderFromTopReading(option: unknown): GrammaticalGender | null {
+  if (!Array.isArray(option)) {
+    return null;
   }
-  return null;
+  const analyses = option[1];
+  const first = Array.isArray(analyses) ? analyses[0] : null;
+  if (!Array.isArray(first)) {
+    return null;
+  }
+  return genderFromMorphCode(first[0]);
 }
 
 function optionWord(option: unknown) {
@@ -89,15 +91,8 @@ export function readNakdan(payload: unknown): NakdanReading {
     const options = Array.isArray(row.options) ? row.options : [];
     const vocalized = optionWord(options[0]) || (typeof row.word === "string" ? row.word : "");
     text += vocalized;
-    if (!gender) {
-      for (const option of options) {
-        gender = genderFromValue(option);
-        if (gender) {
-          break;
-        }
-      }
-      gender ??= genderFromValue(row);
-    }
+    // Only the preferred reading. A later option can be a different word with a different gender.
+    gender ??= genderFromTopReading(options[0]);
   }
 
   return { text: text.trim(), gender };
