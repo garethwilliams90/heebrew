@@ -10,11 +10,18 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Webrew
 
-##This file should be the source of truth for this project and should be reffered to always.
+## Sources of truth
+
+Refer to these two files, and only these, for how the project is defined:
+
+- **AGENTS.md** — tech stack, interface language and direction, how current features behave, and working agreements.
+- **LearningFlow.md** — the conceptual path of the app and it's flow through the levelling system
 
 Webrew is an interactive, modern, fully responsive web app for Hebrew learners at every level, from total beginners to advanced speakers. It should feel easy and intuitive: a sleek UI, clean smooth animations, and a subtle nature theme that shows up in logos, icons, and sound effects.
 
 The app lives in this Next.js project (`my-app`). The repo root README describes it as a Hebrew language learning platform for all levels.
+
+The curriculum in LearningFlow.md does not rewrite Alephbet, flashcards, training, streaks, or auth. Those stay available as they are, although they will be blocked for beginners less than level 3. Curriculum levels (0L, 1, 2) are a content gate. Content is by design fed gradually to the user so flashcards and aleph bet will be unlocked at level 3, training will be unlocked at level 10.
 
 ## Tech stack
 

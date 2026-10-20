@@ -8,7 +8,7 @@ function escapeSsml(text: string) {
     .replaceAll('"', "&quot;");
 }
 
-export async function synthesizeHebrew(text: string) {
+export async function synthesizeHebrew(text: string, phoneme?: string) {
   const key = process.env.AZURE_SPEECH_KEY;
   const region = process.env.AZURE_SPEECH_REGION;
 
@@ -16,7 +16,10 @@ export async function synthesizeHebrew(text: string) {
     throw new Error("Speech is not configured");
   }
 
-  const ssml = `<speak version="1.0" xml:lang="he-IL"><voice name="${VOICE}">${escapeSsml(text)}</voice></speak>`;
+  const spoken = phoneme
+    ? `<phoneme alphabet="ipa" ph="${escapeSsml(phoneme)}">${escapeSsml(text)}</phoneme>`
+    : escapeSsml(text);
+  const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL"><voice name="${VOICE}">${spoken}</voice></speak>`;
   const response = await fetch(
     `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`,
     {

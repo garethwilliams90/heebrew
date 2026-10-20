@@ -1,8 +1,6 @@
 import { getLocale } from "next-intl/server";
-import { HomeDashboard } from "@/components/home/home-dashboard";
-import { WelcomeCard } from "@/components/home/welcome-card";
+import { WelcomeHome } from "@/components/home/welcome-home";
 import { redirect } from "@/i18n/navigation";
-import { loadHomeStats } from "@/lib/flashcards/home-stats";
 
 export default async function Home({
   searchParams,
@@ -19,11 +17,5 @@ export default async function Home({
     redirect({ href: `/decks?${params.toString()}`, locale });
   }
 
-  const stats = await loadHomeStats();
-
-  return (
-    <HomeDashboard stats={stats}>
-      <WelcomeCard />
-    </HomeDashboard>
-  );
+  return <WelcomeHome />;
 }

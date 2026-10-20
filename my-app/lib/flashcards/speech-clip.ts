@@ -1,7 +1,8 @@
 const pending = new Map<string, Promise<HTMLAudioElement | null>>();
 
-export function loadSpeechClip(text: string) {
-  const existing = pending.get(text);
+export function loadSpeechClip(text: string, phoneme?: string) {
+  const key = phoneme ? `${text}\u0000${phoneme}` : text;
+  const existing = pending.get(key);
   if (existing) {
     return existing;
   }
@@ -9,7 +10,7 @@ export function loadSpeechClip(text: string) {
   const request = fetch("/api/speech", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify(phoneme ? { text, phoneme } : { text }),
   })
     .then(async (response) => {
       if (!response.ok) {
@@ -27,6 +28,6 @@ export function loadSpeechClip(text: string) {
     })
     .catch(() => null);
 
-  pending.set(text, request);
+  pending.set(key, request);
   return request;
 }

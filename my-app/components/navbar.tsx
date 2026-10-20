@@ -19,6 +19,7 @@ export function Navbar({
   const alephBet = useTranslations("AlephBet");
   const tabs = [
     { href: "/", label: home("nav") },
+    { href: "/profile", label: home("profile") },
     { href: "/decks", label: flashcards("decks") },
     { href: "/training", label: training("nav") },
     { href: "/aleph-bet", label: alephBet("nav") },
