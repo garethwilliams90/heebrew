@@ -18,7 +18,7 @@ const cardSpring = { type: "spring" as const, bounce: 0.35, visualDuration: 0.22
 const correctMove = { duration: 0.9, times: [0, 0.28, 0.48, 1], ease: "easeInOut" as const };
 const correctTint = "#16a34a";
 const lessonExperience = 6;
-const variedVowels = ["tsere", "segol", "hiriq", "kubutz", "shuruk", "holam", "holamVav"] as const;
+const variedVowels = ["tsere", "segol", "hiriq", "kubutz", "holam", "holamVav"] as const;
 
 export type QuizCard = {
   id: string;
@@ -78,7 +78,6 @@ export function SoundQuiz({
   const settleRef = useRef<() => void>(() => {});
   const round = rounds[index];
   const done = index >= rounds.length;
-  const place = placeExperience(experience);
 
   playRef.current = onPlay;
   learnRef.current = onLearn;
@@ -193,30 +192,7 @@ export function SoundQuiz({
     return () => window.clearTimeout(timer);
   }, [flyingId]);
 
-  function ExperienceTube({ total, label, detail }: { total: number; label: string; detail: string }) {
-  const place = placeExperience(total);
-  const ratio = place.span === 0 ? 0 : (place.into / place.span) * 100;
-
-  return (
-    <div className="pointer-events-none fixed top-28 right-4 bottom-28 z-20 flex w-8 flex-col items-center">
-      <p className="mb-2 text-center text-[10px] font-semibold tracking-wide text-emerald-900">{label}</p>
-      <div className="relative h-full w-full overflow-hidden rounded-full border border-white/80 bg-white/25 shadow-[inset_0_10px_14px_rgba(255,255,255,0.75),inset_0_-10px_14px_rgba(6,78,59,0.28),0_10px_24px_rgba(6,78,59,0.22)]">
-        <div
-          className="absolute inset-x-0 bottom-0 transition-[height] duration-500"
-          style={{
-            height: `${ratio}%`,
-            background: "linear-gradient(180deg, #ecfdf5 0%, #6ee7b7 28%, #10b981 62%, #047857 100%)",
-            boxShadow: "inset 3px 0 6px rgba(255,255,255,0.75), inset -2px 0 4px rgba(6,78,59,0.25)",
-          }}
-        />
-        <div className="pointer-events-none absolute inset-y-2 left-1 w-1 rounded-full bg-white/70" />
-      </div>
-      <p className="mt-2 max-w-16 text-center text-[10px] text-emerald-900/70">{detail}</p>
-    </div>
-  );
-}
-
-function preview(card: QuizCard) {
+  function preview(card: QuizCard) {
     if (!armed.current || flyingId) {
       return;
     }
@@ -229,24 +205,25 @@ function preview(card: QuizCard) {
   }
 
   const answered = round.choices.find((item) => item.id === round.correctId);
+  const question = Math.min(index + 1, rounds.length);
   const ratio = rounds.length === 0 ? 0 : (index / rounds.length) * 100;
 
   return (
-    <div className="flex w-full flex-col items-center gap-6">
-      <div className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2">
+    <div className="flex w-full items-stretch gap-6">
+      <div className="flex min-w-0 flex-1 flex-col items-center gap-6">
+      <div className="w-full px-1">
         <ProgressMeter
-          label={t("quizProgress", { done: index, total: rounds.length })}
-          value={index}
+          label={t("quizProgress", { done: question, total: rounds.length })}
+          value={question}
           max={rounds.length}
           ratio={ratio}
           sections={rounds.length}
-          className="h-2.5 rounded-none"
+          className="h-2.5 rounded-full bg-emerald-950/10"
         />
       </div>
-      <ExperienceTube total={experience} label={xpLabel("levelLabel", { level: place.level })} detail={xpLabel("experienceProgress", { into: place.into, span: place.span })} />
       <div className="text-center">
         <p className="text-base text-emerald-900/80 sm:text-lg">{t("quizPrompt")}</p>
-        <p className="mt-2 text-sm text-emerald-800">{t("quizProgress", { done: index, total: rounds.length })}</p>
+        <p className="mt-2 text-sm text-emerald-800">{t("quizProgress", { done: question, total: rounds.length })}</p>
       </div>
       {learned ? <p className="max-w-md text-center text-sm font-medium text-emerald-800">{t("newWord", { word: learned })}</p> : null}
       <div className="flex flex-col items-center gap-1">
@@ -327,6 +304,28 @@ function preview(card: QuizCard) {
         })}
       </div>
       <span className="sr-only">{answered?.name}</span>
+      </div>
+      <ExperienceTube total={experience} label={xpLabel} />
+    </div>
+  );
+}
+
+function ExperienceTube({ total, label }: { total: number; label: ReturnType<typeof useTranslations<"Flashcards">> }) {
+  const place = placeExperience(total);
+  const ratio = place.span === 0 ? 0 : (place.into / place.span) * 100;
+
+  return (
+    <div className="flex w-12 shrink-0 flex-col items-center self-stretch py-1">
+      <p className="mb-2 text-center text-[10px] font-semibold tracking-wide text-emerald-900">{label("levelLabel", { level: place.level })}</p>
+      <div className="relative min-h-48 w-5 flex-1 overflow-hidden rounded-full bg-emerald-950/10">
+        <motion.div
+          className="absolute inset-x-0 bottom-0 rounded-full bg-emerald-600"
+          initial={false}
+          animate={{ height: `${ratio}%` }}
+          transition={{ type: "spring", bounce: 0.08, visualDuration: 0.5 }}
+        />
+      </div>
+      <p className="mt-2 max-w-14 text-center text-[10px] text-emerald-900/70">{label("experienceProgress", { into: place.into, span: place.span })}</p>
     </div>
   );
 }

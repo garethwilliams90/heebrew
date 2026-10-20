@@ -2,6 +2,7 @@
 
 import { Leaf } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { FlashcardsNavLink } from "@/components/flashcards/flashcards-access";
 import { SocialLinks } from "@/components/social-links";
 import { Link, usePathname } from "@/i18n/navigation";
 
@@ -43,16 +44,18 @@ export function Navbar({
           </Link>
           {tabs.map((tab) => {
             const current = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
+            const className = current ? "text-sm font-medium text-emerald-950" : "text-sm text-emerald-800";
+
+            if (tab.href === "/decks") {
+              return (
+                <FlashcardsNavLink key={tab.href} href="/decks" className={className} current={current}>
+                  {tab.label}
+                </FlashcardsNavLink>
+              );
+            }
 
             return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className={
-                  current ? "text-sm font-medium text-emerald-950" : "text-sm text-emerald-800"
-                }
-                aria-current={current ? "page" : undefined}
-              >
+              <Link key={tab.href} href={tab.href} className={className} aria-current={current ? "page" : undefined}>
                 {tab.label}
               </Link>
             );

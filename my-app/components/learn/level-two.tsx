@@ -16,14 +16,13 @@ const dagForms = [
   { id: "dehg", hebrew: "דֵּג", sound: "dehg", gloss: false },
   { id: "deeg", hebrew: "דִּג", sound: "deeg", gloss: false },
   { id: "dohg", hebrew: "דֹּג", sound: "dohg", gloss: false },
-  { id: "doog", hebrew: "דּוּג", sound: "doog", gloss: false },
 ];
 
 const sofitPairs = [
-  { open: "נ", end: "ן" },
-  { open: "מ", end: "ם" },
-  { open: "כ", end: "ך" },
-  { open: "צ", end: "ץ" },
+  { open: "נ", end: "ן", word: "בֵּן" },
+  { open: "מ", end: "ם", word: "שֵׁם" },
+  { open: "כ", end: "ך", word: "לֵךְ" },
+  { open: "צ", end: "ץ", word: "עֵץ" },
 ];
 
 const letterSpring = { type: "spring" as const, bounce: 0.35, visualDuration: 0.22 };
@@ -63,7 +62,7 @@ export function LevelTwo({
         <p className="mt-3 text-base text-emerald-900/80">{t("sofitIntro")}</p>
         <div className={cn(printFont.className, "mt-8 flex justify-center gap-6 text-7xl text-black")} dir="rtl" lang="he">
           {sofitPairs.map((pair) => (
-            <span key={pair.open}>{pair.open}</span>
+            <SofitHover key={pair.open} pair={pair} face="open" />
           ))}
         </div>
       </div>
@@ -77,15 +76,7 @@ export function LevelTwo({
         <p className="mt-3 text-base text-emerald-900/80">{t("sofitWhen")}</p>
             <div className="mt-8 flex flex-wrap justify-center gap-4" dir="ltr">
           {sofitPairs.map((pair) => (
-            <div
-              key={pair.open}
-              className={cn(printFont.className, "flex items-center gap-3 rounded-3xl bg-white/80 px-5 py-4 text-6xl text-black")}
-              lang="he"
-            >
-              <span>{pair.open}</span>
-              <span className="text-2xl text-emerald-800">→</span>
-              <span className="text-blue-600">{pair.end}</span>
-            </div>
+            <SofitHover key={pair.open} pair={pair} face="pair" />
           ))}
         </div>
       </div>
@@ -156,6 +147,47 @@ function FishLesson() {
         ))}
       </div>
     </div>
+  );
+}
+
+function SofitHover({
+  pair,
+  face,
+}: {
+  pair: (typeof sofitPairs)[number];
+  face: "open" | "pair";
+}) {
+  return (
+    <motion.button
+      type="button"
+      className={cn(
+        printFont.className,
+        "group/sofit relative flex min-w-24 flex-col items-center justify-center rounded-3xl bg-white/80 px-5 py-4 text-black",
+        face === "open" ? "text-7xl" : "text-6xl",
+      )}
+      lang="he"
+      dir="ltr"
+      onHoverStart={() => void playWord({ text: pair.word })}
+      onPointerEnter={() => void playWord({ text: pair.word })}
+      onFocus={() => void playWord({ text: pair.word })}
+      onClick={() => void playWord({ text: pair.word })}
+    >
+      {face === "open" ? (
+        <span>{pair.open}</span>
+      ) : (
+        <span className="flex items-center gap-3">
+          <span>{pair.open}</span>
+          <span className="text-2xl text-emerald-800">→</span>
+          <span className="text-blue-600">{pair.end}</span>
+        </span>
+      )}
+      <span
+        className="mt-2 hidden text-5xl text-emerald-950 group-hover/sofit:block group-focus/sofit:block"
+        dir="rtl"
+      >
+        {pair.word}
+      </span>
+    </motion.button>
   );
 }
 

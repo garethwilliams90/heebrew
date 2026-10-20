@@ -21,7 +21,7 @@ export function ProgressMeter({
 
   return (
     <div
-      className={`relative ${className ?? "h-1.5 overflow-hidden rounded-full bg-emerald-950/10"}`}
+      className={`relative ${className ?? "h-1.5 rounded-full bg-emerald-950/10"}`}
       role="meter"
       aria-label={label}
       aria-valuemin={0}
@@ -37,20 +37,14 @@ export function ProgressMeter({
         />
       </div>
       {marks > 0
-        ? Array.from({ length: marks }, (_, index) => {
-            const last = index + 1 === marks;
-            return (
-              <span
-                key={index}
-                aria-hidden
-                className="absolute top-1/2 size-2.5 rounded-full bg-blue-500 ring-2 ring-[#f3f6f1]"
-                style={{
-                  left: `${((index + 1) / marks) * 100}%`,
-                  transform: last ? "translate(-100%, -50%)" : "translate(-50%, -50%)",
-                }}
-              />
-            );
-          })
+        ? Array.from({ length: marks }, (_, index) => (
+            <span
+              key={index}
+              aria-hidden
+              className="pointer-events-none absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500 ring-2 ring-[#f3f6f1]"
+              style={{ left: `${((index + 0.5) / marks) * 100}%` }}
+            />
+          ))
         : null}
     </div>
   );

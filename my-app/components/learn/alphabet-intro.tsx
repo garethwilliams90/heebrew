@@ -26,7 +26,9 @@ import { markLearningStarted } from "@/lib/learn/started";
 import { DevLevelControl, useLocalhost } from "@/components/learn/dev-level";
 import { cursiveFont } from "@/components/alephbet/cursive-font";
 import { useRouter } from "@/i18n/navigation";
-import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
+import { FormDialog } from "@/components/flashcards/form-dialog";
+import { markFlashcardsUnlocked } from "@/lib/learn/flashcards-access";
+import { ArrowLeftIcon, ArrowRightIcon, XIcon } from "lucide-react";
 
 const alphabet = alphabetLetters();
 const firstFive = alphabet.slice(0, 5);
@@ -48,6 +50,7 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   const [step, setStep] = useState(initialStep);
   const [direction, setDirection] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const [passed, setPassed] = useState(false);
   const [speechError, setSpeechError] = useState(false);
   const [cursive, setCursive] = useState(false);
@@ -194,7 +197,41 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
     step === 3 ? t("patachBody") : step === 2 ? t("nikudBody") : step === 1 ? t("introBody") : t("introBody");
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8">
+    <main className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8">
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          variant="ghost"
+          className="size-11 rounded-full bg-white/90 p-0 shadow-sm"
+          aria-label={t("closeLevel")}
+          onClick={() => setLeaveOpen(true)}
+        >
+          <XIcon className="size-6" />
+        </Button>
+      </div>
+      {leaveOpen ? (
+        <FormDialog label={t("leaveTitle")} onClose={() => setLeaveOpen(false)} className="w-full max-w-md">
+          <div className="rounded-3xl bg-white p-6 text-center shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]">
+            <h2 className="text-xl font-semibold text-emerald-950">{t("leaveTitle")}</h2>
+            <p className="mt-3 text-sm text-emerald-900/80">{t("leaveBody")}</p>
+            <div className="mt-6 flex justify-center gap-3">
+              <Button type="button" variant="outline" onClick={() => setLeaveOpen(false)}>
+                {t("leaveStay")}
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  setLeaveOpen(false);
+                  router.push("/");
+                }}
+              >
+                {t("leaveConfirm")}
+              </Button>
+            </div>
+          </div>
+        </FormDialog>
+      ) : null}
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         <AnimatePresence mode="wait" custom={direction} initial={false}>
           <motion.div
@@ -291,8 +328,24 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
             {step === 9 ? <LevelTwo part="sofitPairs" onPass={() => go(10)} /> : null}
             {step === 10 ? <LevelTwo part="sofitQuiz" onPass={() => go(11)} /> : null}
             {step === 11 ? <LevelTwo part="vowels" onPass={() => go(12)} /> : null}
-            {step === 12 && !passed ? <LevelTwo part="words" onPass={() => setPassed(true)} /> : null}
-            {step === 12 && passed ? <p className="max-w-xl text-center text-lg text-emerald-950">{t("wordsDone")}</p> : null}
+            {step === 12 && !passed ? (
+              <LevelTwo
+                part="words"
+                onPass={() => {
+                  markFlashcardsUnlocked();
+                  setPassed(true);
+                }}
+              />
+            ) : null}
+            {step === 12 && passed ? (
+              <div className="flex max-w-xl flex-col items-center text-center">
+                <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("flashcardsUnlockedTitle")}</h1>
+                <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("flashcardsUnlockedBody")}</p>
+                <Link href="/decks" className={cn(buttonVariants(), "mt-6 h-12 px-6")}>
+                  {t("studyFlashcards")}
+                </Link>
+              </div>
+            ) : null}
             {speechError ? <p className="text-center text-sm text-emerald-900/70">{t("speechError")}</p> : null}
           </motion.div>
         </AnimatePresence>
