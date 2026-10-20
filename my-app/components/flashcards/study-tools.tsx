@@ -59,16 +59,22 @@ export function useCardDisplay() {
 
 const menuSpring = { type: "spring" as const, bounce: 0.12, visualDuration: 0.28 };
 
+export type StudyToolId = "word" | "general" | "sentence" | "nikud" | "example";
+
+const allTools: StudyToolId[] = ["word", "general", "sentence", "nikud", "example"];
+
 export function StudyTools({
   soundPrefs,
   onToggleSound,
-  display,
+  display = DISPLAY_DEFAULTS,
   onToggleDisplay,
+  tools = allTools,
 }: {
   soundPrefs: SoundPrefs;
   onToggleSound: (channel: SoundChannel) => void;
-  display: CardDisplay;
-  onToggleDisplay: (key: keyof CardDisplay) => void;
+  display?: CardDisplay;
+  onToggleDisplay?: (key: keyof CardDisplay) => void;
+  tools?: readonly StudyToolId[];
 }) {
   const t = useTranslations("Flashcards");
   const [open, setOpen] = useState(false);
@@ -109,7 +115,7 @@ export function StudyTools({
     }
   }
 
-  const tools = [
+  const toolList = [
     {
       id: "word",
       enabled: soundPrefs.word,
@@ -161,7 +167,7 @@ export function StudyTools({
         if (soundPrefs.general) {
           playToggle(display.nikud);
         }
-        onToggleDisplay("nikud");
+        onToggleDisplay?.("nikud");
       },
     },
     {
@@ -175,10 +181,10 @@ export function StudyTools({
         if (soundPrefs.general) {
           playToggle(display.example);
         }
-        onToggleDisplay("example");
+        onToggleDisplay?.("example");
       },
     },
-  ];
+  ].filter((tool) => (tools as readonly string[]).includes(tool.id));
 
   return (
     <div ref={rootRef} className="flex items-center">
@@ -210,7 +216,7 @@ export function StudyTools({
             style={{ overflow: "hidden" }}
           >
             <div className="flex items-center gap-1 pl-1.5" role="group" aria-label={t("cardOptions")}>
-              {tools.map((tool) => {
+              {toolList.map((tool) => {
                 const Icon = tool.icon;
                 return (
                   <Tooltip key={tool.id}>

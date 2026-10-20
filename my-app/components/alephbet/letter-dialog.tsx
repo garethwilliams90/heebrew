@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { Volume2, X } from "lucide-react";
+import { Pencil, Volume2, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { cn } from "cn";
 import { cursiveFont } from "@/components/alephbet/cursive-font";
+import { LetterDraw } from "@/components/alephbet/letter-draw";
+import { printFont } from "@/components/alephbet/print-font";
 import { cardShadow, letterLayoutId, letterTransition } from "@/components/alephbet/letter-card";
+import { flipSpring } from "@/components/flashcards/swipe-card";
 import { MasteryRing } from "@/components/flashcards/mastery-ring";
 import { Button } from "@/components/ui/button";
 import { highlightLetter, type LetterFact } from "@/lib/alephbet/letter-info";
@@ -32,6 +35,7 @@ export function LetterDialog({
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const [cursive, setCursive] = useState(cursiveAtOpen);
+  const [drawing, setDrawing] = useState(false);
   const noteKey = `facts.${fact.id}.note`;
   const note = t.has(noteKey) ? t(noteKey) : null;
   const meta = [
@@ -45,6 +49,10 @@ export function LetterDialog({
   useEffect(() => {
     setCursive(cursiveAtOpen);
   }, [cursiveAtOpen]);
+
+  useEffect(() => {
+    setDrawing(false);
+  }, [fact.letter]);
 
   useEffect(() => {
     panelRef.current?.focus({ preventScroll: true });
@@ -79,7 +87,23 @@ export function LetterDialog({
       style={{ borderRadius: 28, boxShadow: cardShadow }}
       className="pointer-events-auto w-full max-w-xl cursor-auto bg-card outline-none"
     >
-      <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto px-5 py-5 sm:px-8 sm:py-6" style={{ borderRadius: 28 }}>
+      <div className="perspective-distant">
+        <motion.div
+          className="relative transform-3d"
+          animate={{ rotateY: drawing ? 180 : 0 }}
+          transition={flipSpring}
+          style={{ transformStyle: "preserve-3d" }}
+        >
+      <div
+        className={cn(
+          "px-5 py-5 backface-hidden sm:px-8 sm:py-6",
+          drawing
+            ? "pointer-events-none absolute inset-0 overflow-y-auto"
+            : "relative max-h-[calc(100dvh-2rem)] overflow-y-auto",
+        )}
+        style={{ borderRadius: 28 }}
+        aria-hidden={drawing}
+      >
         <div className="sticky top-0 z-10 -mx-5 flex items-center justify-between gap-3 bg-card px-5 py-1 sm:-mx-8 sm:px-8">
           <MasteryRing level={mastery} />
           <div className="flex gap-2">
@@ -111,7 +135,9 @@ export function LetterDialog({
               transition={glyphFade}
               className={cn(
                 "block leading-none",
-                cursive ? cn("text-8xl sm:text-9xl", cursiveFont.className) : "text-8xl font-bold sm:text-9xl",
+                cursive
+                  ? cn("text-8xl sm:text-9xl", cursiveFont.className)
+                  : cn("text-8xl font-bold sm:text-9xl", printFont.className),
               )}
             >
               {fact.letter}
@@ -127,12 +153,16 @@ export function LetterDialog({
           {fact.spoken}
         </p>
 
-        <div className="mt-4 flex justify-center gap-2">
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Button type="button" variant={cursive ? "outline" : "default"} aria-pressed={!cursive} onClick={() => setCursive(false)}>
             {t("printScript")}
           </Button>
           <Button type="button" variant={cursive ? "default" : "outline"} aria-pressed={cursive} onClick={() => setCursive(true)}>
             {t("cursiveScript")}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => setDrawing(true)}>
+            <Pencil />
+            {t("drawLetter")}
           </Button>
         </div>
 
@@ -166,6 +196,32 @@ export function LetterDialog({
             </li>
           ))}
         </ul>
+      </div>
+      <div
+        className={cn(
+          "flex flex-col overflow-hidden bg-card px-5 py-5 backface-hidden transform-[rotateY(180deg)] sm:px-8 sm:py-6",
+          drawing ? "relative min-h-[26rem]" : "absolute inset-0",
+        )}
+        style={{ borderRadius: 28 }}
+        aria-hidden={!drawing}
+      >
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <Button type="button" variant="outline" onClick={() => setDrawing(false)}>
+            {t("backToLetter")}
+          </Button>
+          <Button type="button" variant="outline" size="icon" aria-label={t("closeLetter")} onClick={onClose}>
+            <X />
+          </Button>
+        </div>
+        {drawing ? (
+          <LetterDraw
+            key={`${fact.letter}-${cursive ? "cursive" : "print"}`}
+            letter={fact.letter}
+            fontClassName={cursive ? cursiveFont.className : cn("font-bold", printFont.className)}
+          />
+        ) : null}
+      </div>
+        </motion.div>
       </div>
     </motion.div>
   );

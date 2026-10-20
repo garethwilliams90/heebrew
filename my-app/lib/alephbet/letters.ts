@@ -3,6 +3,9 @@ import { letterCatalog } from "@/lib/alephbet/letter-info";
 // One progress row per letter, stored beside the vocabulary decks.
 export const letterDeckId = "aleph-bet";
 
+export const LETTER_STUDY_DEFAULT = 10;
+export const LETTER_STUDY_MAX = 20;
+
 export const spokenNames: Record<string, string> = Object.fromEntries(
   letterCatalog.map((item) => [item.letter, item.spoken]),
 );
@@ -18,6 +21,21 @@ export type StudyLetter = {
 
 export function letterList(): StudyLetter[] {
   return letterCatalog.map((item) => ({ letter: item.letter, name: item.name }));
+}
+
+// The least practiced letters come first, then the slice is shuffled so the order changes.
+export function takeForPractice<T extends { id: string }>(
+  items: readonly T[],
+  mastery: Record<string, number>,
+  count: number,
+): T[] {
+  const weakest = [...items]
+    .map((item, order) => ({ item, order, level: mastery[item.id] ?? 0 }))
+    .sort((left, right) => left.level - right.level || left.order - right.order)
+    .slice(0, count)
+    .map((entry) => entry.item);
+
+  return shuffleLetters(weakest);
 }
 
 export function shuffleLetters<T>(items: readonly T[]): T[] {
