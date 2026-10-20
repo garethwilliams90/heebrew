@@ -90,6 +90,34 @@ async function readExperience(): Promise<{ signedIn: boolean; experience: number
   };
 }
 
+export function experienceForLevel(level: number) {
+  const target = Math.max(1, Math.floor(level));
+  let total = 0;
+  for (let current = 1; current < target; current += 1) {
+    total += spanForLevel(current);
+  }
+  return total;
+}
+
+export async function setExperience(experience: number): Promise<"ok" | "signed-out" | "error"> {
+  experienceLoad = null;
+  const next = Math.max(0, Math.floor(experience));
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    writeLocalExperience(next);
+    return "signed-out";
+  }
+
+  const { error: writeError } = await supabase.from("learner_experience").upsert(
+    { user_id: data.user.id, experience: next },
+    { onConflict: "user_id" },
+  );
+
+  return writeError ? "error" : "ok";
+}
+
 export async function addExperience(gained: number): Promise<"ok" | "signed-out" | "error"> {
   experienceLoad = null;
 

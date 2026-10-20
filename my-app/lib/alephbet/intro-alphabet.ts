@@ -80,7 +80,7 @@ export function isLessonPhoneme(value: string) {
 
 export type SpeechCue = {
   text: string;
-  phoneme: string;
+  phoneme?: string;
 };
 
 export function consonantCue(letter: LetterFact): SpeechCue {

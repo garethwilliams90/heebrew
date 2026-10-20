@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import type { BuiltinDeckId } from "@/lib/flashcards/builtin";
 import type { CardTally, CustomDeck, DeckEdit } from "@/lib/flashcards/catalog";
 import { starterDeck } from "@/lib/flashcards/starter-deck";
+import { KnownWordsDeckCard } from "@/components/learn/known-words-study";
 
 const hebrewFromScratchCount = 4299;
 
@@ -64,6 +65,7 @@ export async function DeckPicker({
         </div>
       </div>
       <div className="mt-8 grid w-full gap-4 sm:grid-cols-2">
+        <KnownWordsDeckCard />
         {[...builtin, ...custom].map((deck) => (
           <article
             key={deck.id}

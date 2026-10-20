@@ -9,6 +9,7 @@ import { mergeDeck } from "@/lib/flashcards/merge";
 import type { Flashcard } from "@/lib/flashcards/types";
 import { starterDeck } from "@/lib/flashcards/starter-deck";
 import { parseStudyCount, parseStudyMode } from "@/lib/flashcards/study-plan";
+import { KnownWordsStudy } from "@/components/learn/known-words-study";
 
 export default async function DecksPage({
   searchParams,
@@ -17,6 +18,9 @@ export default async function DecksPage({
 }) {
   const t = await getTranslations("Flashcards");
   const { deck, view, mode, count } = await searchParams;
+  if (deck === "known-words") {
+    return <KnownWordsStudy view={view} mode={mode} count={count} />;
+  }
   const library = await loadLibrary(deck);
   const active = await activeDeck(deck, library, t);
 

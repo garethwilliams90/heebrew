@@ -64,9 +64,15 @@ The learner knows the letters and practices the aleph-bet as flashcards, limited
 
 ## Level 2
 
-The learner forms and reads basic pointed Hebrew: one-syllable words. The Level 2 word set starts with גג, דג, עץ, שם, פה, and את. The rest of that list is still to be completed, and should not be invented here.
+After level 1, the learner reads real two-letter words. The screens are:
 
-For each word, the learner says it, or marks by hand whether they got it right. The full list must be practiced at 85% or better. Failed attempts can be retaken. Passing unlocks Level 3.
+- **2.0** — what this level covers: basic words, reading, vowels, and final letter shapes
+- **2.1** — דָּג means fish. Other nikud on the same letters change the sound: dag, dehg, deeg, dohg, doog
+- **2.2** — nun, mem, kaf, and tsadi, then their final shapes side by side, then a short quiz with words such as עֵץ, שֵׁם, and בֵּן
+- **2.3** — vowels are nikud, and a few letters can be silent
+- **2.4** — a five-word quiz. Each word is saved to the Known words flashcard deck
+
+A list of 50 pointed two-letter words is the bank for this level. Shva is not used in these quizzes.
 
 ## Level 3
 
