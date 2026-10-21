@@ -4,9 +4,10 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
-import useSound from "use-sound";
+import { useCue } from "@/components/settings/use-cue";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
+import { HeartRow, HintButton } from "@/components/learn/practice-hearts";
 import { BlueNikud, PointedLetter } from "@/components/learn/pointed-letter";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { Button } from "@/components/ui/button";
@@ -39,14 +40,16 @@ export type QuizRound = {
 
 export function LetterQuiz({
   letters,
+  pool,
   onPlay,
   onPass,
 }: {
   letters: readonly LetterFact[];
+  pool?: readonly LetterFact[];
   onPlay: (cue: SpeechCue) => void | Promise<void>;
   onPass: () => void;
 }) {
-  const [rounds] = useState(() => letterRounds(letters));
+  const [rounds] = useState(() => letterRounds(letters, pool ?? letters));
   return <SoundQuiz rounds={rounds} onPlay={onPlay} onPass={onPass} />;
 }
 
@@ -55,11 +58,15 @@ export function SoundQuiz({
   onPlay,
   onPass,
   onLearn,
+  dense = false,
+  prompt,
 }: {
   rounds: QuizRound[];
   onPlay: (cue: SpeechCue) => void | Promise<void>;
   onPass: () => void;
   onLearn?: (card: QuizCard) => void;
+  dense?: boolean;
+  prompt?: string;
 }) {
   const t = useTranslations("Learn");
   const [index, setIndex] = useState(0);
@@ -67,13 +74,17 @@ export function SoundQuiz({
   const [flyingId, setFlyingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [replayDown, setReplayDown] = useState(false);
-  const [playWrong] = useSound("/sounds/samples/disable-sound.mp3", { volume: 0.5, interrupt: true });
-  const [playSuccess] = useSound("/sounds/samples/success.mp3", { volume: 0.55, interrupt: true });
+  const [halves, setHalves] = useState(10);
+  const [hidden, setHidden] = useState<string[]>([]);
+  const [failed, setFailed] = useState(false);
+  const playWrong = useCue("/sounds/samples/disable-sound.mp3");
+  const playSuccess = useCue("/sounds/samples/success.mp3", 0.55);
   const playRef = useRef(onPlay);
   const learnRef = useRef(onLearn);
   const armed = useRef(false);
   const armTimer = useRef<number | null>(null);
   const settled = useRef(false);
+  const answering = useRef(false);
   const settleRef = useRef<() => void>(() => {});
   const round = rounds[index];
   const done = index >= rounds.length;
@@ -114,12 +125,13 @@ export function SoundQuiz({
         return;
       }
 
-      if (event.type === "keyup" || flyingId) {
+      if (event.type === "keyup" || flyingId || failed) {
         return;
       }
 
+      const visible = round.choices.filter((item) => !hidden.includes(item.id));
       const choice = event.key === "1" ? 0 : event.key === "2" ? 1 : event.key === "3" ? 2 : -1;
-      const card = choice < 0 ? undefined : round.choices[choice];
+      const card = choice < 0 ? undefined : visible[choice];
       if (!card) {
         return;
       }
@@ -134,23 +146,43 @@ export function SoundQuiz({
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKey);
     };
-  }, [round, flyingId]);
+  }, [round, flyingId, failed, hidden]);
 
-  function choose(card: QuizCard) {
-    if (!round || done || flyingId) {
+  function loseHeart(cost: number) {
+    setHalves((current) => {
+      const next = Math.max(0, current - cost);
+      if (next <= 0) {
+        setFailed(true);
+      }
+      return next;
+    });
+  }
+
+  async function choose(card: QuizCard) {
+    if (!round || done || flyingId || failed || answering.current) {
       return;
+    }
+
+    answering.current = true;
+    try {
+      await Promise.resolve(playRef.current(card.cue));
+    } catch {
+      // A missing clip still counts as an answer.
     }
 
     const correct = round.choices.find((item) => item.id === round.correctId);
     if (!correct || card.id !== correct.id) {
       playWrong();
       setWrongId(card.id);
-      window.setTimeout(() => setWrongId((value) => (value === card.id ? null : value)), 450);
+      loseHeart(2);
+      window.setTimeout(() => {
+        setWrongId((value) => (value === card.id ? null : value));
+        answering.current = false;
+      }, 450);
       return;
     }
 
     playSuccess();
-    void addExperience(lessonExperience);
     learnRef.current?.(card);
     if (onLearn) {
       setToast(t("newWordToast"));
@@ -158,7 +190,35 @@ export function SoundQuiz({
     }
     settled.current = false;
     setWrongId(null);
+    setHidden([]);
     setFlyingId(card.id);
+    answering.current = false;
+  }
+
+  function hint() {
+    if (!round || failed || flyingId || halves < 1) {
+      return;
+    }
+
+    const wrongs = round.choices.filter((item) => item.id !== round.correctId && !hidden.includes(item.id));
+    const pick = wrongs[Math.floor(Math.random() * wrongs.length)];
+    if (!pick) {
+      return;
+    }
+
+    setHidden((current) => [...current, pick.id]);
+    loseHeart(1);
+  }
+
+  function retry() {
+    answering.current = false;
+    settled.current = false;
+    setHalves(10);
+    setHidden([]);
+    setFailed(false);
+    setWrongId(null);
+    setFlyingId(null);
+    setIndex(0);
   }
 
   function settle() {
@@ -170,6 +230,7 @@ export function SoundQuiz({
     const next = index + 1;
     setFlyingId(null);
     if (next >= rounds.length) {
+      void addExperience(rounds.length * lessonExperience);
       onPass();
     }
     setIndex(next);
@@ -186,19 +247,13 @@ export function SoundQuiz({
     return () => window.clearTimeout(timer);
   }, [flyingId]);
 
-  function preview(card: QuizCard) {
-    if (!armed.current || flyingId) {
-      return;
-    }
-
-    void onPlay(card.cue);
-  }
-
   if (done || !round) {
     return null;
   }
 
   const answered = round.choices.find((item) => item.id === round.correctId);
+  const visible = round.choices.filter((item) => !hidden.includes(item.id));
+  const wrongLeft = round.choices.filter((item) => item.id !== round.correctId && !hidden.includes(item.id)).length;
   const question = Math.min(index + 1, rounds.length);
   const ratio = rounds.length === 0 ? 0 : ((index + 0.5) / rounds.length) * 100;
 
@@ -215,10 +270,19 @@ export function SoundQuiz({
           className="h-2.5 rounded-full bg-emerald-950/10"
         />
       </div>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <HeartRow hearts={halves / 2} />
+        <HintButton disabled={failed || halves < 1 || wrongLeft < 1} onHint={hint} />
+      </div>
       <div className="text-center">
-        <p className="text-base text-emerald-900/80 sm:text-lg">{t("quizPrompt")}</p>
+        <p className="text-base text-emerald-900/80 sm:text-lg">{failed ? t("outOfHearts") : (prompt ?? t("quizPrompt"))}</p>
         <p className="mt-2 text-sm text-emerald-800">{t("quizProgress", { done: question, total: rounds.length })}</p>
       </div>
+      {failed ? (
+        <Button type="button" className="h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" onClick={retry}>
+          {t("tryAgain")}
+        </Button>
+      ) : null}
       {toast
         ? createPortal(
             <p className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-emerald-800 px-4 py-2 text-sm font-medium text-white shadow-lg">
@@ -251,7 +315,9 @@ export function SoundQuiz({
         </motion.span>
       </div>
       <div className="flex flex-wrap items-start justify-center gap-4">
-        {round.choices.map((card, choice) => {
+        {failed
+          ? null
+          : visible.map((card, choice) => {
           const flying = flyingId === card.id;
 
           return (
@@ -273,7 +339,9 @@ export function SoundQuiz({
                 }}
                 className={cn(
                   printFont.className,
-                  "relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/10 bg-white/90 text-4xl text-black shadow-[0_18px_40px_-28px_rgba(6,78,59,0.8)] outline-none focus-visible:ring-3 focus-visible:ring-emerald-700/30 sm:h-32 sm:w-32 sm:text-5xl",
+                  dense
+                    ? "relative flex min-h-28 w-44 cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/10 bg-white/90 px-3 py-4 text-lg leading-snug text-black shadow-[0_18px_40px_-28px_rgba(6,78,59,0.8)] outline-none focus-visible:ring-3 focus-visible:ring-emerald-700/30 sm:w-52"
+                    : "relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/10 bg-white/90 text-4xl text-black shadow-[0_18px_40px_-28px_rgba(6,78,59,0.8)] outline-none focus-visible:ring-3 focus-visible:ring-emerald-700/30 sm:h-32 sm:w-32 sm:text-5xl",
                   wrongId === card.id && "border-red-300 bg-red-50 text-red-700",
                 )}
                 style={flying ? { willChange: "transform" } : undefined}
@@ -281,9 +349,7 @@ export function SoundQuiz({
                 lang="he"
                 aria-keyshortcuts={String(choice + 1)}
                 aria-label={t("quizChoice", { number: choice + 1, name: card.name })}
-                onPointerEnter={() => preview(card)}
-                onFocus={() => preview(card)}
-                onClick={() => choose(card)}
+                onClick={() => void choose(card)}
               >
                 {card.mark || card.tail ? (
                   <PointedLetter letter={card.glyph} mark={card.mark} tail={card.tail} />
@@ -345,13 +411,14 @@ function holdOptions(
   };
 }
 
-function letterRounds(letters: readonly LetterFact[]): QuizRound[] {
-  return shuffleLetters(letters)
-    .slice(0, 6)
-    .map((letter) => {
+function letterRounds(letters: readonly LetterFact[], pool: readonly LetterFact[]): QuizRound[] {
+  const base = shuffleLetters(letters);
+  const prompts = base.length >= 6 ? base.slice(0, 6) : Array.from({ length: 6 }, (_, index) => base[index % base.length]);
+
+  return prompts.map((letter, promptIndex) => {
     const nikudId = Math.random() < 0.3 ? variedVowels[Math.floor(Math.random() * variedVowels.length)] : "patach";
     const nikud = nikudCycle.find((item) => item.id === nikudId) ?? nikudCycle[1];
-    const others = shuffleLetters(letters.filter((item) => item.id !== letter.id)).slice(0, 2);
+    const others = shuffleLetters(pool.filter((item) => item.id !== letter.id)).slice(0, 2);
     const choices = shuffleLetters([letter, ...others]).map((item) => ({
       id: item.id,
       name: item.name,
@@ -362,7 +429,7 @@ function letterRounds(letters: readonly LetterFact[]): QuizRound[] {
     }));
 
     return {
-      id: `${letter.id}-${nikud.id}`,
+      id: `${letter.id}-${nikud.id}-${promptIndex}`,
       correctId: letter.id,
       prompt: nikudCue(letter, nikud.id),
       choices,

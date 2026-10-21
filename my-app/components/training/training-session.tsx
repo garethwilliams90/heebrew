@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import useSound from "use-sound";
+import { useCue } from "@/components/settings/use-cue";
 import { AccountNotice } from "@/components/flashcards/account-notice";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { readSoundPrefs } from "@/components/flashcards/sound-toggle";
@@ -32,8 +32,8 @@ export function TrainingSession() {
   const [reward, setReward] = useState<{ from: number; to: number } | null>(null);
   const experienceRef = useRef(0);
   const rewardedRef = useRef(false);
-  const [playCorrect] = useSound("/sounds/samples/pop-up-on.mp3", { volume: 0.5, interrupt: true });
-  const [playWrong] = useSound("/sounds/samples/pop-down.mp3", { volume: 0.5, interrupt: true });
+  const playCorrect = useCue("/sounds/samples/pop-up-on.mp3");
+  const playWrong = useCue("/sounds/samples/pop-down.mp3");
 
   useEffect(() => {
     let cancel = false;

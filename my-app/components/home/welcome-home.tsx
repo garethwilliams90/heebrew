@@ -22,7 +22,7 @@ export function WelcomeHome() {
   }, []);
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-12 px-4 py-16">
+    <main className="flex min-h-0 flex-1 flex-col items-center gap-12 overflow-y-auto py-6">
       <WelcomeTitle label={t("welcome")} hebrew={t("welcomeHebrew")} />
       {started ? (
         <LevelPath />

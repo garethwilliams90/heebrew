@@ -4,7 +4,7 @@ This file is the source of truth for the conceptual path a learner takes through
 
 [AGENTS.md](AGENTS.md) stays the source of truth for the tech stack, interface language and direction, how current features behave, and working agreements.
 
-The curriculum does not rewrite Alephbet, flashcards, training, streaks, or auth. Those stay available as they are. A curriculum level opens when the learner completes the previous one. Experience still records practice, and it does not open levels or features. Flashcards and aleph bet unlock at level 3. Training unlocks at level 10.
+The curriculum does not rewrite Alephbet, flashcards, training, streaks, or auth. Those stay available as they are. A curriculum level opens when the learner completes the previous one. Experience still records practice, and it does not open levels or features. Aleph bet unlocks at level 3. Flashcards unlock at level 5, once level 4 is complete. Training unlocks at level 15, after level 14.
 
 ## Scope
 
@@ -12,7 +12,7 @@ Hebrew from scratch. A learner sees only content for their current curriculum le
 
 Passing a level means completing that level's required set at the accuracy named below. A failed attempt can be retaken. A fail does not trap the learner on Level 0.3, Level 1, or Level 2.
 
-The "already know some Hebrew" assessment, and every level after 2, come later and are not specified here.
+The "already know some Hebrew" assessment comes later and is not specified here. Levels 3 through 14 are specified below. Level 1 and level 2 stay as they are.
 
 ## Start
 
@@ -26,7 +26,7 @@ On a first visit, the home entry offers two actions:
 A guided introduction. The learner moves forward only by pressing Next. The screens are labelled like a game level:
 
 - **1.0** — the alphabet introduction
-- **1.1** — one letter at a time. The learner hears that letter's consonant, then says it back with ah. A voice check has to accept the sound before the next letter. The card shows only the letter.
+- **1.1** — gimel first, with five different vowels: gah, geh, gee, goo, and goh. The card shows gimel with that nikud in blue, explains the sound, and plays the consonant, then the syllable. The learner says it back. A match has to be that vowel, so gaw does not pass for gah. Next stays off until the sound is accepted. After those five, each remaining letter appears once, with one of those vowels and not silent shva.
 - **1.2** — the first five letters. Clicking a letter changes its nikud and plays the new sound.
 - **1.3** — all 22 letters with the patach mark visible
 - **1.4** — a listening quiz. Each sound offers three letter cards.
@@ -42,9 +42,9 @@ Next focuses the first five letters and centers them. The screen explains that n
 
 Next focuses on ד. Each vowel from the set below appears on its own card. Pressing a card plays that syllable: dah, deh, d (consonant only), dee, doo, doh.
 
-### 0.3 Ah on every letter
+### 0.3 Say the vowel
 
-Next opens a voice check. Each letter is shown with only the "ah" vowel: dah, bah, khah, and the rest of the alphabet. Passing every letter unlocks Level 1.
+Next opens a voice check on gimel. The five sounds are gah, geh, gee, goo, and goh, one nikud each. Passing those five, then one vowel on every other letter, continues the level. Silent shva is not in this check.
 
 ### 1.5 Drag the vowel
 
@@ -79,6 +79,32 @@ After level 1, the learner reads real two-letter words. The screens are:
 
 A list of 50 pointed two-letter words is the bank for this level. Shva is not used in these quizzes.
 
-## Level 3
+## Levels 3 through 11
 
-Not specified yet.
+After level 2, each level introduces the next two letters, in aleph-bet order, starting at vav. Level 1 already focuses on the first five letters (א through ה). Level 11 is tav on its own.
+
+| Level | Letters |
+| --- | --- |
+| 3 | ו ז |
+| 4 | ח ט |
+| 5 | י כ |
+| 6 | ל מ |
+| 7 | נ ס |
+| 8 | ע פ |
+| 9 | צ ק |
+| 10 | ר ש |
+| 11 | ת |
+
+Each letter has an intro slide and one simple pointed word. Kaf, mem, nun, pe, and tsadi also show one final-form word. A practice quiz then uses only that level's letters. Passing the level opens the next one.
+
+## Level 12
+
+Fifty pointed three-letter words. The learner hears the word, then chooses among three spellings that use the same letters and different nikud. Shva is not a choice. Hovering a choice does not play it.
+
+## Level 13
+
+Forty basic sentences built on את ה and של. של varies across שלי, שלך, שלו, שלה, שלנו, שלכם, and שלכן. An example of the shape is הוא אוכל את הדג שלי, or זה הכלב שלנו.
+
+## Level 14
+
+Present-tense verbs that take את, such as אוהב, אוהבת, שותה, and אוכל, in the same sentence frame as level 13. Verbs with ל, על, and מ come later.

@@ -6,27 +6,28 @@ import { cn } from "cn";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "@/i18n/navigation";
 import { curriculumLevel } from "@/lib/learn/curriculum";
+import { flashcardsUnlocked } from "@/lib/learn/flashcards-access";
 
 export type LockedFeature = "study" | "aleph" | "training";
 
 const featureLevel: Record<LockedFeature, number> = {
-  study: 3,
+  study: 5,
   aleph: 3,
-  training: 10,
+  training: 15,
 };
 
-export function useFeatureOpen(level: number) {
+export function useFeatureOpen(level: number, honorLegacy = false) {
   const [open, setOpen] = useState<boolean | null>(null);
 
   useEffect(() => {
     function refresh() {
-      setOpen(curriculumLevel() >= level);
+      setOpen(curriculumLevel() >= level || (honorLegacy && flashcardsUnlocked()));
     }
 
     refresh();
     window.addEventListener("webrew-curriculum", refresh);
     return () => window.removeEventListener("webrew-curriculum", refresh);
-  }, [level]);
+  }, [honorLegacy, level]);
 
   return open;
 }
@@ -45,7 +46,7 @@ function useFeatureMessage(feature: LockedFeature) {
 }
 
 export function FeatureAccess({ feature, children }: { feature: LockedFeature; children: ReactNode }) {
-  const open = useFeatureOpen(featureLevel[feature]);
+  const open = useFeatureOpen(featureLevel[feature], feature === "study");
   const message = useFeatureMessage(feature);
 
   if (open === null) {
@@ -68,20 +69,22 @@ export function LockedNavLink({
   className,
   current,
   feature,
+  onClick,
   children,
 }: {
   href: "/decks" | "/training" | "/aleph-bet";
   className: string;
   current: boolean;
   feature: LockedFeature;
+  onClick?: () => void;
   children: ReactNode;
 }) {
-  const open = useFeatureOpen(featureLevel[feature]);
+  const open = useFeatureOpen(featureLevel[feature], feature === "study");
   const message = useFeatureMessage(feature);
 
   if (open) {
     return (
-      <Link href={href} className={className} aria-current={current ? "page" : undefined}>
+      <Link href={href} className={className} aria-current={current ? "page" : undefined} onClick={onClick}>
         {children}
       </Link>
     );

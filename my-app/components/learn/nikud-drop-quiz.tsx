@@ -4,9 +4,10 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, ty
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { animate, motion, useAnimation, useMotionValue } from "motion/react";
-import useSound from "use-sound";
+import { useCue } from "@/components/settings/use-cue";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
+import { HeartRow, HintButton } from "@/components/learn/practice-hearts";
 import { PointedLetter } from "@/components/learn/pointed-letter";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import { addExperience } from "@/lib/flashcards/experience";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { nikudDropRounds, nikudSlot, type NikudDropOption, type NikudSlot } from "@/lib/learn/nikud-drop";
 import { rasterNikud, type NikudImage } from "@/lib/learn/nikud-raster";
-import type { SpeechCue } from "@/lib/alephbet/intro-alphabet";
+import { nikudCue, type SpeechCue } from "@/lib/alephbet/intro-alphabet";
 
 const lessonExperience = 6;
 const homeSpring = { type: "spring" as const, bounce: 0.28, visualDuration: 0.32 };
@@ -49,8 +50,12 @@ export function NikudDropQuiz({
   const [aim, setAim] = useState<NikudSlot | null>(null);
   const [ready, setReady] = useState(false);
   const [replayDown, setReplayDown] = useState(false);
-  const [playWrong] = useSound("/sounds/samples/disable-sound.mp3", { volume: 0.5, interrupt: true });
-  const [playSuccess] = useSound("/sounds/samples/success.mp3", { volume: 0.55, interrupt: true });
+  const [halves, setHalves] = useState(10);
+  const [hidden, setHidden] = useState<string[]>([]);
+  const [failed, setFailed] = useState(false);
+  const answering = useRef(false);
+  const playWrong = useCue("/sounds/samples/disable-sound.mp3");
+  const playSuccess = useCue("/sounds/samples/success.mp3", 0.55);
   const topSlot = useRef<HTMLDivElement>(null);
   const bottomSlot = useRef<HTMLDivElement>(null);
   const zoneMotion = useAnimation();
@@ -95,6 +100,7 @@ export function NikudDropQuiz({
       setIndex((current) => {
         const next = current + 1;
         if (next >= rounds.length) {
+          void addExperience(rounds.length * lessonExperience);
           passRef.current();
         }
         return next;
@@ -111,7 +117,7 @@ export function NikudDropQuiz({
         return;
       }
 
-      if (!round || placed) {
+      if (!round || placed || failed) {
         return;
       }
 
@@ -135,40 +141,94 @@ export function NikudDropQuiz({
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKey);
     };
-  }, [round, placed]);
+  }, [round, placed, failed]);
+
+  function loseHeart(cost: number) {
+    setHalves((current) => {
+      const next = Math.max(0, current - cost);
+      if (next <= 0) {
+        setFailed(true);
+      }
+      return next;
+    });
+  }
+
+  function playThen(id: string, after: () => void) {
+    const option = round?.options.find((item) => item.id === id);
+    const cue = round && option ? nikudCue(round.letter, option.id) : null;
+    void Promise.resolve(cue ? playRef.current(cue) : undefined).finally(after);
+  }
 
   function choose(id: string) {
-    if (!round || placed || !ready) {
+    if (!round || placed || !ready || failed || answering.current) {
       return false;
     }
 
-    if (id !== round.answerId) {
+    const correct = id === round.answerId;
+    answering.current = true;
+    playThen(id, () => {
+      if (!correct) {
+        playWrong();
+        setRejected(id);
+        loseHeart(2);
+        window.setTimeout(() => {
+          setRejected((value) => (value === id ? null : value));
+          answering.current = false;
+        }, 450);
+        void zoneMotion.start({
+          x: [0, -12, 12, -8, 8, 0],
+          transition: { duration: 0.4, ease: "easeInOut" },
+        });
+        return;
+      }
+
+      playSuccess();
+      setRejected(null);
+      setHidden([]);
+      setPlaced(id);
+      answering.current = false;
+    });
+    return correct;
+  }
+
+  function miss(id: string) {
+    if (placed || failed || answering.current) {
+      return;
+    }
+    answering.current = true;
+    playThen(id, () => {
       playWrong();
-      setRejected(id);
-      window.setTimeout(() => setRejected((value) => (value === id ? null : value)), 450);
+      loseHeart(2);
+      answering.current = false;
       void zoneMotion.start({
         x: [0, -12, 12, -8, 8, 0],
         transition: { duration: 0.4, ease: "easeInOut" },
       });
-      return false;
-    }
-
-    playSuccess();
-    void addExperience(lessonExperience);
-    setRejected(null);
-    setPlaced(id);
-    return true;
+    });
   }
 
-  function miss() {
-    if (placed) {
+  function hint() {
+    if (!round || failed || halves < 1 || placed) {
       return;
     }
-    playWrong();
-    void zoneMotion.start({
-      x: [0, -12, 12, -8, 8, 0],
-      transition: { duration: 0.4, ease: "easeInOut" },
-    });
+    const wrongs = round.options.filter((item) => item.id !== round.answerId && !hidden.includes(item.id));
+    const pick = wrongs[Math.floor(Math.random() * wrongs.length)];
+    if (!pick) {
+      return;
+    }
+    setHidden((current) => [...current, pick.id]);
+    loseHeart(1);
+  }
+
+  function retry() {
+    answering.current = false;
+    setHalves(10);
+    setHidden([]);
+    setFailed(false);
+    setPlaced(null);
+    setRejected(null);
+    setAim(null);
+    setIndex(0);
   }
 
   function replay() {
@@ -199,10 +259,22 @@ export function NikudDropQuiz({
             className="h-2.5 rounded-full bg-emerald-950/10"
           />
         </div>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <HeartRow hearts={halves / 2} />
+          <HintButton
+            disabled={failed || halves < 1 || round.options.filter((item) => item.id !== round.answerId && !hidden.includes(item.id)).length < 1}
+            onHint={hint}
+          />
+        </div>
         <div className="text-center">
-          <p className="text-base text-emerald-900/80 sm:text-lg">{t("dropSlots")}</p>
+          <p className="text-base text-emerald-900/80 sm:text-lg">{failed ? t("outOfHearts") : t("dropSlots")}</p>
           <p className="mt-2 text-sm text-emerald-800">{t("quizProgress", { done: question, total: rounds.length })}</p>
         </div>
+        {failed ? (
+          <Button type="button" className="h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" onClick={retry}>
+            {t("tryAgain")}
+          </Button>
+        ) : null}
         <motion.span
           className="relative inline-flex"
           animate={{ scale: replayDown ? 0.96 : 1 }}
@@ -261,19 +333,23 @@ export function NikudDropQuiz({
           )}
         </motion.div>
         <div className="relative z-20 flex flex-wrap items-start justify-center gap-3 sm:gap-4">
-          {round.options.map((option, choice) => (
+          {failed
+            ? null
+            : round.options
+                .filter((option) => !hidden.includes(option.id))
+                .map((option, choice) => (
             <VowelChip
               key={`${round.id}-${option.id}`}
               option={option}
               index={choice}
-              locked={!ready || Boolean(placed)}
+              locked={!ready || Boolean(placed) || failed}
               dimmed={Boolean(placed) && placed !== option.id}
               accepted={placed === option.id}
               rejected={rejected === option.id}
               topSlot={topSlot}
               bottomSlot={bottomSlot}
               onAim={setAim}
-              onMiss={miss}
+              onMiss={() => miss(option.id)}
               onDrop={choose}
               ariaLabel={t("dropChoice", { number: choice + 1, name: t(option.nameKey) })}
             />

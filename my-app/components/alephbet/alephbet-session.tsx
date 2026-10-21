@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { letterDeckId, spokenNames } from "@/lib/alephbet/letters";
 import { loadDeckMastery } from "@/lib/flashcards/progress";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { playAudio } from "@/lib/settings/master-volume";
 
 const scrimFade = { duration: 0.2, ease: "easeOut" as const };
 
@@ -93,7 +94,7 @@ export function AlephBetSession() {
     stopClips();
     pendingLetter.current = null;
     setFailed(false);
-    void audio.play().catch(() => {
+    void playAudio(audio).catch(() => {
       setFailed(true);
     });
   }

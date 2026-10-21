@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { TextQuote, Volume2, VolumeX, WholeWord } from "lucide-react";
 import { useTranslations } from "next-intl";
-import useSound from "use-sound";
+import { useCue } from "@/components/settings/use-cue";
 import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "webrew.sound";
@@ -93,8 +93,8 @@ export function SoundControls({
   className?: string;
 }) {
   const t = useTranslations("Flashcards");
-  const [playOn] = useSound("/sounds/samples/pop-up-on.mp3", { volume: 0.5, interrupt: true });
-  const [playOff] = useSound("/sounds/samples/pop-down.mp3", { volume: 0.5, interrupt: true });
+  const playOn = useCue("/sounds/samples/pop-up-on.mp3");
+  const playOff = useCue("/sounds/samples/pop-down.mp3");
 
   return (
     <div

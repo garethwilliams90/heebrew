@@ -36,7 +36,7 @@ export function DevLevelControl() {
 
   return (
     <form
-      className="fixed top-20 left-4 z-30 flex items-center gap-2 rounded-2xl border border-emerald-950/10 bg-white/95 px-3 py-2 text-sm text-emerald-950 shadow-lg"
+      className="fixed bottom-4 left-4 z-30 flex items-center gap-2 rounded-2xl border border-emerald-950/10 bg-white/95 px-3 py-2 text-sm text-emerald-950 shadow-lg"
       onSubmit={(event) => {
         event.preventDefault();
         const next = Number(level);
@@ -54,7 +54,7 @@ export function DevLevelControl() {
         id="dev-level"
         type="number"
         min={1}
-        max={22}
+        max={14}
         value={level}
         onChange={(event) => setLevel(event.target.value)}
         className="w-16 rounded-lg border border-emerald-950/15 px-2 py-1"

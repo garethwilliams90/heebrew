@@ -90,9 +90,9 @@ function Button({
   }
 
   if (asChild) {
-    // Slot has to receive the child directly. motion.create() memoizes
-    // children, which turns a server-rendered child into something Slot
-    // cannot merge onto.
+    const { children, ...slotProps } = props
+    // Slot rejects whitespace, promises, and anything that is not one element.
+    // A server-rendered link often arrives in one of those shapes.
     return (
       <motion.span
         className="inline-flex shrink-0"
@@ -107,13 +107,49 @@ function Button({
           data-variant={variant}
           data-size={size}
           className={cn(buttonVariants({ variant, size, className }))}
-          {...props}
-        />
+          {...slotProps}
+        >
+          {slotChild(children)}
+        </Slot.Root>
       </motion.span>
     )
   }
 
   return <motion.button {...shared} {...props} />
+}
+
+function slotChild(children: React.ReactNode): React.ReactNode {
+  let current: unknown = children
+  if (isThenable(current)) {
+    current = React.use(current)
+  }
+  if (isLazyNode(current)) {
+    current = React.use(current._payload)
+  }
+
+  const node = current as React.ReactNode
+  if (React.Children.count(node) === 1 && React.isValidElement(node)) {
+    return node
+  }
+
+  const nodes = React.Children.toArray(node).filter((child) => {
+    if (typeof child === "string" || typeof child === "number") {
+      return String(child).trim().length > 0
+    }
+    return React.isValidElement(child)
+  })
+  return nodes.length === 1 ? nodes[0] : node
+}
+
+function isThenable(value: unknown): value is Promise<unknown> {
+  return typeof value === "object" && value !== null && typeof (value as { then?: unknown }).then === "function"
+}
+
+function isLazyNode(value: unknown): value is { _payload: Promise<unknown> } {
+  if (typeof value !== "object" || value === null || !("$$typeof" in value) || !("_payload" in value)) {
+    return false
+  }
+  return (value as { $$typeof?: symbol }).$$typeof === Symbol.for("react.lazy") && isThenable(value._payload)
 }
 
 export { Button, buttonVariants }

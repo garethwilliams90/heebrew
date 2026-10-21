@@ -21,7 +21,7 @@ Webrew is an interactive, modern, fully responsive web app for Hebrew learners a
 
 The app lives in this Next.js project (`my-app`). The repo root README describes it as a Hebrew language learning platform for all levels.
 
-The curriculum in LearningFlow.md does not rewrite Alephbet, flashcards, training, streaks, or auth. Those stay available as they are, although they will be blocked for beginners less than level 3. Curriculum levels (0L, 1, 2) are a content gate. Content is by design fed gradually to the user so flashcards and aleph bet will be unlocked at level 3, training will be unlocked at level 10.
+The curriculum in LearningFlow.md does not rewrite Alephbet, flashcards, training, streaks, or auth. Those stay available as they are. Curriculum levels are a content gate, and content is fed gradually. Aleph bet unlocks at level 3. Flashcards unlock at level 5. Training unlocks at level 15.
 
 ## Tech stack
 

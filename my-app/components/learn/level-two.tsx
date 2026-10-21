@@ -8,6 +8,7 @@ import { printFont } from "@/components/alephbet/print-font";
 import { BlueNikud } from "@/components/learn/pointed-letter";
 import type { SpeechCue } from "@/lib/alephbet/intro-alphabet";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { playAudio } from "@/lib/settings/master-volume";
 import { wordsByIds } from "@/lib/learn/basic-words";
 import { shuffleLetters } from "@/lib/alephbet/letters";
 import { WordQuiz } from "@/components/learn/word-quiz";
@@ -24,6 +25,7 @@ const sofitPairs = [
   { open: "מ", end: "ם", word: "שֵׁם" },
   { open: "כ", end: "ך", word: "לֵךְ" },
   { open: "צ", end: "ץ", word: "עֵץ" },
+  { open: "פ", end: "ף", word: "כף" },
 ];
 
 const letterSpring = { type: "spring" as const, bounce: 0.35, visualDuration: 0.22 };
@@ -242,5 +244,5 @@ async function playWord(cue: SpeechCue) {
     return;
   }
   audio.currentTime = 0;
-  await audio.play().catch(() => undefined);
+  await playAudio(audio).catch(() => undefined);
 }

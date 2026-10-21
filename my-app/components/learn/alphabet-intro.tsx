@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "motion/react";
-import useSound from "use-sound";
+import { useCue } from "@/components/settings/use-cue";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
 import { PointedLetter } from "@/components/learn/pointed-letter";
@@ -13,6 +13,7 @@ import { LetterQuiz } from "@/components/learn/letter-quiz";
 import { NikudDropQuiz } from "@/components/learn/nikud-drop-quiz";
 import { LevelTwo } from "@/components/learn/level-two";
 import { ExperienceTube } from "@/components/learn/experience-tube";
+import { LevelClose, NextLevelLink } from "@/components/learn/level-finish";
 import { Link } from "@/i18n/navigation";
 import {
   alphabetLetters,
@@ -23,14 +24,13 @@ import {
 } from "@/lib/alephbet/intro-alphabet";
 import type { LetterFact } from "@/lib/alephbet/letter-info";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { playAudio } from "@/lib/settings/master-volume";
 import { completeCurriculumLevel, curriculumLevel, stageLevel } from "@/lib/learn/curriculum";
 import { learnStages } from "@/lib/learn/stages";
 import { markLearningStarted } from "@/lib/learn/started";
 import { DevLevelControl, useLocalhost } from "@/components/learn/dev-level";
 import { useRouter } from "@/i18n/navigation";
-import { FormDialog } from "@/components/flashcards/form-dialog";
-import { markFlashcardsUnlocked } from "@/lib/learn/flashcards-access";
-import { ArrowLeftIcon, ArrowRightIcon, XIcon } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 
 const alphabet = alphabetLetters();
 const dalet = alphabet.find((letter) => letter.id === "dalet");
@@ -52,11 +52,10 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   const [step, setStep] = useState(initialStep);
   const [direction, setDirection] = useState(1);
   const [busy, setBusy] = useState(false);
-  const [leaveOpen, setLeaveOpen] = useState(false);
   const [passed, setPassed] = useState(false);
   const [speechError, setSpeechError] = useState(false);
   const [held, setHeld] = useState<"back" | "next" | null>(null);
-  const [playSwitch] = useSound("/sounds/samples/switch-on.mp3", { volume: 0.5, interrupt: true });
+  const playSwitch = useCue("/sounds/samples/switch-on.mp3");
   const request = useRef(0);
   const playing = useRef<HTMLAudioElement | null>(null);
 
@@ -75,7 +74,7 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
     }
   }, [router, step]);
 
-  const canNext = step === 0 || step === 2 || step === 3 || step === 6 || (step > 6 && step < 11) || step === 12;
+  const canNext = step === 0 || step === 2 || step === 3 || (step > 6 && step < 11) || step === 12;
   const goRef = useRef<(next: number) => void>(() => {});
   const playRef = useRef(playSwitch);
   playRef.current = playSwitch;
@@ -166,7 +165,7 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
     playing.current = audio;
     setSpeechError(false);
     try {
-      await audio.play();
+      await playAudio(audio);
     } catch {
       if (id === request.current) {
         setSpeechError(true);
@@ -199,46 +198,16 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   const body = step === 3 ? t("patachBody") : t("introBody");
 
   return (
-    <main className="relative mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden px-4 py-3">
+    <main className="relative p-4 z-10 mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden rounded-[2rem] bg-white/55 shadow-[0_24px_60px_-36px_rgba(6,78,59,0.45)] backdrop-blur-md">
       <header className="relative flex shrink-0 items-center justify-center py-1">
         <p className="rounded-full border border-emerald-950/15 bg-white/80 px-4 py-1 text-sm font-semibold tracking-[0.18em] text-emerald-950 uppercase">
           {t("level", { id: levels[step] })}
         </p>
-        <div className="fixed top-4 right-4 z-40">
-          <Button
-            type="button"
-            variant="ghost"
-            className="size-11 rounded-full bg-white/90 p-0 shadow-sm"
-            aria-label={t("closeLevel")}
-            onClick={() => setLeaveOpen(true)}
-          >
-            <XIcon className="size-6" />
-          </Button>
-        </div>
+        <LevelClose
+          finished={step === 6 || passed || curriculumLevel() > stageLevel(levels[step] ?? "1")}
+          className="absolute top-0 right-0 z-20"
+        />
       </header>
-      {leaveOpen ? (
-        <FormDialog label={t("leaveTitle")} onClose={() => setLeaveOpen(false)} className="w-full max-w-md">
-          <div className="rounded-3xl bg-white p-6 text-center shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]">
-            <h2 className="text-xl font-semibold text-emerald-950">{t("leaveTitle")}</h2>
-            <p className="mt-3 text-sm text-emerald-900/80">{t("leaveBody")}</p>
-            <div className="mt-6 flex justify-center gap-3">
-              <Button type="button" variant="outline" onClick={() => setLeaveOpen(false)}>
-                {t("leaveStay")}
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => {
-                  setLeaveOpen(false);
-                  router.push("/");
-                }}
-              >
-                {t("leaveConfirm")}
-              </Button>
-            </div>
-          </div>
-        </FormDialog>
-      ) : null}
       <div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
         <div className="relative min-h-0 flex-1 overflow-hidden">
         <AnimatePresence mode="wait" custom={direction} initial={false}>
@@ -325,6 +294,7 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
               <div className="max-w-xl text-center">
                 <h1 className="text-3xl font-semibold tracking-tight text-emerald-950 sm:text-4xl">{t("levelOneDoneTitle")}</h1>
                 <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("levelOneDoneBody")}</p>
+                <NextLevelLink level={1} />
               </div>
             ) : null}
             {step === 7 ? <LevelTwo part="outline" onPass={() => go(8)} /> : null}
@@ -337,25 +307,23 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
               <LevelTwo
                 part="words"
                 onPass={() => {
-                  markFlashcardsUnlocked();
+                  completeCurriculumLevel(2);
                   setPassed(true);
                 }}
               />
             ) : null}
             {step === 13 && passed ? (
               <div className="flex max-w-xl flex-col items-center text-center">
-                <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("flashcardsUnlockedTitle")}</h1>
-                <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("flashcardsUnlockedBody")}</p>
-                <Link href="/decks" className={cn(buttonVariants(), "mt-6 h-12 px-6")}>
-                  {t("studyFlashcards")}
-                </Link>
+                <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("levelClear", { level: 2 })}</h1>
+                <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("wordsDone")}</p>
+                <NextLevelLink level={2} />
               </div>
             ) : null}
             {speechError ? <p className="text-center text-sm text-emerald-900/70">{t("speechError")}</p> : null}
           </motion.div>
         </AnimatePresence>
         </div>
-        {step === 1 || step === 4 || step === 5 || step === 13 ? <ExperienceTube /> : null}
+        {step === 13 && passed ? <ExperienceTube /> : null}
       </div>
 
       <div className="flex shrink-0 items-center justify-center gap-4 py-3">

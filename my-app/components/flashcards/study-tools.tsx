@@ -4,7 +4,7 @@ import { CaseSensitive, Quote, Settings, TextQuote, Volume2, VolumeX, WholeWord 
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import useSound from "use-sound";
+import { useCue } from "@/components/settings/use-cue";
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -79,8 +79,8 @@ export function StudyTools({
   const t = useTranslations("Flashcards");
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const [playOn] = useSound("/sounds/samples/pop-up-on.mp3", { volume: 0.5, interrupt: true });
-  const [playOff] = useSound("/sounds/samples/pop-down.mp3", { volume: 0.5, interrupt: true });
+  const playOn = useCue("/sounds/samples/pop-up-on.mp3");
+  const playOff = useCue("/sounds/samples/pop-down.mp3");
 
   useEffect(() => {
     if (!open) {

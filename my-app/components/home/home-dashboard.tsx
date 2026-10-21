@@ -50,7 +50,7 @@ export function HomeDashboard({ stats, children }: { stats: HomeView; children: 
   const view = stats.signedIn ? stats : (guest ?? stats);
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-8 sm:px-8">
+    <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 overflow-y-auto">
       <div className="flex flex-col gap-4 ">
         <div className="grid gap-4 grid-cols-2">
           <LevelCard experience={view.experience} />

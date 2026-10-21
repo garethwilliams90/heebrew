@@ -4,13 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "motion/react";
 import { MicIcon } from "lucide-react";
-import useSound from "use-sound";
+import { useCue } from "@/components/settings/use-cue";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
+import { BlueNikud } from "@/components/learn/pointed-letter";
 import { Button } from "@/components/ui/button";
+import { alphabetLetters, nikudCue } from "@/lib/alephbet/intro-alphabet";
 import { addExperience } from "@/lib/flashcards/experience";
-import { consonantLessons, consonantSrc, saidWithAh, type ConsonantLesson } from "@/lib/learn/consonant-sounds";
+import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { consonantSrc, saidSyllable, speakSteps, type SpeakStep } from "@/lib/learn/consonant-sounds";
+import { playAudio } from "@/lib/settings/master-volume";
 
 const lessonExperience = 6;
 const cardShadow = "0 24px 60px -32px rgba(6, 78, 59, 0.45)";
@@ -48,10 +52,10 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
   const t = useTranslations("Learn");
   const [index, setIndex] = useState(0);
   const [heard, setHeard] = useState("");
-  const [phase, setPhase] = useState<"ready" | "listening" | "wrong" | "empty" | "quiet" | "missing">("ready");
+  const [phase, setPhase] = useState<"ready" | "listening" | "correct" | "wrong" | "empty" | "quiet" | "missing">("ready");
   const [micStream, setMicStream] = useState<MediaStream | null>(null);
-  const [playWrong] = useSound("/sounds/samples/disable-sound.mp3", { volume: 0.5, interrupt: true });
-  const [playSuccess] = useSound("/sounds/samples/success.mp3", { volume: 0.55, interrupt: true });
+  const playWrong = useCue("/sounds/samples/disable-sound.mp3");
+  const playSuccess = useCue("/sounds/samples/success.mp3", 0.55);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<BrowserRecognition | null>(null);
   const outcome = useRef<"idle" | "hit" | "miss">("idle");
@@ -65,8 +69,8 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
   const holdSample = useRef(true);
   const sampleReleased = useRef(false);
   const earContext = useRef<AudioContext | null>(null);
-  const lesson = consonantLessons[index];
-  const done = index >= consonantLessons.length;
+  const lesson = speakSteps[index];
+  const done = index >= speakSteps.length;
 
   passRef.current = onPass;
 
@@ -103,13 +107,31 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
     armRef.current?.();
   }
 
-  function playSample(audio: HTMLAudioElement) {
-    audio.addEventListener("ended", releaseSample, { once: true });
-    later(releaseSample, 2200);
-    void audio.play().catch(() => releaseSample());
+  function playSample(audio: HTMLAudioElement, step: SpeakStep) {
+    let released = false;
+    const finish = () => {
+      if (released) {
+        return;
+      }
+      released = true;
+      releaseSample();
+    };
+    const afterConsonant = async () => {
+      const letter = alphabetLetters().find((item) => item.id === step.letterId);
+      const cue = letter ? nikudCue(letter, step.vowel) : { text: `${step.letter}${step.mark}` };
+      const clip = await loadSpeechClip(cue.text, cue.phoneme);
+      if (clip) {
+        clip.currentTime = 0;
+        await playAudio(clip).catch(() => undefined);
+      }
+      finish();
+    };
+    audio.addEventListener("ended", () => void afterConsonant(), { once: true });
+    later(finish, 7000);
+    void playAudio(audio).catch(() => void afterConsonant());
   }
 
-  async function openEar(current: ConsonantLesson, waitForSample: boolean, fromGesture: boolean) {
+  async function openEar(current: SpeakStep, waitForSample: boolean, fromGesture: boolean) {
     const id = session.current + 1;
     session.current = id;
     const live = () => session.current === id;
@@ -210,20 +232,8 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
       stopMic();
       playSuccess();
       void addExperience(lessonExperience);
-      later(() => {
-        if (!live()) {
-          return;
-        }
-        setPhase("ready");
-        setHeard("");
-        setIndex((value) => {
-          const next = value + 1;
-          if (next >= consonantLessons.length) {
-            passRef.current();
-          }
-          return next;
-        });
-      }, 700);
+      setPhase("correct");
+      setHeard("");
     }
 
     function finish() {
@@ -288,7 +298,7 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
       const line = transcripts[0] ?? "";
       heardRef.current = line;
       setHeard(line);
-      const match = transcripts.some((transcript) => saidWithAh(current, transcript));
+      const match = transcripts.some((transcript) => saidSyllable(current, transcript));
       if (!match) {
         return;
       }
@@ -342,10 +352,9 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
     const audio = new Audio(consonantSrc(lesson.file));
     audioRef.current = audio;
     void openEar(lesson, true, false);
-    playSample(audio);
+    playSample(audio, lesson);
     return () => {
       audio.pause();
-      audio.removeEventListener("ended", releaseSample);
       session.current += 1;
       clearTimers();
       armRef.current = null;
@@ -366,10 +375,26 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
     audio.pause();
     audio.currentTime = 0;
     void openEar(lesson, true, false);
-    playSample(audio);
+    playSample(audio, lesson);
   }
 
-  function speak(current: ConsonantLesson) {
+  function goNext() {
+    if (outcome.current !== "hit") {
+      return;
+    }
+    outcome.current = "idle";
+    setHeard("");
+    setPhase("ready");
+    setIndex((value) => {
+      const next = value + 1;
+      if (next >= speakSteps.length) {
+        passRef.current();
+      }
+      return next;
+    });
+  }
+
+  function speak(current: SpeakStep) {
     if (outcome.current === "hit" || phase === "listening") {
       return;
     }
@@ -386,25 +411,26 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
     return null;
   }
 
-  const question = Math.min(index + 1, consonantLessons.length);
-  const ratio = ((index + 0.5) / consonantLessons.length) * 100;
+  const question = Math.min(index + 1, speakSteps.length);
+  const ratio = ((index + 0.5) / speakSteps.length) * 100;
+  const consonant = lesson.consonant === "quiet" ? t("speakNoConsonant") : lesson.consonant;
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-3">
       <div className="flex w-full flex-col items-center gap-3">
         <div className="w-full">
           <ProgressMeter
-            label={t("quizProgress", { done: question, total: consonantLessons.length })}
+            label={t("quizProgress", { done: question, total: speakSteps.length })}
             value={question}
-            max={consonantLessons.length}
+            max={speakSteps.length}
             ratio={ratio}
-            sections={consonantLessons.length}
+            sections={speakSteps.length}
             className="h-2.5 rounded-full bg-emerald-950/10"
           />
         </div>
         <div className="text-center">
-          <p className="text-base text-emerald-900/80 sm:text-lg">{t("speakPrompt")}</p>
-          <p className="mt-2 text-sm text-emerald-800">{t("quizProgress", { done: question, total: consonantLessons.length })}</p>
+          <p className="text-base text-emerald-900/80 sm:text-lg">{t("speakTask", { consonant, sound: lesson.sound })}</p>
+          <p className="mt-2 text-sm text-emerald-800">{t("quizProgress", { done: question, total: speakSteps.length })}</p>
         </div>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -415,26 +441,32 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
             transition={{ type: "spring", bounce: 0.18, visualDuration: 0.28 }}
             className="flex aspect-square w-44 items-center justify-center rounded-2xl border border-foreground/10 bg-card sm:w-52"
             style={{ boxShadow: cardShadow }}
-            dir="rtl"
-            lang="he"
-            aria-label={lesson.letter}
+            aria-label={lesson.sound}
           >
-            <span className={cn(printFont.className, "text-7xl leading-none text-black sm:text-8xl")}>{lesson.letter}</span>
+            <BlueNikud text={`${lesson.letter}${lesson.mark}`} className={cn(printFont.className, "text-7xl leading-none sm:text-8xl")} />
           </motion.div>
         </AnimatePresence>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button type="button" variant="outline" className="h-11 px-5" onClick={replay}>
             {t("speakHear")}
           </Button>
-          <Button type="button" className="h-11 px-5" disabled={phase === "listening"} onClick={() => speak(lesson)}>
+          <Button type="button" className="h-11 px-5" disabled={phase === "listening" || phase === "correct"} onClick={() => speak(lesson)}>
             <MicIcon className="size-4" />
-            {phase === "listening" ? t("speakListening") : t("speakSay", { sound: lesson.readings[0] })}
+            {phase === "listening" ? t("speakListening") : t("speakSay", { sound: lesson.sound })}
+          </Button>
+          <Button type="button" className="h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" disabled={phase !== "correct"} onClick={goNext}>
+            {t("speakNext")}
           </Button>
         </div>
-        <MicMeter stream={phase === "listening" ? micStream : null} onPeak={(value) => {
-          if (value > peak.current) peak.current = value;
-        }} />
+        <MicMeter
+          stream={phase === "listening" ? micStream : null}
+          correct={phase === "correct"}
+          onPeak={(value) => {
+            if (value > peak.current) peak.current = value;
+          }}
+        />
         <p className="min-h-6 text-center text-sm text-emerald-900" aria-live="polite">
+          {phase === "correct" ? t("speakCorrect") : null}
           {phase === "listening" && heard ? heard : null}
           {phase === "wrong" ? t("speakWrong", { heard }) : null}
           {phase === "empty" ? t("speakEmpty") : null}
@@ -446,7 +478,20 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
   );
 }
 
-function MicMeter({ stream, onPeak }: { stream: MediaStream | null; onPeak: (value: number) => void }) {
+function bellHeight(index: number, count: number) {
+  const x = count <= 1 ? 0 : (index / (count - 1)) * 2 - 1;
+  return Math.exp(-2.4 * x * x);
+}
+
+function MicMeter({
+  stream,
+  correct,
+  onPeak,
+}: {
+  stream: MediaStream | null;
+  correct: boolean;
+  onPeak: (value: number) => void;
+}) {
   const bars = useRef<HTMLSpanElement[]>([]);
   const peakRef = useRef(onPeak);
   peakRef.current = onPeak;
@@ -454,7 +499,7 @@ function MicMeter({ stream, onPeak }: { stream: MediaStream | null; onPeak: (val
   useEffect(() => {
     if (!stream) {
       for (const bar of bars.current) {
-        if (bar) bar.style.transform = "scaleY(0.08)";
+        if (bar) bar.style.transform = correct ? "scaleY(0.92)" : "scaleY(0.08)";
       }
       return;
     }
@@ -477,7 +522,8 @@ function MicMeter({ stream, onPeak }: { stream: MediaStream | null; onPeak: (val
       peakRef.current(max);
       const nodes = bars.current;
       for (let index = 0; index < nodes.length; index += 1) {
-        const sample = Math.abs(data[index * 4] - 128) / 128;
+        const sampleIndex = Math.floor((index / Math.max(1, nodes.length - 1)) * (data.length - 1));
+        const sample = Math.abs(data[sampleIndex] - 128) / 128;
         const bar = nodes[index];
         if (bar) bar.style.transform = `scaleY(${Math.max(0.08, Math.min(1, sample * 3))})`;
       }
@@ -489,18 +535,24 @@ function MicMeter({ stream, onPeak }: { stream: MediaStream | null; onPeak: (val
       window.cancelAnimationFrame(frame);
       void context.close();
     };
-  }, [stream]);
+  }, [stream, correct]);
+
+  const count = 17;
 
   return (
-    <div className="flex h-10 w-44 items-end justify-center gap-1" aria-hidden>
-      {Array.from({ length: 12 }, (_, index) => (
-        <span key={index} className="flex h-full w-2 items-end rounded-full bg-emerald-950/10">
+    <div className="flex h-16 w-72 items-end justify-center gap-1 sm:w-80" aria-hidden>
+      {Array.from({ length: count }, (_, index) => (
+        <span
+          key={index}
+          className="flex w-2 items-end rounded-full bg-emerald-950/10"
+          style={{ height: `${Math.round(bellHeight(index, count) * 100)}%` }}
+        >
           <span
             ref={(node) => {
               if (node) bars.current[index] = node;
             }}
-            className="h-full w-full origin-bottom rounded-full bg-emerald-600"
-            style={{ transform: "scaleY(0.12)" }}
+            className={cn("h-full w-full origin-bottom rounded-full", correct ? "bg-green-500" : "bg-emerald-600")}
+            style={{ transform: correct ? "scaleY(0.92)" : "scaleY(0.12)" }}
           />
         </span>
       ))}

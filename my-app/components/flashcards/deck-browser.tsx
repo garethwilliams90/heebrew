@@ -15,6 +15,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { prepareSpeechClip, requestDeckSpeech } from "@/lib/flashcards/deck-speech";
 import { removeCard } from "@/lib/flashcards/library";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { playAudio } from "@/lib/settings/master-volume";
 import { loadDeckMastery } from "@/lib/flashcards/progress";
 import { sortCards, type CardSort } from "@/lib/flashcards/sort-cards";
 import type { Flashcard } from "@/lib/flashcards/types";
@@ -183,7 +184,7 @@ export function DeckBrowser({
     };
     setFailedId(null);
     setPlayingId(id);
-    void audio.play().catch(() => {
+    void playAudio(audio).catch(() => {
       playingKindRef.current = null;
       setPlayingId(null);
       setFailedId(id);

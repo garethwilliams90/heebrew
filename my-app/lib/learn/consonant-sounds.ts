@@ -1,94 +1,114 @@
-export type ConsonantLesson = {
+export type SpeakVowel = "patach" | "segol" | "hiriq" | "kubutz" | "holam";
+
+export type SpeakStep = {
+  id: string;
+  letterId: string;
+  letter: string;
+  file: string;
+  vowel: SpeakVowel;
+  mark: string;
+  sound: string;
+  consonant: string;
+  accept: readonly string[];
+  reject: readonly string[];
+};
+
+type VowelShape = {
+  id: SpeakVowel;
+  mark: string;
+  sound: string;
+  endings: readonly string[];
+};
+
+type LetterSound = {
   id: string;
   file: string;
   letter: string;
-  readings: readonly string[];
-  forms: readonly string[];
+  consonant: string;
+  stems: readonly string[];
 };
 
-// Bet and kaf use the hard clip. Pe only has the soft clip in the set.
-const lessons: readonly ConsonantLesson[] = [
-  { id: "aleph", file: "01_alef_א.mp3", letter: "א", readings: ["ah", "a"], forms: ["אה", "הא", "אא"] },
-  { id: "bet", file: "03_bet_hard_בּ.mp3", letter: "ב", readings: ["bah", "ba", "pah", "pa"], forms: ["בה", "בא"] },
-  { id: "gimel", file: "04_gimel_ג.mp3", letter: "ג", readings: ["gah", "ga"], forms: ["גה", "גא"] },
-  { id: "dalet", file: "05_dalet_ד.mp3", letter: "ד", readings: ["dah", "da"], forms: ["דה", "דא"] },
-  { id: "he", file: "06_he_ה.mp3", letter: "ה", readings: ["hah", "ha"], forms: ["הה", "הא"] },
-  { id: "vav", file: "07_vav_ו.mp3", letter: "ו", readings: ["vah", "va"], forms: ["וה", "וא"] },
-  { id: "zayin", file: "08_zayin_ז.mp3", letter: "ז", readings: ["zah", "za"], forms: ["זה", "זא"] },
-  { id: "chet", file: "09_het_ח.mp3", letter: "ח", readings: ["khah", "cha", "kh"], forms: ["חה", "חא"] },
-  { id: "tet", file: "10_tet_ט.mp3", letter: "ט", readings: ["tah", "ta"], forms: ["טה", "טא"] },
-  { id: "yod", file: "11_yod_י.mp3", letter: "י", readings: ["yah", "ya", "yeah"], forms: ["יה", "יא"] },
-  { id: "kaf", file: "13_kaf_hard_כּ.mp3", letter: "כ", readings: ["kah", "ka"], forms: ["כה", "כא"] },
-  { id: "lamed", file: "14_lamed_ל.mp3", letter: "ל", readings: ["lah", "la"], forms: ["לה", "לא"] },
-  { id: "mem", file: "15_mem_מ.mp3", letter: "מ", readings: ["mah", "ma", "my"], forms: ["מה", "מא"] },
-  { id: "nun", file: "16_nun_נ.mp3", letter: "נ", readings: ["nah", "na"], forms: ["נה", "נא"] },
-  { id: "samekh", file: "17_samekh_ס.mp3", letter: "ס", readings: ["sah", "sa"], forms: ["סה", "סא"] },
-  { id: "ayin", file: "18_ayin_ע.mp3", letter: "ע", readings: ["ah", "a"], forms: ["עה", "עא", "אה", "הא"] },
-  { id: "pe", file: "19_pe_soft_פ.mp3", letter: "פ", readings: ["fah", "fa"], forms: ["פה", "פא"] },
-  { id: "tsadi", file: "20_tsadi_צ.mp3", letter: "צ", readings: ["tsah", "tsa", "tzah"], forms: ["צה", "צא"] },
-  { id: "kuf", file: "21_qof_ק.mp3", letter: "ק", readings: ["kah", "ka"], forms: ["קה", "קא"] },
-  { id: "reish", file: "22_resh_ר.mp3", letter: "ר", readings: ["rah", "ra"], forms: ["רה", "רא"] },
-  { id: "shin", file: "23_shin_ש.mp3", letter: "ש", readings: ["shah", "sha"], forms: ["שה", "שא"] },
-  { id: "tav", file: "24_tav_ת.mp3", letter: "ת", readings: ["tah", "ta"], forms: ["תה", "תא"] },
+const vowels: readonly VowelShape[] = [
+  { id: "patach", mark: "\u05B7", sound: "ah", endings: ["ah", "a"] },
+  { id: "segol", mark: "\u05B6", sound: "eh", endings: ["eh"] },
+  { id: "hiriq", mark: "\u05B4", sound: "ee", endings: ["ee", "i"] },
+  { id: "kubutz", mark: "\u05BB", sound: "oo", endings: ["oo", "u"] },
+  { id: "holam", mark: "\u05B9", sound: "oh", endings: ["oh", "o"] },
 ];
 
-const nikud = /[\u0591-\u05C7]/g;
+const letters: readonly LetterSound[] = [
+  { id: "aleph", file: "01_alef_א.mp3", letter: "א", consonant: "quiet", stems: [""] },
+  { id: "bet", file: "03_bet_hard_בּ.mp3", letter: "ב", consonant: "b", stems: ["b"] },
+  { id: "gimel", file: "04_gimel_ג.mp3", letter: "ג", consonant: "g", stems: ["g"] },
+  { id: "dalet", file: "05_dalet_ד.mp3", letter: "ד", consonant: "d", stems: ["d"] },
+  { id: "he", file: "06_he_ה.mp3", letter: "ה", consonant: "h", stems: ["h"] },
+  { id: "vav", file: "07_vav_ו.mp3", letter: "ו", consonant: "v", stems: ["v"] },
+  { id: "zayin", file: "08_zayin_ז.mp3", letter: "ז", consonant: "z", stems: ["z"] },
+  { id: "chet", file: "09_het_ח.mp3", letter: "ח", consonant: "kh", stems: ["kh", "ch"] },
+  { id: "tet", file: "10_tet_ט.mp3", letter: "ט", consonant: "t", stems: ["t"] },
+  { id: "yod", file: "11_yod_י.mp3", letter: "י", consonant: "y", stems: ["y"] },
+  { id: "kaf", file: "13_kaf_hard_כּ.mp3", letter: "כ", consonant: "k", stems: ["k"] },
+  { id: "lamed", file: "14_lamed_ל.mp3", letter: "ל", consonant: "l", stems: ["l"] },
+  { id: "mem", file: "15_mem_מ.mp3", letter: "מ", consonant: "m", stems: ["m"] },
+  { id: "nun", file: "16_nun_נ.mp3", letter: "נ", consonant: "n", stems: ["n"] },
+  { id: "samekh", file: "17_samekh_ס.mp3", letter: "ס", consonant: "s", stems: ["s"] },
+  { id: "ayin", file: "18_ayin_ע.mp3", letter: "ע", consonant: "quiet", stems: [""] },
+  { id: "pe", file: "19_pe_soft_פ.mp3", letter: "פ", consonant: "f", stems: ["f"] },
+  { id: "tsadi", file: "20_tsadi_צ.mp3", letter: "צ", consonant: "ts", stems: ["ts", "tz"] },
+  { id: "kuf", file: "21_qof_ק.mp3", letter: "ק", consonant: "k", stems: ["k"] },
+  { id: "reish", file: "22_resh_ר.mp3", letter: "ר", consonant: "r", stems: ["r"] },
+  { id: "shin", file: "23_shin_ש.mp3", letter: "ש", consonant: "sh", stems: ["sh"] },
+  { id: "tav", file: "24_tav_ת.mp3", letter: "ת", consonant: "t", stems: ["t"] },
+];
 
-export const consonantLessons = lessons;
+function tokens(stems: readonly string[], endings: readonly string[]) {
+  return stems.flatMap((stem) => endings.map((ending) => `${stem}${ending}`));
+}
+
+function makeStep(letter: LetterSound, vowel: VowelShape): SpeakStep {
+  const otherEndings = vowels.filter((item) => item.id !== vowel.id).flatMap((item) => item.endings);
+  const accept = tokens(letter.stems, vowel.endings);
+  const reject = tokens(letter.stems, [...otherEndings, "aw"]).filter((token) => token.length > 0 && !accept.includes(token));
+
+  return {
+    id: `${letter.id}-${vowel.id}`,
+    letterId: letter.id,
+    letter: letter.letter,
+    file: letter.file,
+    vowel: vowel.id,
+    mark: vowel.mark,
+    sound: `${letter.stems.find((stem) => stem.length > 0) ?? ""}${vowel.sound}`,
+    consonant: letter.consonant,
+    accept,
+    reject,
+  };
+}
+
+const gimel = letters.find((letter) => letter.id === "gimel");
+if (!gimel) {
+  throw new Error("Gimel is missing from the speak lessons");
+}
+
+const gimelGate = vowels.map((vowel) => makeStep(gimel, vowel));
+const later = letters
+  .filter((letter) => letter.id !== "gimel")
+  .map((letter, index) => makeStep(letter, vowels[index % vowels.length]));
+
+export const speakSteps: readonly SpeakStep[] = [...gimelGate, ...later];
 
 export function consonantSrc(file: string) {
   return `/sounds/hebrew_letter_sounds_24_mp3s/${encodeURIComponent(file)}`;
 }
 
-export function normalizeSpeech(value: string) {
-  return value.normalize("NFKC").replace(nikud, "").replace(/[^\p{L}\p{N}]+/gu, "").toLowerCase();
-}
-
-const ahMark = /[\u05B7\u05B8]/;
-
-export function saidWithAh(lesson: ConsonantLesson, transcript: string) {
-  const compact = transcript.normalize("NFKC").replace(/\s+/g, "");
-  const marked = compact.indexOf(lesson.letter);
-  if (marked >= 0 && ahMark.test(compact.slice(marked + 1, marked + 3))) {
-    return true;
-  }
-
-  const heard = normalizeSpeech(transcript);
-  if (!heard) {
-    return false;
-  }
-
-  const hebrew = heard.replace(/[^\u0590-\u05FF]/g, "");
-  if (hebrew) {
-    return lesson.forms.some((form) => normalizeSpeech(form) === hebrew);
-  }
-
+export function saidSyllable(step: SpeakStep, transcript: string) {
   const words = transcript.toLowerCase().match(/[a-z]+/g) ?? [];
-  const target = lesson.readings[0] ?? "";
-  const stem = target.replace(/ah$|a$/, "");
-  return words.some((word) => soundsLikeAh(word, stem, lesson.readings));
-}
-
-const ahEnding = /(?:uh|ah|aw|ow|er)$/;
-
-function soundsLikeAh(word: string, stem: string, readings: readonly string[]) {
-  const simple = word.replace(ahEnding, "a");
-  if (readings.some((reading) => reading.replace(ahEnding, "a") === simple)) {
-    return true;
-  }
-  if (!stem) {
-    return simple === "a" || simple === "ha" || word === "huh" || word === "uh";
-  }
-
-  // "bah bah" often arrives as one token. Accept the syllable repeated, and a bare consonant when the vowel was clipped.
-  const token = (readings[0] ?? "").replace(/ah$/, "a");
-  const folded = word.replace(/ah|uh/g, "a");
-  if (token && folded.length <= 12 && folded.split(token).join("") === "") {
-    return true;
-  }
-  if (!simple.startsWith(stem) || simple.length > stem.length + 2) {
+  if (words.some((word) => step.reject.includes(word))) {
     return false;
   }
-  const tail = simple.slice(stem.length);
-  return tail.length === 0 || tail.includes("a");
+  if (words.some((word) => step.accept.includes(word))) {
+    return true;
+  }
+
+  const compact = transcript.normalize("NFKC").replace(/\s+/g, "");
+  return compact.includes(step.letter) && compact.includes(step.mark);
 }

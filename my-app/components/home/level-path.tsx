@@ -6,11 +6,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
 import { Link } from "@/i18n/navigation";
-import { alphabetLetters } from "@/lib/alephbet/intro-alphabet";
 import { curriculumLevel } from "@/lib/learn/curriculum";
+import { StonePath } from "@/components/learn/nature-scene";
+import { letterCatalog } from "@/lib/alephbet/letter-info";
+import { letterPairLevels } from "@/lib/learn/letter-pairs";
 import { hasLearningStarted } from "@/lib/learn/started";
-
-const letters = alphabetLetters();
 
 const levelStages: Record<number, { id: string; href: "/learn" | `/learn?from=${string}`; practice?: boolean }[]> = {
   1: [
@@ -52,24 +52,40 @@ export function LevelPath() {
     return null;
   }
 
+  const nodes = [
+    { level: 1, mark: "אב", href: "/learn" as const },
+    { level: 2, mark: "דג", href: "/learn?from=2.0" as const },
+    ...letterPairLevels.map((item) => ({
+      level: item.level,
+      mark: item.letterIds.map((id) => letterCatalog.find((letter) => letter.id === id)?.letter ?? "").join(""),
+      href: `/learn?level=${item.level}` as const,
+    })),
+    { level: 12, mark: "אמא", href: "/learn?level=12" as const },
+    { level: 13, mark: "של", href: "/learn?level=13" as const },
+    { level: 14, mark: "אוהב", href: "/learn?level=14" as const },
+  ];
+
   return (
     <div className="flex w-full max-w-3xl flex-col items-center gap-6">
       <p className="text-sm text-emerald-800">{t("levelPathHint", { level: pathLevel })}</p>
-      <div className="flex w-full flex-col items-center gap-4" dir="rtl">
-        {letters.map((letter, index) => {
-          const level = index + 1;
+      <div className="flex w-full flex-col items-center gap-6" dir="rtl">
+        {nodes.map((node, index) => {
+          const level = node.level;
           const open = pathLevel >= level;
           const stages = levelStages[level];
           const expanded = hovered === level && open && Boolean(stages);
+          const shifts = [4, 36, 12, 42, 18, 30];
+          const shift = `${shifts[index % shifts.length]}%`;
 
           return (
             <motion.div
-              key={letter.id}
+              key={level}
               className="flex w-full flex-col items-center"
+              style={{ marginInlineStart: shift }}
               onHoverStart={() => setHovered(level)}
               onHoverEnd={() => setHovered((current) => (current === level ? null : current))}
             >
-              <LevelNode letter={letter.letter} level={level} open={open} href={stages?.[0]?.href} label={t("openLevel", { level })} />
+              <LevelNode letter={node.mark} level={level} open={open} href={node.href} label={t("openLevel", { level })} />
               <AnimatePresence initial={false}>
                 {expanded ? (
                   <motion.div
@@ -100,6 +116,7 @@ export function LevelPath() {
                   </motion.div>
                 ) : null}
               </AnimatePresence>
+              {index < nodes.length - 1 ? <StonePath turn={(index % 5) * 8 - 12} /> : null}
             </motion.div>
           );
         })}
@@ -118,7 +135,7 @@ function LevelNode({
   letter: string;
   level: number;
   open: boolean;
-  href?: "/learn" | `/learn?from=${string}`;
+  href?: "/learn" | `/learn?from=${string}` | `/learn?level=${number}`;
   label: string;
 }) {
   const className = cn(

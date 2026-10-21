@@ -16,6 +16,7 @@ import { CardFace, SwipeCard, type SwipeDirection } from "@/components/flashcard
 import { StudyTools } from "@/components/flashcards/study-tools";
 import { Button } from "@/components/ui/button";
 import { cn } from "cn";
+import { playAudio } from "@/lib/settings/master-volume";
 import {
   LETTER_STUDY_DEFAULT,
   letterDeckId,
@@ -170,7 +171,7 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
     stopClip();
     setSpeechError(false);
     setSpeaking(true);
-    void audio.play().catch(() => {
+    void playAudio(audio).catch(() => {
       if (cardRef.current?.speak === text) {
         setSpeechError(true);
       }

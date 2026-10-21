@@ -16,6 +16,7 @@ import { recordDailyCards } from "@/lib/flashcards/daily-practice";
 import { addExperience, flashcardExperience, loadExperience } from "@/lib/flashcards/experience";
 import { loadDeckMemory, saveSessionProgress } from "@/lib/flashcards/progress";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { playAudio } from "@/lib/settings/master-volume";
 import {
   freshMemory,
   gradeMemory,
@@ -336,7 +337,7 @@ export function FlashcardSession({
     setSpeechError(false);
     speakingKindRef.current = kind;
     setSpeakingClip(text);
-    void audio.play().catch(() => {
+    void playAudio(audio).catch(() => {
       speakingKindRef.current = null;
       setSpeakingClip((current) => (current === text ? null : current));
       setSpeechError(true);

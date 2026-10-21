@@ -3,11 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { AuthButton } from "@/components/auth-button";
 import { MotionProvider } from "@/components/motion-provider";
 import { Navbar } from "@/components/navbar";
+import { SettingsProvider } from "@/components/settings/settings-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/i18n/routing";
+import { createClient } from "@/lib/supabase/server";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -43,6 +44,9 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const email = typeof data?.claims?.email === "string" ? data.claims.email : null;
 
   return (
     <html
@@ -50,11 +54,13 @@ export default async function LocaleLayout({
       dir="ltr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex h-dvh flex-col overflow-hidden">
         <MotionProvider>
           <TooltipProvider delayDuration={300}>
             <NextIntlClientProvider locale={locale} messages={messages}>
-              <Navbar auth={<AuthButton />}>{children}</Navbar>
+              <SettingsProvider>
+                <Navbar email={email}>{children}</Navbar>
+              </SettingsProvider>
             </NextIntlClientProvider>
           </TooltipProvider>
         </MotionProvider>
