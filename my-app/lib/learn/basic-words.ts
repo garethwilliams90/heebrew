@@ -16,14 +16,14 @@ const m = "masculine" as const;
 const f = "feminine" as const;
 
 export const basicWords: BasicWord[] = [
-  { id: "dag", hebrew: "דָּג", english: "fish", reading: "dag", partOfSpeech: noun, gender: m },
+  { id: "dag", hebrew: "דָג", english: "fish", reading: "dag", partOfSpeech: noun, gender: m },
   { id: "gag", hebrew: "גַּג", english: "roof", reading: "gag", partOfSpeech: noun, gender: m },
   { id: "ets", hebrew: "עֵץ", english: "tree", reading: "ets", partOfSpeech: noun, gender: m },
   { id: "shem", hebrew: "שֵׁם", english: "name", reading: "shem", partOfSpeech: noun, gender: m },
   { id: "ben", hebrew: "בֵּן", english: "son", reading: "ben", partOfSpeech: noun, gender: m },
   { id: "bat", hebrew: "בַּת", english: "daughter", reading: "bat", partOfSpeech: noun, gender: f },
   { id: "yad", hebrew: "יָד", english: "hand", reading: "yad", partOfSpeech: noun, gender: f },
-  { id: "dam", hebrew: "דָּם", english: "blood", reading: "dam", partOfSpeech: noun, gender: m },
+  { id: "dam", hebrew: "דָם", english: "blood", reading: "dam", partOfSpeech: noun, gender: m },
   { id: "am", hebrew: "עַם", english: "people", reading: "am", partOfSpeech: noun, gender: m },
   { id: "lev", hebrew: "לֵב", english: "heart", reading: "lev", partOfSpeech: noun, gender: m },
   { id: "peh", hebrew: "פֶּה", english: "mouth", reading: "peh", partOfSpeech: noun, gender: m },
@@ -49,7 +49,7 @@ export const basicWords: BasicWord[] = [
   { id: "mi", hebrew: "מִי", english: "who", reading: "mi", partOfSpeech: "pronoun", gender: null },
   { id: "kaf", hebrew: "כַּף", english: "spoon", reading: "kaf", partOfSpeech: noun, gender: f },
   { id: "ner", hebrew: "נֵר", english: "candle", reading: "ner", partOfSpeech: noun, gender: m },
-  { id: "dan", hebrew: "דָּן", english: "Dan", reading: "dan", partOfSpeech: noun, gender: m },
+  { id: "dan", hebrew: "דָן", english: "Dan", reading: "dan", partOfSpeech: noun, gender: m },
   { id: "rats", hebrew: "רָץ", english: "runs", reading: "rats", partOfSpeech: "verb", gender: m },
   { id: "ba", hebrew: "בָּא", english: "came", reading: "ba", partOfSpeech: "verb", gender: m },
   { id: "kar", hebrew: "קַר", english: "cold", reading: "kar", partOfSpeech: "adjective", gender: null },
@@ -57,14 +57,14 @@ export const basicWords: BasicWord[] = [
   { id: "ra", hebrew: "רַע", english: "bad", reading: "ra", partOfSpeech: "adjective", gender: m },
   { id: "tal", hebrew: "טַל", english: "dew", reading: "tal", partOfSpeech: noun, gender: m },
   { id: "tsad", hebrew: "צַד", english: "side", reading: "tsad", partOfSpeech: noun, gender: m },
-  { id: "daf", hebrew: "דַּף", english: "page", reading: "daf", partOfSpeech: noun, gender: m },
+  { id: "daf", hebrew: "דַף", english: "page", reading: "daf", partOfSpeech: noun, gender: m },
   { id: "kan", hebrew: "קַן", english: "nest", reading: "kan", partOfSpeech: noun, gender: m },
   { id: "yam", hebrew: "יָם", english: "sea", reading: "yam", partOfSpeech: noun, gender: m },
   { id: "esh", hebrew: "אֵשׁ", english: "fire", reading: "esh", partOfSpeech: noun, gender: f },
   { id: "pat", hebrew: "פַּת", english: "bread", reading: "pat", partOfSpeech: noun, gender: f },
   { id: "gal", hebrew: "גַּל", english: "wave", reading: "gal", partOfSpeech: noun, gender: m },
   { id: "or", hebrew: "אוֹר", english: "light", reading: "or", partOfSpeech: noun, gender: m },
-  { id: "dod", hebrew: "דּוֹד", english: "uncle", reading: "dod", partOfSpeech: noun, gender: m },
+  { id: "dod", hebrew: "דוֹד", english: "uncle", reading: "dod", partOfSpeech: noun, gender: m },
   { id: "gur", hebrew: "גּוּר", english: "cub", reading: "gur", partOfSpeech: noun, gender: m },
 ];
 

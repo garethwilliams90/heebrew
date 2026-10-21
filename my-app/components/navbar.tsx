@@ -2,7 +2,7 @@
 
 import { Leaf } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { FlashcardsNavLink } from "@/components/flashcards/flashcards-access";
+import { LockedNavLink, type LockedFeature } from "@/components/learn/feature-access";
 import { SocialLinks } from "@/components/social-links";
 import { Link, usePathname } from "@/i18n/navigation";
 
@@ -18,12 +18,12 @@ export function Navbar({
   const home = useTranslations("Home");
   const training = useTranslations("Training");
   const alephBet = useTranslations("AlephBet");
-  const tabs = [
+  const tabs: { href: "/" | "/profile" | "/decks" | "/training" | "/aleph-bet"; label: string; feature?: LockedFeature }[] = [
     { href: "/", label: home("nav") },
     { href: "/profile", label: home("profile") },
-    { href: "/decks", label: flashcards("decks") },
-    { href: "/training", label: training("nav") },
-    { href: "/aleph-bet", label: alephBet("nav") },
+    { href: "/decks", label: flashcards("decks"), feature: "study" },
+    { href: "/training", label: training("nav"), feature: "training" },
+    { href: "/aleph-bet", label: alephBet("nav"), feature: "aleph" },
   ];
 
   return (
@@ -46,11 +46,11 @@ export function Navbar({
             const current = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
             const className = current ? "text-sm font-medium text-emerald-950" : "text-sm text-emerald-800";
 
-            if (tab.href === "/decks") {
+            if (tab.feature && tab.href !== "/" && tab.href !== "/profile") {
               return (
-                <FlashcardsNavLink key={tab.href} href="/decks" className={className} current={current}>
+                <LockedNavLink key={tab.href} href={tab.href} className={className} current={current} feature={tab.feature}>
                   {tab.label}
-                </FlashcardsNavLink>
+                </LockedNavLink>
               );
             }
 

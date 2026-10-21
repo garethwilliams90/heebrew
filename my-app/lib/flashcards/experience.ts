@@ -130,6 +130,7 @@ export async function addExperience(gained: number): Promise<"ok" | "signed-out"
 
   if (error || !data.user) {
     writeLocalExperience(readLocalExperience() + gained);
+    window.dispatchEvent(new Event("webrew-experience"));
     return "signed-out";
   }
 
@@ -149,5 +150,8 @@ export async function addExperience(gained: number): Promise<"ok" | "signed-out"
     { onConflict: "user_id" },
   );
 
+  if (!writeError && typeof window !== "undefined") {
+    window.dispatchEvent(new Event("webrew-experience"));
+  }
   return writeError ? "error" : "ok";
 }

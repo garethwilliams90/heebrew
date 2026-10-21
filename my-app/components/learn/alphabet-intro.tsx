@@ -8,9 +8,11 @@ import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
 import { PointedLetter } from "@/components/learn/pointed-letter";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ConsonantSpeak } from "@/components/learn/consonant-speak";
 import { LetterQuiz } from "@/components/learn/letter-quiz";
+import { NikudDropQuiz } from "@/components/learn/nikud-drop-quiz";
 import { LevelTwo } from "@/components/learn/level-two";
-import { NikudInfo } from "@/components/learn/nikud-info";
+import { ExperienceTube } from "@/components/learn/experience-tube";
 import { Link } from "@/i18n/navigation";
 import {
   alphabetLetters,
@@ -21,20 +23,20 @@ import {
 } from "@/lib/alephbet/intro-alphabet";
 import type { LetterFact } from "@/lib/alephbet/letter-info";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { completeCurriculumLevel, curriculumLevel, stageLevel } from "@/lib/learn/curriculum";
 import { learnStages } from "@/lib/learn/stages";
 import { markLearningStarted } from "@/lib/learn/started";
 import { DevLevelControl, useLocalhost } from "@/components/learn/dev-level";
-import { cursiveFont } from "@/components/alephbet/cursive-font";
 import { useRouter } from "@/i18n/navigation";
 import { FormDialog } from "@/components/flashcards/form-dialog";
 import { markFlashcardsUnlocked } from "@/lib/learn/flashcards-access";
 import { ArrowLeftIcon, ArrowRightIcon, XIcon } from "lucide-react";
 
 const alphabet = alphabetLetters();
-const firstFive = alphabet.slice(0, 5);
+const dalet = alphabet.find((letter) => letter.id === "dalet");
+const daletNikud = [nikudCycle[0], nikudCycle[2], nikudCycle[5], nikudCycle[6], nikudCycle[8]];
 const levels = learnStages;
-const startingNikud = [0, 2, 6, 5, 8];
-const stepButton = "h-16 min-w-44 px-10 text-xl";
+const stepButton = "h-12 min-w-36 px-8 text-lg";
 const letterSpring = { type: "spring" as const, bounce: 0.35, visualDuration: 0.22 };
 
 const slide = {
@@ -53,11 +55,7 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [passed, setPassed] = useState(false);
   const [speechError, setSpeechError] = useState(false);
-  const [cursive, setCursive] = useState(false);
   const [held, setHeld] = useState<"back" | "next" | null>(null);
-  const [nikudIndex, setNikudIndex] = useState<Record<string, number>>(() =>
-    Object.fromEntries(firstFive.map((letter, index) => [letter.id, startingNikud[index]])),
-  );
   const [playSwitch] = useSound("/sounds/samples/switch-on.mp3", { volume: 0.5, interrupt: true });
   const request = useRef(0);
   const playing = useRef<HTMLAudioElement | null>(null);
@@ -66,7 +64,18 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
     markLearningStarted();
   }, []);
 
-  const canNext = step < 4 || step === 5 || (step > 5 && step < 10) || step === 11;
+  useEffect(() => {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") {
+      return;
+    }
+    const stage = levels[step];
+    if (stage && stageLevel(stage) > curriculumLevel()) {
+      router.replace("/");
+    }
+  }, [router, step]);
+
+  const canNext = step === 0 || step === 2 || step === 3 || step === 6 || (step > 6 && step < 11) || step === 12;
   const goRef = useRef<(next: number) => void>(() => {});
   const playRef = useRef(playSwitch);
   playRef.current = playSwitch;
@@ -126,16 +135,16 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
 
   useEffect(() => {
     const cues: SpeechCue[] = step >= 1 ? alphabet.map(patachCue) : [];
-    if (step === 2) {
-      for (const letter of firstFive) {
-        cues.push(nikudCue(letter, nikudCycle[nikudIndex[letter.id] ?? 0].id));
+    if (step === 2 && dalet) {
+      for (const nikud of daletNikud) {
+        cues.push(nikudCue(dalet, nikud.id));
       }
     }
 
     for (const cue of cues) {
       void loadSpeechClip(cue.text, cue.phoneme);
     }
-  }, [step, nikudIndex]);
+  }, [step]);
 
   async function playCue(cue: SpeechCue) {
     const id = request.current + 1;
@@ -166,6 +175,12 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   }
 
   function go(next: number) {
+    const stage = levels[next];
+    const host = typeof window === "undefined" ? "" : window.location.hostname;
+    const localHost = host === "localhost" || host === "127.0.0.1";
+    if (!localHost && stage && stageLevel(stage) > curriculumLevel()) {
+      return;
+    }
     if (busy || next === step || next < 0 || next >= levels.length) {
       return;
     }
@@ -181,34 +196,26 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
 
   goRef.current = go;
 
-  function cycleNikud(letter: LetterFact) {
-    const next = ((nikudIndex[letter.id] ?? 0) + 1) % nikudCycle.length;
-    if (playing.current) {
-      playing.current.pause();
-      playing.current.currentTime = 0;
-      playing.current = null;
-    }
-    request.current += 1;
-    setNikudIndex((current) => ({ ...current, [letter.id]: next }));
-    void playCue(nikudCue(letter, nikudCycle[next].id));
-  }
-
-  const body =
-    step === 3 ? t("patachBody") : step === 2 ? t("nikudBody") : step === 1 ? t("introBody") : t("introBody");
+  const body = step === 3 ? t("patachBody") : t("introBody");
 
   return (
-    <main className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8">
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          variant="ghost"
-          className="size-11 rounded-full bg-white/90 p-0 shadow-sm"
-          aria-label={t("closeLevel")}
-          onClick={() => setLeaveOpen(true)}
-        >
-          <XIcon className="size-6" />
-        </Button>
-      </div>
+    <main className="relative mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden px-4 py-3">
+      <header className="relative flex shrink-0 items-center justify-center py-1">
+        <p className="rounded-full border border-emerald-950/15 bg-white/80 px-4 py-1 text-sm font-semibold tracking-[0.18em] text-emerald-950 uppercase">
+          {t("level", { id: levels[step] })}
+        </p>
+        <div className="fixed top-4 right-4 z-40">
+          <Button
+            type="button"
+            variant="ghost"
+            className="size-11 rounded-full bg-white/90 p-0 shadow-sm"
+            aria-label={t("closeLevel")}
+            onClick={() => setLeaveOpen(true)}
+          >
+            <XIcon className="size-6" />
+          </Button>
+        </div>
+      </header>
       {leaveOpen ? (
         <FormDialog label={t("leaveTitle")} onClose={() => setLeaveOpen(false)} className="w-full max-w-md">
           <div className="rounded-3xl bg-white p-6 text-center shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]">
@@ -232,7 +239,8 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
           </div>
         </FormDialog>
       ) : null}
-      <div className="relative flex min-h-0 flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
+        <div className="relative min-h-0 flex-1 overflow-hidden">
         <AnimatePresence mode="wait" custom={direction} initial={false}>
           <motion.div
             key={step}
@@ -242,17 +250,14 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
             animate="center"
             exit="exit"
             transition={{ type: "spring", bounce: 0.12, visualDuration: 0.4 }}
-            className="flex w-full flex-1 flex-col items-center justify-center gap-8"
+            className="flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden"
             onAnimationComplete={(definition) => {
               if (definition === "center") {
                 setBusy(false);
               }
             }}
           >
-            <p className="rounded-full border border-emerald-950/15 bg-white/80 px-4 py-1 text-sm font-semibold tracking-[0.18em] text-emerald-950 uppercase">
-              {t("level", { id: levels[step] })}
-            </p>
-            {step < 5 ? (
+            {step < 5 && step !== 1 ? (
             <div className="max-w-xl text-center">
               {step === 3 ? (
                 <h1 className="flex items-center justify-center gap-3 text-emerald-950">
@@ -264,47 +269,38 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
               ) : (
                 <h1 className="text-3xl font-semibold tracking-tight text-emerald-950 sm:text-4xl">{t("introTitle")}</h1>
               )}
-              {step < 4 ? <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{body}</p> : null}
-              {step === 1 ? (
-                <div className="mt-3 flex flex-col items-center gap-3">
-                  <p className="text-sm text-emerald-800">{t("hoverHint")}</p>
-                  <p className="text-sm text-emerald-800">{t("cursiveHint")}</p>
-                  <Button type="button" variant="outline" className="h-10 px-4" onClick={() => setCursive((value) => !value)}>
-                    {cursive ? t("cursiveHide") : t("cursiveShow")}
-                  </Button>
-                </div>
-              ) : null}
               {step === 2 ? (
-                <p className="mt-2 flex items-center justify-center gap-1.5 text-sm text-emerald-800">
-                  <span>{t("nikudHint")}</span>
-                  <NikudInfo />
+                <p className="mt-2 text-base text-emerald-900/80 sm:text-lg">
+                  {t.rich("nikudBody", {
+                    bold: (chunks) => <strong className="font-semibold text-emerald-950">{chunks}</strong>,
+                    blue: (chunks) => <strong className="font-semibold text-blue-600">{chunks}</strong>,
+                  })}
                 </p>
+              ) : step < 4 ? (
+                <p className="mt-2 text-base text-emerald-900/80 sm:text-lg">{body}</p>
               ) : null}
             </div>
             ) : null}
 
-            {step === 1 ? (
-              <LetterRow
-                letters={alphabet}
-                fontClass={cursive ? cursiveFont.className : printFont.className}
-                cue={(letter) => patachCue(letter)}
-                label={(letter) => t("hearPatach", { name: letter.name })}
-                onPlay={playCue}
-              />
-            ) : null}
-            {step === 2 ? (
-              <LetterRow
-                letters={firstFive}
-                focused
-                cue={(letter) => nikudCue(letter, nikudCycle[nikudIndex[letter.id] ?? 0].id)}
-                nikud={(letter) => nikudCycle[nikudIndex[letter.id] ?? 0]}
-                label={(letter) => {
-                  const nikud = nikudCycle[nikudIndex[letter.id] ?? 0];
-                  return t("withNikud", { name: letter.name, nikud: t(nikud.label) });
-                }}
-                onPlay={playCue}
-                onActivate={cycleNikud}
-              />
+            {step === 1 ? <ConsonantSpeak onPass={() => go(2)} /> : null}
+            {step === 2 && dalet ? (
+              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                {daletNikud.map((nikud) => (
+                  <motion.button
+                    key={nikud.id}
+                    type="button"
+                    whileHover={{ scale: 1.06, y: -4 }}
+                    transition={letterSpring}
+                    className={cn(printFont.className, "cursor-pointer rounded-2xl px-2 py-1 text-6xl text-black outline-none hover:bg-white/80 focus-visible:ring-3 focus-visible:ring-emerald-700/30 sm:text-7xl")}
+                    dir="rtl"
+                    lang="he"
+                    aria-label={t("withNikud", { name: dalet.name, nikud: t(nikud.label) })}
+                    onClick={() => void playCue(nikudCue(dalet, nikud.id))}
+                  >
+                    <PointedLetter letter={dalet.letter} mark={nikud.mark} tail={nikud.tail} />
+                  </motion.button>
+                ))}
+              </div>
             ) : null}
             {step === 3 ? (
               <LetterRow
@@ -317,18 +313,27 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
             ) : null}
             {step === 4 ? <LetterQuiz letters={alphabet} onPlay={playCue} onPass={() => go(5)} /> : null}
             {step === 5 ? (
+              <NikudDropQuiz
+                onPlay={playCue}
+                onPass={() => {
+                  completeCurriculumLevel(1);
+                  go(6);
+                }}
+              />
+            ) : null}
+            {step === 6 ? (
               <div className="max-w-xl text-center">
                 <h1 className="text-3xl font-semibold tracking-tight text-emerald-950 sm:text-4xl">{t("levelOneDoneTitle")}</h1>
                 <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("levelOneDoneBody")}</p>
               </div>
             ) : null}
-            {step === 6 ? <LevelTwo part="outline" onPass={() => go(7)} /> : null}
-            {step === 7 ? <LevelTwo part="fish" onPass={() => go(8)} /> : null}
-            {step === 8 ? <LevelTwo part="sofit" onPass={() => go(9)} /> : null}
-            {step === 9 ? <LevelTwo part="sofitPairs" onPass={() => go(10)} /> : null}
-            {step === 10 ? <LevelTwo part="sofitQuiz" onPass={() => go(11)} /> : null}
-            {step === 11 ? <LevelTwo part="vowels" onPass={() => go(12)} /> : null}
-            {step === 12 && !passed ? (
+            {step === 7 ? <LevelTwo part="outline" onPass={() => go(8)} /> : null}
+            {step === 8 ? <LevelTwo part="fish" onPass={() => go(9)} /> : null}
+            {step === 9 ? <LevelTwo part="sofit" onPass={() => go(10)} /> : null}
+            {step === 10 ? <LevelTwo part="sofitPairs" onPass={() => go(11)} /> : null}
+            {step === 11 ? <LevelTwo part="sofitQuiz" onPass={() => go(12)} /> : null}
+            {step === 12 ? <LevelTwo part="vowels" onPass={() => go(13)} /> : null}
+            {step === 13 && !passed ? (
               <LevelTwo
                 part="words"
                 onPass={() => {
@@ -337,7 +342,7 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
                 }}
               />
             ) : null}
-            {step === 12 && passed ? (
+            {step === 13 && passed ? (
               <div className="flex max-w-xl flex-col items-center text-center">
                 <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("flashcardsUnlockedTitle")}</h1>
                 <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("flashcardsUnlockedBody")}</p>
@@ -349,9 +354,11 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
             {speechError ? <p className="text-center text-sm text-emerald-900/70">{t("speechError")}</p> : null}
           </motion.div>
         </AnimatePresence>
+        </div>
+        {step === 1 || step === 4 || step === 5 || step === 13 ? <ExperienceTube /> : null}
       </div>
 
-      <div className="flex items-center justify-center gap-4 pt-8">
+      <div className="flex shrink-0 items-center justify-center gap-4 py-3">
         {local ? (
           <Button
             type="button"

@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
 import useSound from "use-sound";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
-import { PointedLetter } from "@/components/learn/pointed-letter";
+import { BlueNikud, PointedLetter } from "@/components/learn/pointed-letter";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { Button } from "@/components/ui/button";
-import { addExperience, loadExperience, placeExperience } from "@/lib/flashcards/experience";
+import { addExperience } from "@/lib/flashcards/experience";
 import { nikudCue, nikudCycle, type SpeechCue } from "@/lib/alephbet/intro-alphabet";
 import type { LetterFact } from "@/lib/alephbet/letter-info";
 import { shuffleLetters } from "@/lib/alephbet/letters";
@@ -61,13 +62,11 @@ export function SoundQuiz({
   onLearn?: (card: QuizCard) => void;
 }) {
   const t = useTranslations("Learn");
-  const xpLabel = useTranslations("Flashcards");
   const [index, setIndex] = useState(0);
   const [wrongId, setWrongId] = useState<string | null>(null);
   const [flyingId, setFlyingId] = useState<string | null>(null);
-  const [learned, setLearned] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [replayDown, setReplayDown] = useState(false);
-  const [experience, setExperience] = useState(0);
   const [playWrong] = useSound("/sounds/samples/disable-sound.mp3", { volume: 0.5, interrupt: true });
   const [playSuccess] = useSound("/sounds/samples/success.mp3", { volume: 0.55, interrupt: true });
   const playRef = useRef(onPlay);
@@ -81,10 +80,6 @@ export function SoundQuiz({
 
   playRef.current = onPlay;
   learnRef.current = onLearn;
-
-  useEffect(() => {
-    void loadExperience().then((saved) => setExperience(saved.experience));
-  }, []);
 
   useEffect(() => {
     if (!round) {
@@ -155,12 +150,11 @@ export function SoundQuiz({
     }
 
     playSuccess();
-    setExperience((value) => value + lessonExperience);
     void addExperience(lessonExperience);
     learnRef.current?.(card);
     if (onLearn) {
-      setLearned(card.name);
-      window.setTimeout(() => setLearned(null), 2400);
+      setToast(t("newWordToast"));
+      window.setTimeout(() => setToast(null), 2400);
     }
     settled.current = false;
     setWrongId(null);
@@ -206,12 +200,12 @@ export function SoundQuiz({
 
   const answered = round.choices.find((item) => item.id === round.correctId);
   const question = Math.min(index + 1, rounds.length);
-  const ratio = rounds.length === 0 ? 0 : (index / rounds.length) * 100;
+  const ratio = rounds.length === 0 ? 0 : ((index + 0.5) / rounds.length) * 100;
 
   return (
-    <div className="flex w-full items-stretch gap-6">
-      <div className="flex min-w-0 flex-1 flex-col items-center gap-6">
-      <div className="w-full px-1">
+    <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-3">
+      <div className="flex w-full flex-col items-center gap-3">
+      <div className="w-full">
         <ProgressMeter
           label={t("quizProgress", { done: question, total: rounds.length })}
           value={question}
@@ -225,7 +219,14 @@ export function SoundQuiz({
         <p className="text-base text-emerald-900/80 sm:text-lg">{t("quizPrompt")}</p>
         <p className="mt-2 text-sm text-emerald-800">{t("quizProgress", { done: question, total: rounds.length })}</p>
       </div>
-      {learned ? <p className="max-w-md text-center text-sm font-medium text-emerald-800">{t("newWord", { word: learned })}</p> : null}
+      {toast
+        ? createPortal(
+            <p className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-emerald-800 px-4 py-2 text-sm font-medium text-white shadow-lg">
+              {toast}
+            </p>,
+            document.body,
+          )
+        : null}
       <div className="flex flex-col items-center gap-1">
         <motion.span
           className="relative inline-flex"
@@ -272,7 +273,7 @@ export function SoundQuiz({
                 }}
                 className={cn(
                   printFont.className,
-                  "relative flex h-40 w-36 cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/10 bg-white/90 text-5xl text-black shadow-[0_18px_40px_-28px_rgba(6,78,59,0.8)] outline-none focus-visible:ring-3 focus-visible:ring-emerald-700/30",
+                  "relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-emerald-950/10 bg-white/90 text-4xl text-black shadow-[0_18px_40px_-28px_rgba(6,78,59,0.8)] outline-none focus-visible:ring-3 focus-visible:ring-emerald-700/30 sm:h-32 sm:w-32 sm:text-5xl",
                   wrongId === card.id && "border-red-300 bg-red-50 text-red-700",
                 )}
                 style={flying ? { willChange: "transform" } : undefined}
@@ -284,7 +285,11 @@ export function SoundQuiz({
                 onFocus={() => preview(card)}
                 onClick={() => choose(card)}
               >
-                <PointedLetter letter={card.glyph} mark={card.mark} tail={card.tail} />
+                {card.mark || card.tail ? (
+                  <PointedLetter letter={card.glyph} mark={card.mark} tail={card.tail} />
+                ) : (
+                  <BlueNikud text={card.glyph} />
+                )}
                 {flying ? (
                   <motion.span
                     aria-hidden
@@ -305,27 +310,6 @@ export function SoundQuiz({
       </div>
       <span className="sr-only">{answered?.name}</span>
       </div>
-      <ExperienceTube total={experience} label={xpLabel} />
-    </div>
-  );
-}
-
-function ExperienceTube({ total, label }: { total: number; label: ReturnType<typeof useTranslations<"Flashcards">> }) {
-  const place = placeExperience(total);
-  const ratio = place.span === 0 ? 0 : (place.into / place.span) * 100;
-
-  return (
-    <div className="flex w-12 shrink-0 flex-col items-center self-stretch py-1">
-      <p className="mb-2 text-center text-[10px] font-semibold tracking-wide text-emerald-900">{label("levelLabel", { level: place.level })}</p>
-      <div className="relative min-h-48 w-5 flex-1 overflow-hidden rounded-full bg-emerald-950/10">
-        <motion.div
-          className="absolute inset-x-0 bottom-0 rounded-full bg-emerald-600"
-          initial={false}
-          animate={{ height: `${ratio}%` }}
-          transition={{ type: "spring", bounce: 0.08, visualDuration: 0.5 }}
-        />
-      </div>
-      <p className="mt-2 max-w-14 text-center text-[10px] text-emerald-900/70">{label("experienceProgress", { into: place.into, span: place.span })}</p>
     </div>
   );
 }

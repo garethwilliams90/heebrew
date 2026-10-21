@@ -83,9 +83,9 @@ export const letterCatalog: readonly LetterFact[] = [
     base: null,
     value: 4,
     examples: [
-      { word: "דָּג", reading: "dag" },
+      { word: "דָג", reading: "dag" },
       { word: "דֶּלֶת", reading: "delet" },
-      { word: "דֹּב", reading: "dov" },
+      { word: "דֹב", reading: "dov" },
     ],
   },
   {

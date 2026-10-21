@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { experienceForLevel, loadExperience, placeExperience, setExperience } from "@/lib/flashcards/experience";
+import { curriculumLevel, setCurriculumLevel } from "@/lib/learn/curriculum";
 
 export function useLocalhost() {
   const [local, setLocal] = useState(false);
@@ -22,7 +22,12 @@ export function DevLevelControl() {
   const [current, setCurrent] = useState<number | null>(null);
 
   useEffect(() => {
-    void loadExperience().then((saved) => setCurrent(placeExperience(saved.experience).level));
+    setCurrent(curriculumLevel());
+    function refresh() {
+      setCurrent(curriculumLevel());
+    }
+    window.addEventListener("webrew-curriculum", refresh);
+    return () => window.removeEventListener("webrew-curriculum", refresh);
   }, []);
 
   if (!local) {
@@ -38,10 +43,8 @@ export function DevLevelControl() {
         if (!Number.isFinite(next) || next < 1) {
           return;
         }
-        void setExperience(experienceForLevel(next)).then(() => {
-          setCurrent(Math.floor(next));
-          window.dispatchEvent(new Event("webrew-experience"));
-        });
+        setCurriculumLevel(next);
+        setCurrent(Math.floor(next));
       }}
     >
       <label className="font-medium" htmlFor="dev-level">

@@ -1,4 +1,4 @@
-import { placeExperience } from "@/lib/flashcards/experience";
+import { completeCurriculumLevel, curriculumLevel } from "@/lib/learn/curriculum";
 
 const UNLOCKED_KEY = "webrew.flashcards-unlocked";
 
@@ -8,17 +8,9 @@ export function markFlashcardsUnlocked() {
   }
 
   window.localStorage.setItem(UNLOCKED_KEY, "1");
-  window.dispatchEvent(new Event("webrew-experience"));
+  completeCurriculumLevel(2);
 }
 
-export function flashcardsUnlocked(experience: number) {
-  if (placeExperience(experience).level >= 3) {
-    return true;
-  }
-
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  return window.localStorage.getItem(UNLOCKED_KEY) === "1";
+export function flashcardsUnlocked() {
+  return curriculumLevel() >= 3;
 }

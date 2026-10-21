@@ -6,8 +6,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
 import { Link } from "@/i18n/navigation";
-import { loadExperience, placeExperience } from "@/lib/flashcards/experience";
 import { alphabetLetters } from "@/lib/alephbet/intro-alphabet";
+import { curriculumLevel } from "@/lib/learn/curriculum";
 import { hasLearningStarted } from "@/lib/learn/started";
 
 const letters = alphabetLetters();
@@ -15,10 +15,11 @@ const letters = alphabetLetters();
 const levelStages: Record<number, { id: string; href: "/learn" | `/learn?from=${string}`; practice?: boolean }[]> = {
   1: [
     { id: "1.0", href: "/learn" },
-    { id: "1.1", href: "/learn?from=1.1" },
+    { id: "1.1", href: "/learn?from=1.1", practice: true },
     { id: "1.2", href: "/learn?from=1.2" },
     { id: "1.3", href: "/learn?from=1.3" },
     { id: "1.4", href: "/learn?from=1.4", practice: true },
+    { id: "1.5", href: "/learn?from=1.5", practice: true },
   ],
   2: [
     { id: "2.0", href: "/learn?from=2.0" },
@@ -33,20 +34,18 @@ export function LevelPath() {
   const t = useTranslations("Home");
   const [ready, setReady] = useState(false);
   const [started, setStarted] = useState(false);
-  const [xpLevel, setXpLevel] = useState(1);
+  const [pathLevel, setPathLevel] = useState(1);
   const [hovered, setHovered] = useState<number | null>(null);
 
   useEffect(() => {
     setStarted(hasLearningStarted());
-    void loadExperience().then((saved) => {
-      setXpLevel(placeExperience(saved.experience).level);
-      setReady(true);
-    });
+    setPathLevel(curriculumLevel());
+    setReady(true);
     function refresh() {
-      void loadExperience().then((saved) => setXpLevel(placeExperience(saved.experience).level));
+      setPathLevel(curriculumLevel());
     }
-    window.addEventListener("webrew-experience", refresh);
-    return () => window.removeEventListener("webrew-experience", refresh);
+    window.addEventListener("webrew-curriculum", refresh);
+    return () => window.removeEventListener("webrew-curriculum", refresh);
   }, []);
 
   if (!ready || !started) {
@@ -55,11 +54,11 @@ export function LevelPath() {
 
   return (
     <div className="flex w-full max-w-3xl flex-col items-center gap-6">
-      <p className="text-sm text-emerald-800">{t("levelPathHint", { level: xpLevel })}</p>
+      <p className="text-sm text-emerald-800">{t("levelPathHint", { level: pathLevel })}</p>
       <div className="flex w-full flex-col items-center gap-4" dir="rtl">
         {letters.map((letter, index) => {
           const level = index + 1;
-          const open = xpLevel >= level;
+          const open = pathLevel >= level;
           const stages = levelStages[level];
           const expanded = hovered === level && open && Boolean(stages);
 

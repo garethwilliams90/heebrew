@@ -31,10 +31,10 @@ export function DeckHeading({
   const Title = level;
   const openTimer = useRef<number | null>(null);
   const cancelEdit = useRef(false);
-  const deleteRef = useRef<HTMLButtonElement>(null);
   const [field, setField] = useState<"title" | "description" | null>(null);
   const [draft, setDraft] = useState("");
-  const [armed, setArmed] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState<"signed-out" | "error" | null>(null);
 
   useEffect(() => {
@@ -44,21 +44,6 @@ export function DeckHeading({
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (!armed) {
-      return;
-    }
-
-    function away(event: PointerEvent) {
-      if (!deleteRef.current?.contains(event.target as Node)) {
-        setArmed(false);
-      }
-    }
-
-    document.addEventListener("pointerdown", away);
-    return () => document.removeEventListener("pointerdown", away);
-  }, [armed]);
 
   function scheduleOpen() {
     if (!opensDeck) {
@@ -104,13 +89,19 @@ export function DeckHeading({
   }
 
   async function remove() {
+    if (deleting) {
+      return;
+    }
+    setDeleting(true);
+    setMessage(null);
     const result = await deleteDeck(deckId);
     if (result === "ok") {
-      router.push("/");
+      router.push("/decks");
       router.refresh();
       return;
     }
-    setArmed(false);
+    setDeleting(false);
+    setConfirming(false);
     setMessage(result === "signed-out" ? "signed-out" : "error");
   }
 
@@ -186,27 +177,34 @@ export function DeckHeading({
             </p>
           )}
         </div>
-        {canDelete ? (
+        {canDelete && !confirming ? (
           <Button
-            ref={deleteRef}
             type="button"
             variant="destructive"
             size="icon"
-            className={armed ? "ring-2 ring-destructive" : undefined}
-            aria-label={armed ? t("deleteDeckConfirm") : t("deleteDeck")}
+            aria-label={t("deleteDeck")}
             onClick={(event) => {
+              event.preventDefault();
               event.stopPropagation();
-              if (!armed) {
-                setArmed(true);
-                return;
-              }
-              void remove();
+              setMessage(null);
+              setConfirming(true);
             }}
           >
             <Trash2 />
           </Button>
         ) : null}
       </div>
+      {confirming ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <p className="text-sm text-emerald-900/70">{t("deleteDeckConfirm")}</p>
+          <Button type="button" variant="destructive" disabled={deleting} onClick={() => void remove()}>
+            {t("deleteDeck")}
+          </Button>
+          <Button type="button" variant="outline" disabled={deleting} onClick={() => setConfirming(false)}>
+            {t("cancel")}
+          </Button>
+        </div>
+      ) : null}
       {message === "signed-out" ? <p className="mt-2 text-sm text-emerald-900/70">{t("signInToEdit")}</p> : null}
       {message === "error" ? (
         <p className="mt-2 text-sm text-red-800" role="alert">

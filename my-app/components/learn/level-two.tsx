@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
+import { BlueNikud } from "@/components/learn/pointed-letter";
 import type { SpeechCue } from "@/lib/alephbet/intro-alphabet";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { wordsByIds } from "@/lib/learn/basic-words";
@@ -12,15 +13,15 @@ import { shuffleLetters } from "@/lib/alephbet/letters";
 import { WordQuiz } from "@/components/learn/word-quiz";
 
 const dagForms = [
-  { id: "dag", hebrew: "דָּג", sound: "dag", gloss: true },
-  { id: "dehg", hebrew: "דֵּג", sound: "dehg", gloss: false },
-  { id: "deeg", hebrew: "דִּג", sound: "deeg", gloss: false },
-  { id: "dohg", hebrew: "דֹּג", sound: "dohg", gloss: false },
+  { id: "dag", hebrew: "דָג", sound: "dag", gloss: true },
+  { id: "dehg", hebrew: "דֵג", sound: "dehg", gloss: false },
+  { id: "deeg", hebrew: "דִג", sound: "deeg", gloss: false },
+  { id: "dohg", hebrew: "דֹג", sound: "dohg", gloss: false },
 ];
 
 const sofitPairs = [
-  { open: "נ", end: "ן", word: "בֵּן" },
-  { open: "מ", end: "ם", word: "שֵׁם" },
+  { open: "נ", end: "ן", word: "בֵּן" },
+  { open: "מ", end: "ם", word: "שֵׁם" },
   { open: "כ", end: "ך", word: "לֵךְ" },
   { open: "צ", end: "ץ", word: "עֵץ" },
 ];
@@ -93,7 +94,7 @@ export function LevelTwo({
         <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("vowelTitle")}</h1>
         <p className="mt-3 text-base text-emerald-900/80">{t("vowelBody")}</p>
         <p className="mt-3 text-base text-emerald-900/80">{t("silentBody")}</p>
-        <div className={cn(printFont.className, "mt-8 flex flex-wrap justify-center gap-6 text-5xl text-black")} dir="rtl" lang="he">
+        <div className={cn(printFont.className, "mt-8 flex flex-wrap justify-center gap-6 text-5xl")} dir="rtl" lang="he">
           <Example word="לֹא" caption={t("silentLo")} />
           <Example word="אָב" caption={t("silentAv")} />
           <Example word="מָה" caption={t("silentMah")} />
@@ -115,12 +116,12 @@ function FishLesson() {
       <p className="mt-3 text-base text-emerald-900/80">{t("fishBody")}</p>
       <button
         type="button"
-        className={cn(printFont.className, "mt-8 text-8xl text-black")}
+        className={cn(printFont.className, "mt-8 text-8xl")}
         dir="rtl"
         lang="he"
         onClick={() => void playWord({ text: form.hebrew })}
       >
-        {form.hebrew}
+        <BlueNikud text={form.hebrew} />
       </button>
       <p className="mt-3 text-xl text-emerald-950">{form.gloss ? t("fishGloss") : form.sound}</p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -132,7 +133,7 @@ function FishLesson() {
             transition={letterSpring}
             className={cn(
               printFont.className,
-              "rounded-2xl bg-white/80 px-4 py-2 text-4xl text-black",
+              "rounded-2xl bg-white/80 px-4 py-2 text-4xl",
               form.id === item.id && "ring-2 ring-emerald-700",
             )}
             dir="rtl"
@@ -142,7 +143,7 @@ function FishLesson() {
               void playWord({ text: item.hebrew });
             }}
           >
-            {item.hebrew}
+            <BlueNikud text={item.hebrew} />
           </motion.button>
         ))}
       </div>
@@ -157,20 +158,33 @@ function SofitHover({
   pair: (typeof sofitPairs)[number];
   face: "open" | "pair";
 }) {
+  const [shown, setShown] = useState(false);
+  const wordVisible = face === "pair" && shown;
+
   return (
     <motion.button
       type="button"
       className={cn(
         printFont.className,
-        "group/sofit relative flex min-w-24 flex-col items-center justify-center rounded-3xl bg-white/80 px-5 py-4 text-black",
+        "relative flex min-w-24 flex-col items-center justify-center rounded-3xl bg-white/80 px-5 py-4 text-black",
         face === "open" ? "text-7xl" : "text-6xl",
       )}
       lang="he"
       dir="ltr"
-      onHoverStart={() => void playWord({ text: pair.word })}
-      onPointerEnter={() => void playWord({ text: pair.word })}
-      onFocus={() => void playWord({ text: pair.word })}
-      onClick={() => void playWord({ text: pair.word })}
+      onMouseEnter={() => setShown(true)}
+      onMouseLeave={() => setShown(false)}
+      onFocus={() => setShown(true)}
+      onBlur={() => setShown(false)}
+      onClick={() => {
+        if (face !== "pair") {
+          return;
+        }
+        if (!shown) {
+          setShown(true);
+          return;
+        }
+        void playWord({ text: pair.word });
+      }}
     >
       {face === "open" ? (
         <span>{pair.open}</span>
@@ -181,12 +195,11 @@ function SofitHover({
           <span className="text-blue-600">{pair.end}</span>
         </span>
       )}
-      <span
-        className="mt-2 hidden text-5xl text-emerald-950 group-hover/sofit:block group-focus/sofit:block"
-        dir="rtl"
-      >
-        {pair.word}
-      </span>
+      {wordVisible ? (
+        <span className="mt-2 text-5xl" dir="rtl">
+          <BlueNikud text={pair.word} blueLetter={pair.end} />
+        </span>
+      ) : null}
     </motion.button>
   );
 }
@@ -194,7 +207,7 @@ function SofitHover({
 function Example({ word, caption }: { word: string; caption: string }) {
   return (
     <button type="button" className="flex flex-col items-center gap-2" onClick={() => void playWord({ text: word })}>
-      <span>{word}</span>
+      <BlueNikud text={word} />
       <span className="font-sans text-sm text-emerald-800">{caption}</span>
     </button>
   );

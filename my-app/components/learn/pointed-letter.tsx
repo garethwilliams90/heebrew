@@ -4,6 +4,41 @@ import { motion } from "motion/react";
 
 const markSpring = { type: "spring" as const, bounce: 0.22, visualDuration: 0.28 };
 
+const hebrewMark = /[\u0591-\u05C7]/;
+
+export function BlueNikud({ text, className = "", blueLetter = "" }: { text: string; className?: string; blueLetter?: string }) {
+  const clusters: { letter: string; marks: string }[] = [];
+
+  for (const char of text) {
+    if (hebrewMark.test(char)) {
+      const last = clusters[clusters.length - 1];
+      if (last) {
+        last.marks += char;
+      }
+      continue;
+    }
+    clusters.push({ letter: char, marks: "" });
+  }
+
+  return (
+    <span dir="rtl" lang="he" className={className}>
+      {clusters.map((cluster, index) =>
+        cluster.marks ? (
+          <span key={index} className="inline-grid">
+            <span className="col-start-1 row-start-1 text-blue-600">
+              {cluster.letter}
+              {cluster.marks}
+            </span>
+            <span className={`relative z-10 col-start-1 row-start-1 ${cluster.letter === blueLetter ? "text-blue-600" : "text-black"}`}>{cluster.letter}</span>
+          </span>
+        ) : (
+          <span key={index}>{cluster.letter}</span>
+        ),
+      )}
+    </span>
+  );
+}
+
 export function PointedLetter({ letter, mark = "", tail = "" }: { letter: string; mark?: string; tail?: string }) {
   if (!mark && !tail) {
     return letter;
