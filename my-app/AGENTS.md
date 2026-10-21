@@ -31,6 +31,7 @@ Use only this stack unless the owner explicitly requests or approves a deviation
 - Tailwind CSS
 - shadcn/ui for components
 - Supabase for authentication and the database
+- https://mcp.kitbitz.art kitbitz for images for flashcards and general illustrations
 - `use-sound` for sound effects
 - `next-intl` for interface languages
 - Azure AI Translator on the free F0 tier for English-to-Hebrew text, Azure AI Speech on the free F0 tier for speaking the Hebrew, and Dicta's free Nakdan for grammatical gender. Translator allows 2 million characters a month. Speech allows 0.5 million neural characters a month. Both stay free only while the Azure resources are on F0. Keys stay server-side in `.env.local` as `AZURE_TRANSLATOR_KEY`, `AZURE_TRANSLATOR_REGION`, `AZURE_SPEECH_KEY`, and `AZURE_SPEECH_REGION`. Do not expose them to the browser. Dicta Nakdan needs no key. Do not call the public Google Translate website.
