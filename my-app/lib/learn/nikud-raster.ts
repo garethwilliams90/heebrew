@@ -16,7 +16,8 @@ export async function rasterNikud(mark: string, tail: string): Promise<NikudImag
   probe.remove();
 
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
-  const size = 280;
+  // Vav marks (shuruk, holam-vav) need room for the letter and the dot. A tight canvas clips them into a tall block.
+  const size = tail ? 420 : 280;
   const canvas = document.createElement("canvas");
   canvas.width = size * dpr;
   canvas.height = size * dpr;
@@ -27,7 +28,7 @@ export async function rasterNikud(mark: string, tail: string): Promise<NikudImag
 
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, size, size);
-  ctx.font = `700 180px ${family}`;
+  ctx.font = `700 ${tail ? 200 : 180}px ${family}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#2563eb";

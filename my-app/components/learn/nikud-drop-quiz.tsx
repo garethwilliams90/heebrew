@@ -19,6 +19,18 @@ import type { SpeechCue } from "@/lib/alephbet/intro-alphabet";
 const lessonExperience = 6;
 const homeSpring = { type: "spring" as const, bounce: 0.28, visualDuration: 0.32 };
 const ghostSize = 64;
+const maxInk = 60;
+
+function inkSize(image: NikudImage | null) {
+  if (!image) {
+    return { width: ghostSize, height: ghostSize };
+  }
+  const scale = Math.min(1, maxInk / image.width, maxInk / image.height);
+  return {
+    width: Math.max(1, Math.round(image.width * scale)),
+    height: Math.max(1, Math.round(image.height * scale)),
+  };
+}
 const attractDistance = 118;
 const lockDistance = 36;
 
@@ -340,7 +352,8 @@ function VowelChip({
   }
 
   function offsets() {
-    return { x: (image?.width ?? ghostSize) / 2, y: (image?.height ?? ghostSize) / 2 };
+    const size = inkSize(image);
+    return { x: size.width / 2, y: size.height / 2 };
   }
 
   function springHome() {
@@ -444,6 +457,8 @@ function VowelChip({
     springHome();
   }
 
+  const size = inkSize(image);
+
   return (
     <div className={cn("flex flex-col items-center gap-2", dimmed && "opacity-45")}>
       <button
@@ -465,10 +480,10 @@ function VowelChip({
             src={image.url}
             alt=""
             draggable={false}
-            width={image.width}
-            height={image.height}
+            width={size.width}
+            height={size.height}
             className={dragging ? "opacity-0" : undefined}
-            style={{ width: image.width, height: image.height }}
+            style={{ width: size.width, height: size.height }}
           />
         ) : null}
       </button>
@@ -479,10 +494,10 @@ function VowelChip({
               src={image.url}
               alt=""
               draggable={false}
-              width={image.width}
-              height={image.height}
+              width={size.width}
+              height={size.height}
               className="pointer-events-none fixed top-0 left-0 z-50"
-              style={{ x: ghostX, y: ghostY, width: image.width, height: image.height, willChange: "transform" }}
+              style={{ x: ghostX, y: ghostY, width: size.width, height: size.height, willChange: "transform" }}
             />,
             document.body,
           )

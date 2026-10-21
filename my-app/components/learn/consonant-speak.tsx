@@ -27,6 +27,7 @@ type BrowserRecognition = {
   maxAlternatives: number;
   onresult: ((event: SpeechResultEvent) => void) | null;
   onerror: ((event: SpeechErrorEvent) => void) | null;
+  onstart: (() => void) | null;
   onend: (() => void) | null;
   start: () => void;
   stop: () => void;
@@ -55,28 +56,23 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
   const recognitionRef = useRef<BrowserRecognition | null>(null);
   const outcome = useRef<"idle" | "hit" | "miss">("idle");
   const peak = useRef(0);
+  const heardRef = useRef("");
   const micRef = useRef<MediaStream | null>(null);
   const passRef = useRef(onPass);
+  const session = useRef(0);
+  const timers = useRef<number[]>([]);
+  const armRef = useRef<(() => void) | null>(null);
+  const holdSample = useRef(true);
+  const sampleReleased = useRef(false);
+  const earContext = useRef<AudioContext | null>(null);
   const lesson = consonantLessons[index];
   const done = index >= consonantLessons.length;
 
   passRef.current = onPass;
 
   useEffect(() => {
-    if (!lesson) {
-      return;
-    }
-
-    const audio = new Audio(consonantSrc(lesson.file));
-    audioRef.current = audio;
-    void audio.play().catch(() => {});
     return () => {
-      audio.pause();
-    };
-  }, [lesson]);
-
-  useEffect(() => {
-    return () => {
+      session.current += 1;
       recognitionRef.current?.abort();
       micRef.current?.getTracks().forEach((track) => track.stop());
     };
@@ -85,33 +81,110 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
   function stopMic() {
     micRef.current?.getTracks().forEach((track) => track.stop());
     micRef.current = null;
+    void earContext.current?.close();
+    earContext.current = null;
     setMicStream(null);
   }
 
-  function replay() {
-    if (!lesson) {
-      return;
+  function clearTimers() {
+    for (const timer of timers.current) {
+      window.clearTimeout(timer);
     }
-    const audio = audioRef.current ?? new Audio(consonantSrc(lesson.file));
-    audioRef.current = audio;
-    audio.currentTime = 0;
-    void audio.play().catch(() => {});
+    timers.current = [];
   }
 
-  async function listen(current: ConsonantLesson) {
+  function later(run: () => void, delay: number) {
+    const timer = window.setTimeout(run, delay);
+    timers.current.push(timer);
+  }
+
+  function releaseSample() {
+    sampleReleased.current = true;
+    armRef.current?.();
+  }
+
+  function playSample(audio: HTMLAudioElement) {
+    audio.addEventListener("ended", releaseSample, { once: true });
+    later(releaseSample, 2200);
+    void audio.play().catch(() => releaseSample());
+  }
+
+  async function openEar(current: ConsonantLesson, waitForSample: boolean, fromGesture: boolean) {
+    const id = session.current + 1;
+    session.current = id;
+    const live = () => session.current === id;
+    clearTimers();
+    armRef.current = null;
+    sampleReleased.current = !waitForSample;
+    recognitionRef.current?.abort();
+    recognitionRef.current = null;
+    stopMic();
+    peak.current = 0;
+    heardRef.current = "";
+    outcome.current = "idle";
+    setHeard("");
+    setPhase("ready");
+
     const Ctor = recognitionCtor();
     if (!Ctor) {
       setPhase("missing");
       return;
     }
 
-    audioRef.current?.pause();
-    recognitionRef.current?.abort();
-    stopMic();
-    peak.current = 0;
-    outcome.current = "idle";
-    setHeard("");
-    setPhase("listening");
+    let stream: MediaStream | null = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+    } catch {
+      stream = null;
+    }
+    if (!live()) {
+      stream?.getTracks().forEach((track) => track.stop());
+      return;
+    }
+    if (stream) {
+      micRef.current = stream;
+      setMicStream(stream);
+      const context = new AudioContext();
+      earContext.current = context;
+      const source = context.createMediaStreamSource(stream);
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+      const data = new Uint8Array(analyser.fftSize);
+      const watch = () => {
+        if (!live()) {
+          return;
+        }
+        try {
+          analyser.getByteTimeDomainData(data);
+        } catch {
+          return;
+        }
+        let max = 0;
+        for (let index = 0; index < data.length; index += 1) {
+          const sample = Math.abs(data[index] - 128) / 128;
+          if (sample > max) {
+            max = sample;
+          }
+        }
+        if (max > peak.current) {
+          peak.current = max;
+        }
+        window.requestAnimationFrame(watch);
+      };
+      void context.resume().then(() => {
+        if (live()) {
+          watch();
+        }
+      });
+    }
 
     const recognition = new Ctor();
     recognition.lang = "en-US";
@@ -120,29 +193,27 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
     recognition.maxAlternatives = 5;
     recognitionRef.current = recognition;
 
-    recognition.onresult = (event) => {
-      const result = event.results[event.results.length - 1];
-      if (!result) {
-        return;
-      }
-      const transcripts = Array.from({ length: result.length }, (_, choice) => result[choice]?.transcript ?? "");
-      setHeard(transcripts[0] ?? "");
-      const match = transcripts.some((transcript) => saidWithAh(current, transcript));
-      if (!match) {
-        if (!result.isFinal) {
-          return;
-        }
-        outcome.current = "miss";
-        recognition.stop();
-        playWrong();
-        setPhase(transcripts[0] ? "wrong" : "empty");
+    let armed = false;
+    let arming = false;
+    let startedAt = 0;
+    let acceptNotBefore = Number.POSITIVE_INFINITY;
+    let sampleDone = sampleReleased.current;
+    holdSample.current = waitForSample;
+
+    function accept() {
+      if (!live() || outcome.current !== "idle") {
         return;
       }
       outcome.current = "hit";
+      clearTimers();
       recognition.stop();
+      stopMic();
       playSuccess();
       void addExperience(lessonExperience);
-      window.setTimeout(() => {
+      later(() => {
+        if (!live()) {
+          return;
+        }
         setPhase("ready");
         setHeard("");
         setIndex((value) => {
@@ -153,54 +224,162 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
           return next;
         });
       }, 700);
-    };
+    }
 
-    recognition.onerror = (event) => {
-      if (event.error === "aborted") {
+    function finish() {
+      if (!live() || outcome.current !== "idle") {
         return;
       }
       outcome.current = "miss";
-      if (event.error === "not-allowed" || event.error === "language-not-supported" || event.error === "service-not-allowed") {
-        setPhase("missing");
+      recognition.stop();
+      stopMic();
+      const heard = heardRef.current;
+      if (!heard && peak.current < 0.04) {
+        setPhase("quiet");
         return;
       }
       playWrong();
-      setPhase("empty");
+      setPhase(heard ? "wrong" : "empty");
+    }
+
+    function tryArm() {
+      if (!live() || armed || arming || !sampleDone || !startedAt) {
+        return;
+      }
+      arming = true;
+      const beat = holdSample.current ? 450 : 0;
+      const readyAt = Math.max(startedAt + 400, performance.now() + beat);
+      later(() => {
+        arming = false;
+        if (!live() || outcome.current !== "idle") {
+          return;
+        }
+        if (performance.now() < startedAt + 380) {
+          tryArm();
+          return;
+        }
+        armed = true;
+        peak.current = 0;
+        setPhase("listening");
+        later(finish, 6500);
+      }, Math.max(0, readyAt - performance.now()));
+    }
+
+    armRef.current = () => {
+      sampleDone = true;
+      tryArm();
     };
 
-    const listenTimer = window.setTimeout(() => {
-      if (outcome.current === "idle") {
-        recognition.stop();
+    recognition.onstart = () => {
+      startedAt = performance.now();
+      acceptNotBefore = startedAt + 380;
+      tryArm();
+    };
+
+    recognition.onresult = (event) => {
+      if (!live() || !armed || outcome.current !== "idle" || performance.now() < acceptNotBefore) {
+        return;
       }
-    }, 5000);
+      const result = event.results[event.results.length - 1];
+      if (!result) {
+        return;
+      }
+      const transcripts = Array.from({ length: result.length }, (_, choice) => result[choice]?.transcript ?? "");
+      const line = transcripts[0] ?? "";
+      heardRef.current = line;
+      setHeard(line);
+      const match = transcripts.some((transcript) => saidWithAh(current, transcript));
+      if (!match) {
+        return;
+      }
+      if (micRef.current && peak.current < 0.015) {
+        return;
+      }
+      accept();
+    };
+
+    recognition.onerror = (event) => {
+      if (!live() || event.error === "aborted" || event.error === "no-speech") {
+        return;
+      }
+      if (event.error === "not-allowed" || event.error === "service-not-allowed" || event.error === "language-not-supported") {
+        recognitionRef.current = null;
+        if (fromGesture || event.error === "language-not-supported") {
+          outcome.current = "miss";
+          setPhase("missing");
+        }
+      }
+    };
 
     recognition.onend = () => {
-      window.clearTimeout(listenTimer);
-      stopMic();
-      if (outcome.current === "idle") {
-        setPhase(peak.current < 0.08 ? "quiet" : "empty");
+      if (!live() || outcome.current !== "idle") {
+        return;
+      }
+      try {
+        recognition.start();
+      } catch {
+        recognitionRef.current = null;
       }
     };
+
+    if (sampleDone) {
+      tryArm();
+    }
 
     try {
       recognition.start();
     } catch {
-      window.clearTimeout(listenTimer);
-      setPhase("missing");
+      if (live()) {
+        setPhase(fromGesture ? "missing" : "ready");
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!lesson) {
       return;
     }
+    const audio = new Audio(consonantSrc(lesson.file));
+    audioRef.current = audio;
+    void openEar(lesson, true, false);
+    playSample(audio);
+    return () => {
+      audio.pause();
+      audio.removeEventListener("ended", releaseSample);
+      session.current += 1;
+      clearTimers();
+      armRef.current = null;
+      recognitionRef.current?.abort();
+      recognitionRef.current = null;
+      stopMic();
+    };
+    // openEar restarts the mic for the letter that just appeared.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lesson]);
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
-      if (outcome.current !== "idle") {
-        stream.getTracks().forEach((track) => track.stop());
-        return;
-      }
-      micRef.current = stream;
-      setMicStream(stream);
-    } catch {
-      setMicStream(null);
+  function replay() {
+    if (!lesson || outcome.current === "hit") {
+      return;
     }
+    const audio = audioRef.current ?? new Audio(consonantSrc(lesson.file));
+    audioRef.current = audio;
+    audio.pause();
+    audio.currentTime = 0;
+    void openEar(lesson, true, false);
+    playSample(audio);
+  }
+
+  function speak(current: ConsonantLesson) {
+    if (outcome.current === "hit" || phase === "listening") {
+      return;
+    }
+    audioRef.current?.pause();
+    if (recognitionRef.current && outcome.current === "idle") {
+      holdSample.current = false;
+      releaseSample();
+      return;
+    }
+    void openEar(current, false, true);
   }
 
   if (done || !lesson) {
@@ -247,7 +426,7 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
           <Button type="button" variant="outline" className="h-11 px-5" onClick={replay}>
             {t("speakHear")}
           </Button>
-          <Button type="button" className="h-11 px-5" disabled={phase === "listening"} onClick={() => listen(lesson)}>
+          <Button type="button" className="h-11 px-5" disabled={phase === "listening"} onClick={() => speak(lesson)}>
             <MicIcon className="size-4" />
             {phase === "listening" ? t("speakListening") : t("speakSay", { sound: lesson.readings[0] })}
           </Button>

@@ -9,7 +9,7 @@ export type ConsonantLesson = {
 // Bet and kaf use the hard clip. Pe only has the soft clip in the set.
 const lessons: readonly ConsonantLesson[] = [
   { id: "aleph", file: "01_alef_א.mp3", letter: "א", readings: ["ah", "a"], forms: ["אה", "הא", "אא"] },
-  { id: "bet", file: "03_bet_hard_בּ.mp3", letter: "ב", readings: ["bah", "ba"], forms: ["בה", "בא"] },
+  { id: "bet", file: "03_bet_hard_בּ.mp3", letter: "ב", readings: ["bah", "ba", "pah", "pa"], forms: ["בה", "בא"] },
   { id: "gimel", file: "04_gimel_ג.mp3", letter: "ג", readings: ["gah", "ga"], forms: ["גה", "גא"] },
   { id: "dalet", file: "05_dalet_ד.mp3", letter: "ד", readings: ["dah", "da"], forms: ["דה", "דא"] },
   { id: "he", file: "06_he_ה.mp3", letter: "ה", readings: ["hah", "ha"], forms: ["הה", "הא"] },
@@ -17,10 +17,10 @@ const lessons: readonly ConsonantLesson[] = [
   { id: "zayin", file: "08_zayin_ז.mp3", letter: "ז", readings: ["zah", "za"], forms: ["זה", "זא"] },
   { id: "chet", file: "09_het_ח.mp3", letter: "ח", readings: ["khah", "cha", "kh"], forms: ["חה", "חא"] },
   { id: "tet", file: "10_tet_ט.mp3", letter: "ט", readings: ["tah", "ta"], forms: ["טה", "טא"] },
-  { id: "yod", file: "11_yod_י.mp3", letter: "י", readings: ["yah", "ya"], forms: ["יה", "יא"] },
+  { id: "yod", file: "11_yod_י.mp3", letter: "י", readings: ["yah", "ya", "yeah"], forms: ["יה", "יא"] },
   { id: "kaf", file: "13_kaf_hard_כּ.mp3", letter: "כ", readings: ["kah", "ka"], forms: ["כה", "כא"] },
   { id: "lamed", file: "14_lamed_ל.mp3", letter: "ל", readings: ["lah", "la"], forms: ["לה", "לא"] },
-  { id: "mem", file: "15_mem_מ.mp3", letter: "מ", readings: ["mah", "ma"], forms: ["מה", "מא"] },
+  { id: "mem", file: "15_mem_מ.mp3", letter: "מ", readings: ["mah", "ma", "my"], forms: ["מה", "מא"] },
   { id: "nun", file: "16_nun_נ.mp3", letter: "נ", readings: ["nah", "na"], forms: ["נה", "נא"] },
   { id: "samekh", file: "17_samekh_ס.mp3", letter: "ס", readings: ["sah", "sa"], forms: ["סה", "סא"] },
   { id: "ayin", file: "18_ayin_ע.mp3", letter: "ע", readings: ["ah", "a"], forms: ["עה", "עא", "אה", "הא"] },
@@ -69,13 +69,26 @@ export function saidWithAh(lesson: ConsonantLesson, transcript: string) {
   return words.some((word) => soundsLikeAh(word, stem, lesson.readings));
 }
 
+const ahEnding = /(?:uh|ah|aw|ow|er)$/;
+
 function soundsLikeAh(word: string, stem: string, readings: readonly string[]) {
-  const simple = word.replace(/uh$/, "a").replace(/ah$/, "a").replace(/er$/, "a");
-  if (readings.some((reading) => reading.replace(/uh$/, "a").replace(/ah$/, "a") === simple)) {
+  const simple = word.replace(ahEnding, "a");
+  if (readings.some((reading) => reading.replace(ahEnding, "a") === simple)) {
     return true;
   }
   if (!stem) {
-    return /^a+$/.test(simple);
+    return simple === "a" || simple === "ha" || word === "huh" || word === "uh";
   }
-  return simple.startsWith(stem) && simple.length <= stem.length + 2 && simple.slice(stem.length).includes("a");
+
+  // "bah bah" often arrives as one token. Accept the syllable repeated, and a bare consonant when the vowel was clipped.
+  const token = (readings[0] ?? "").replace(/ah$/, "a");
+  const folded = word.replace(/ah|uh/g, "a");
+  if (token && folded.length <= 12 && folded.split(token).join("") === "") {
+    return true;
+  }
+  if (!simple.startsWith(stem) || simple.length > stem.length + 2) {
+    return false;
+  }
+  const tail = simple.slice(stem.length);
+  return tail.length === 0 || tail.includes("a");
 }
