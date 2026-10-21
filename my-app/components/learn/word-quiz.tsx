@@ -93,7 +93,7 @@ function wordRounds(targets: readonly BasicWord[]): QuizRound[] {
     }
 
     const choices = shuffleLetters(glyphs).map((glyph) => ({
-      id: glyph === word.hebrew ? word.id : glyph,
+      id: glyph,
       name: word.english,
       cue: { text: glyph },
       glyph,
@@ -101,7 +101,7 @@ function wordRounds(targets: readonly BasicWord[]): QuizRound[] {
 
     return {
       id: word.id,
-      correctId: word.id,
+      correctId: word.hebrew,
       prompt: { text: word.hebrew },
       choices,
     };
