@@ -4,15 +4,18 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { printFont } from "@/components/alephbet/print-font";
 import { ExperienceTube } from "@/components/learn/experience-tube";
+import { LetterIntro } from "@/components/learn/letter-intro";
 import { LetterQuiz } from "@/components/learn/letter-quiz";
-import { LevelClose, NextLevelLink } from "@/components/learn/level-finish";
+import { NextLevelLink } from "@/components/learn/level-finish";
+import { LevelFrame } from "@/components/learn/level-frame";
 import { BlueNikud } from "@/components/learn/pointed-letter";
 import { Button } from "@/components/ui/button";
 import { letterCatalog } from "@/lib/alephbet/letter-info";
 import type { SpeechCue } from "@/lib/alephbet/intro-alphabet";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { completeCurriculumLevel, curriculumLevel } from "@/lib/learn/curriculum";
-import { letterPair, lettersThrough, type PairWord } from "@/lib/learn/letter-pairs";
+import { rememberKnownWord } from "@/lib/learn/known-words";
+import { letterPair, lettersThrough, pairKnownWord, type PairWord } from "@/lib/learn/letter-pairs";
 import { playAudio } from "@/lib/settings/master-volume";
 import { cn } from "cn";
 
@@ -21,6 +24,7 @@ export function LetterPairLevel({ level }: { level: number }) {
   const locale = useLocale();
   const pair = letterPair(level);
   const [allowed, setAllowed] = useState<boolean | null>(null);
+  const [intro, setIntro] = useState(true);
   const [slide, setSlide] = useState(0);
   const [quizzing, setQuizzing] = useState(false);
   const [passed, setPassed] = useState(false);
@@ -31,15 +35,23 @@ export function LetterPairLevel({ level }: { level: number }) {
     setAllowed(local || curriculumLevel() >= level);
   }, [level]);
 
+  const shownWord = !intro && !quizzing && !passed ? pair?.words[slide] : undefined;
+
+  useEffect(() => {
+    if (shownWord) {
+      void rememberKnownWord(pairKnownWord(shownWord));
+    }
+  }, [shownWord]);
+
   if (!pair || allowed === null) {
     return null;
   }
 
   if (!allowed) {
     return (
-      <main className="flex flex-1 items-center justify-center text-center">
-        <p className="text-base text-emerald-900">{t("levelLocked")}</p>
-      </main>
+      <LevelFrame label={t("level", { id: String(level) })} finished>
+        <p className="text-center text-base text-emerald-900">{t("levelLocked")}</p>
+      </LevelFrame>
     );
   }
 
@@ -61,56 +73,53 @@ export function LetterPairLevel({ level }: { level: number }) {
   }
 
   return (
-    <main className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] bg-white/55 shadow-[0_24px_60px_-36px_rgba(6,78,59,0.45)] backdrop-blur-md">
-      <LevelClose finished={passed || curriculumLevel() > level} className="absolute top-0 right-0 z-20" />
-      <header className="flex shrink-0 justify-center py-1">
-        <p className="rounded-full border border-emerald-950/15 bg-white/80 px-4 py-1 text-sm font-semibold tracking-[0.18em] text-emerald-950 uppercase">
-          {t("level", { id: String(level) })}
-        </p>
-      </header>
-      <div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 overflow-hidden">
-          {passed ? (
-            <div className="flex max-w-xl flex-col items-center text-center">
-              <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("levelClear", { level })}</h1>
-              <NextLevelLink level={level} />
-            </div>
-          ) : quizzing ? (
-            <LetterQuiz
-              letters={letters}
-              pool={pool}
-              onPlay={playCue}
-              onPass={() => {
-                completeCurriculumLevel(level);
-                setPassed(true);
-              }}
-            />
-          ) : word ? (
-            <WordSlide
-              word={word}
-              gloss={word.gloss[glossLocale]}
-              hearLabel={t("hearWord")}
-              nextLabel={t("next")}
-              onHear={() => void playCue({ text: word.hebrew })}
-              onNext={() => {
-                if (slide + 1 >= pair.words.length) {
-                  setQuizzing(true);
-                  return;
-                }
-                setSlide((current) => current + 1);
-              }}
-            />
-          ) : null}
+    <LevelFrame
+      label={t("level", { id: String(level) })}
+      finished={passed || curriculumLevel() > level}
+      aside={passed ? <ExperienceTube /> : null}
+    >
+      {passed ? (
+        <div className="flex max-w-xl flex-col items-center text-center">
+          <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("levelClear", { level })}</h1>
+          <NextLevelLink level={level} />
         </div>
-        {passed ? <ExperienceTube /> : null}
-      </div>
-    </main>
+      ) : quizzing ? (
+        <LetterQuiz
+          letters={letters}
+          pool={pool}
+          onPlay={playCue}
+          onPass={() => {
+            completeCurriculumLevel(level);
+            setPassed(true);
+          }}
+        />
+      ) : intro ? (
+        <LetterIntro letters={letters} onPlay={(cue) => void playCue(cue)} onNext={() => setIntro(false)} />
+      ) : word ? (
+        <WordSlide
+          word={word}
+          gloss={word.gloss[glossLocale]}
+          savedLabel={t("newWord", { word: word.gloss[glossLocale] })}
+          hearLabel={t("hearWord")}
+          nextLabel={t("next")}
+          onHear={() => void playCue({ text: word.hebrew })}
+          onNext={() => {
+            if (slide + 1 >= pair.words.length) {
+              setQuizzing(true);
+              return;
+            }
+            setSlide((current) => current + 1);
+          }}
+        />
+      ) : null}
+    </LevelFrame>
   );
 }
 
 function WordSlide({
   word,
   gloss,
+  savedLabel,
   hearLabel,
   nextLabel,
   onHear,
@@ -118,6 +127,7 @@ function WordSlide({
 }: {
   word: PairWord;
   gloss: string;
+  savedLabel: string;
   hearLabel: string;
   nextLabel: string;
   onHear: () => void;
@@ -134,8 +144,9 @@ function WordSlide({
         <BlueNikud text={word.hebrew} />
       </p>
       <p className="text-lg text-emerald-900">{gloss}</p>
+      <p className="text-sm text-emerald-800/80">{savedLabel}</p>
       <div className="flex gap-3">
-        <Button type="button" variant="outline" className="h-11 px-5" onClick={onHear}>
+        <Button type="button" variant="outline" className="h-11 px-5" sound={false} onClick={onHear}>
           {hearLabel}
         </Button>
         <Button type="button" className="h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" onClick={onNext}>

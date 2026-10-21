@@ -54,8 +54,8 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
   const [heard, setHeard] = useState("");
   const [phase, setPhase] = useState<"ready" | "listening" | "correct" | "wrong" | "empty" | "quiet" | "missing">("ready");
   const [micStream, setMicStream] = useState<MediaStream | null>(null);
-  const playWrong = useCue("/sounds/samples/disable-sound.mp3");
-  const playSuccess = useCue("/sounds/samples/success.mp3", 0.55);
+  const playWrong = useCue("wrong");
+  const playSuccess = useCue("success");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<BrowserRecognition | null>(null);
   const outcome = useRef<"idle" | "hit" | "miss">("idle");
@@ -447,10 +447,10 @@ export function ConsonantSpeak({ onPass }: { onPass: () => void }) {
           </motion.div>
         </AnimatePresence>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button type="button" variant="outline" className="h-11 px-5" onClick={replay}>
+          <Button type="button" variant="outline" className="h-11 px-5" sound={false} onClick={replay}>
             {t("speakHear")}
           </Button>
-          <Button type="button" className="h-11 px-5" disabled={phase === "listening" || phase === "correct"} onClick={() => speak(lesson)}>
+          <Button type="button" className="h-11 px-5" sound={false} disabled={phase === "listening" || phase === "correct"} onClick={() => speak(lesson)}>
             <MicIcon className="size-4" />
             {phase === "listening" ? t("speakListening") : t("speakSay", { sound: lesson.sound })}
           </Button>

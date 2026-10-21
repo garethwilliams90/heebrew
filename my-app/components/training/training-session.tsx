@@ -32,8 +32,8 @@ export function TrainingSession() {
   const [reward, setReward] = useState<{ from: number; to: number } | null>(null);
   const experienceRef = useRef(0);
   const rewardedRef = useRef(false);
-  const playCorrect = useCue("/sounds/samples/pop-up-on.mp3");
-  const playWrong = useCue("/sounds/samples/pop-down.mp3");
+  const playCorrect = useCue("popUp");
+  const playWrong = useCue("popDown");
 
   useEffect(() => {
     let cancel = false;

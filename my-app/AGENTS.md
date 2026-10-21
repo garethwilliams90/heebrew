@@ -104,4 +104,6 @@ Login, logout, and registration through Supabase. Email and password are at `/lo
 - Do not add libraries, services, or UI kits outside the stack above unless the owner asks for them or approves them first.
 - Prefer the existing Next.js App Router project. Read `node_modules/next/dist/docs/` before using Next.js APIs that may have changed.
 - Keep UI work consistent with the nature theme, smooth motion, and a clean modern look.
+- The shared `Button` plays the switch-on sound on click. Pass `sound` to choose another sample (`switchOff`, `popUp`, `popDown`, `success`, `wrong`), or `sound={false}` when the button plays its own audio, such as a Hear or Listen control. The global sound setting silences all of them. Sounds that depend on an outcome, like a right or wrong answer, use `useCue`.
+- Every curriculum level renders inside `LevelFrame`, which holds the panel, the level badge, and the exit button.
 - When a feature touches the database or auth, use Supabase. Browser code uses `lib/supabase/client.ts`. Server Components, Server Actions, and Route Handlers use `lib/supabase/server.ts`. `proxy.ts` refreshes the auth session, then applies locale routing. Credentials live in `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Do not commit that file.

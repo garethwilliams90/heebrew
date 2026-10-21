@@ -4,7 +4,7 @@ import { CaseSensitive, Quote, Settings, TextQuote, Volume2, VolumeX, WholeWord 
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { useCue } from "@/components/settings/use-cue";
+import type { SampleName } from "@/components/settings/settings-provider";
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -79,9 +79,6 @@ export function StudyTools({
   const t = useTranslations("Flashcards");
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const playOn = useCue("/sounds/samples/pop-up-on.mp3");
-  const playOff = useCue("/sounds/samples/pop-down.mp3");
-
   useEffect(() => {
     if (!open) {
       return;
@@ -107,12 +104,11 @@ export function StudyTools({
     };
   }, [open]);
 
-  function playToggle(enabled: boolean) {
-    if (enabled) {
-      playOff();
-    } else {
-      playOn();
+  function toggleSound(enabled: boolean, always = false): SampleName | false {
+    if (!soundPrefs.general && !always) {
+      return false;
     }
+    return enabled ? "popDown" : "popUp";
   }
 
   const toolList = [
@@ -123,12 +119,8 @@ export function StudyTools({
       label: soundPrefs.word ? t("muteWord") : t("unmuteWord"),
       hint: t("toolWord"),
       icon: WholeWord,
-      onClick: () => {
-        if (soundPrefs.general) {
-          playToggle(soundPrefs.word);
-        }
-        onToggleSound("word");
-      },
+      sound: toggleSound(soundPrefs.word),
+      onClick: () => onToggleSound("word"),
     },
     {
       id: "general",
@@ -137,10 +129,8 @@ export function StudyTools({
       label: soundPrefs.general ? t("muteSound") : t("unmuteSound"),
       hint: t("toolGeneral"),
       icon: soundPrefs.general ? Volume2 : VolumeX,
-      onClick: () => {
-        playToggle(soundPrefs.general);
-        onToggleSound("general");
-      },
+      sound: toggleSound(soundPrefs.general, true),
+      onClick: () => onToggleSound("general"),
     },
     {
       id: "sentence",
@@ -149,12 +139,8 @@ export function StudyTools({
       label: soundPrefs.sentence ? t("muteSentence") : t("unmuteSentence"),
       hint: t("toolSentence"),
       icon: TextQuote,
-      onClick: () => {
-        if (soundPrefs.general) {
-          playToggle(soundPrefs.sentence);
-        }
-        onToggleSound("sentence");
-      },
+      sound: toggleSound(soundPrefs.sentence),
+      onClick: () => onToggleSound("sentence"),
     },
     {
       id: "nikud",
@@ -163,12 +149,8 @@ export function StudyTools({
       label: display.nikud ? t("hideNikud") : t("showNikud"),
       hint: t("toolNikud"),
       icon: CaseSensitive,
-      onClick: () => {
-        if (soundPrefs.general) {
-          playToggle(display.nikud);
-        }
-        onToggleDisplay?.("nikud");
-      },
+      sound: toggleSound(display.nikud),
+      onClick: () => onToggleDisplay?.("nikud"),
     },
     {
       id: "example",
@@ -177,12 +159,8 @@ export function StudyTools({
       label: display.example ? t("hideExample") : t("showExample"),
       hint: t("toolExample"),
       icon: Quote,
-      onClick: () => {
-        if (soundPrefs.general) {
-          playToggle(display.example);
-        }
-        onToggleDisplay?.("example");
-      },
+      sound: toggleSound(display.example),
+      onClick: () => onToggleDisplay?.("example"),
     },
   ].filter((tool) => (tools as readonly string[]).includes(tool.id));
 
@@ -232,6 +210,7 @@ export function StudyTools({
                         )}
                         aria-pressed={tool.enabled}
                         aria-label={tool.label}
+                        sound={tool.sound}
                         onClick={tool.onClick}
                       >
                         <Icon />

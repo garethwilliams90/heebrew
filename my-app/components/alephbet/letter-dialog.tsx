@@ -113,6 +113,7 @@ export function LetterDialog({
               size="icon"
               aria-label={t("hearLetter")}
               disabled={!soundOn}
+              sound={false}
               onClick={() => onPlay(fact.letter)}
             >
               <Volume2 />

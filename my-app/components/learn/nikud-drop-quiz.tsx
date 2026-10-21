@@ -54,8 +54,8 @@ export function NikudDropQuiz({
   const [hidden, setHidden] = useState<string[]>([]);
   const [failed, setFailed] = useState(false);
   const answering = useRef(false);
-  const playWrong = useCue("/sounds/samples/disable-sound.mp3");
-  const playSuccess = useCue("/sounds/samples/success.mp3", 0.55);
+  const playWrong = useCue("wrong");
+  const playSuccess = useCue("success");
   const topSlot = useRef<HTMLDivElement>(null);
   const bottomSlot = useRef<HTMLDivElement>(null);
   const zoneMotion = useAnimation();
@@ -288,6 +288,7 @@ export function NikudDropQuiz({
             onPointerDown={() => setReplayDown(true)}
             onPointerUp={() => setReplayDown(false)}
             onPointerLeave={() => setReplayDown(false)}
+            sound={false}
             onClick={replay}
           >
             {t("quizHear")}

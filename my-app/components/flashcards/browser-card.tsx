@@ -66,6 +66,7 @@ export function BrowserCard({
             className="border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
             aria-label={wordPlaying ? t("listening") : t("listen")}
             disabled={!wordEnabled || wordPlaying}
+            sound={false}
             onClick={onPlayWord}
           >
             <Volume2 />
@@ -85,6 +86,7 @@ export function BrowserCard({
               className="mt-0.5 shrink-0 border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50"
               aria-label={sentencePlaying ? t("listening") : t("listenSentence")}
               disabled={!sentenceEnabled || sentencePlaying}
+              sound={false}
               onClick={onPlaySentence}
             >
               <Volume2 />

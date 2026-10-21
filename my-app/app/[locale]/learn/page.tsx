@@ -11,10 +11,10 @@ export default async function Learn({
   const { from, level } = await searchParams;
   const major = Number(level);
   if (Number.isFinite(major) && major >= 12) {
-    return <ReadingLevel level={Math.floor(major)} />;
+    return <ReadingLevel key={major} level={Math.floor(major)} />;
   }
   if (Number.isFinite(major) && major >= 3) {
-    return <LetterPairLevel level={Math.floor(major)} />;
+    return <LetterPairLevel key={major} level={Math.floor(major)} />;
   }
 
   return <AlphabetIntro initialStep={stepForStage(from)} />;

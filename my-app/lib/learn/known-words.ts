@@ -1,6 +1,15 @@
 import { createDeck, saveCard } from "@/lib/flashcards/library";
 import { createClient } from "@/lib/supabase/client";
 import { basicWords, type BasicWord } from "@/lib/learn/basic-words";
+import { letterPairLevels, pairKnownWord } from "@/lib/learn/letter-pairs";
+import { readingKnownWords } from "@/lib/learn/reading-levels";
+
+// Every word the curriculum can teach. Ids are shared only when the Hebrew is the same.
+const learnableWords: readonly BasicWord[] = [
+  ...basicWords,
+  ...letterPairLevels.flatMap((level) => level.words.map(pairKnownWord)),
+  ...readingKnownWords,
+];
 
 const STORAGE_KEY = "webrew.known-words";
 const DECK_TITLE = "Known words";
@@ -24,7 +33,7 @@ export function readKnownWords(): BasicWord[] {
       if (!item || typeof item !== "object" || !("id" in item) || typeof item.id !== "string") {
         return [];
       }
-      const word = basicWords.find((entry) => entry.id === item.id);
+      const word = learnableWords.find((entry) => entry.id === item.id);
       return word ? [word] : [];
     });
   } catch {

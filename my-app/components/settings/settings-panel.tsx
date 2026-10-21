@@ -36,7 +36,7 @@ export function SettingsPanel({
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const { sound, volume, clock, toggleSound, toggleClock, setVolume, playSwitch } = useSettings();
+  const { sound, volume, clock, toggleSound, toggleClock, setVolume } = useSettings();
   const [fullscreen, setFullscreen] = useState(false);
   const [languagesOpen, setLanguagesOpen] = useState(false);
 
@@ -53,10 +53,8 @@ export function SettingsPanel({
     try {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
-        playSwitch(false);
       } else {
         await document.documentElement.requestFullscreen();
-        playSwitch(true);
       }
     } catch {
       return;
@@ -64,7 +62,6 @@ export function SettingsPanel({
   }
 
   async function logout() {
-    playSwitch(false);
     const supabase = createClient();
     await supabase.auth.signOut();
     onDone?.();
@@ -76,7 +73,6 @@ export function SettingsPanel({
     if (next === locale) {
       return;
     }
-    playSwitch(true);
     setLanguagesOpen(false);
     onDone?.();
     router.replace(pathname, { locale: next });
@@ -95,7 +91,7 @@ export function SettingsPanel({
           trackClassName="data-horizontal:h-2 data-vertical:w-2"
           onValueChange={(next) => setVolume(next[0] ?? 0)}
           /> */}
-        <Button type="button" variant="outline" size="icon" className={iconButton} aria-pressed={sound} aria-label={t("sound")} onClick={toggleSound}>
+        <Button type="button" variant="outline" size="icon" className={iconButton} aria-pressed={sound} aria-label={t("sound")} sound={false} onClick={toggleSound}>
           {sound ? <Volume2 /> : <VolumeX />}
         </Button>
         </div>
@@ -133,15 +129,16 @@ export function SettingsPanel({
         className={iconButton}
         aria-pressed={fullscreen}
         aria-label={fullscreen ? t("exitFullscreen") : t("fullscreen")}
+        sound={fullscreen ? "switchOff" : "switchOn"}
         onClick={() => void toggleFullscreen()}
       >
         {fullscreen ? <Minimize /> : <Maximize />}
       </Button>
-      <Button type="button" variant="outline" size="icon" className={iconButton} aria-pressed={clock} aria-label={t("clock")} onClick={toggleClock}>
+      <Button type="button" variant="outline" size="icon" className={iconButton} aria-pressed={clock} aria-label={t("clock")} sound={false} onClick={toggleClock}>
         <Clock />
       </Button>
       {email ? (
-        <Button type="button" variant="outline" size="icon" className={iconButton} aria-label={auth("logOut")} onClick={() => void logout()}>
+        <Button type="button" variant="outline" size="icon" className={iconButton} aria-label={auth("logOut")} sound="switchOff" onClick={() => void logout()}>
           <LogOut />
         </Button>
       ) : (

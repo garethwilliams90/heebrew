@@ -100,6 +100,11 @@ export function consonantSrc(file: string) {
   return `/sounds/hebrew_letter_sounds_24_mp3s/${encodeURIComponent(file)}`;
 }
 
+export function letterConsonantSrc(letterId: string) {
+  const file = letters.find((letter) => letter.id === letterId)?.file;
+  return file ? consonantSrc(file) : null;
+}
+
 export function saidSyllable(step: SpeakStep, transcript: string) {
   const words = transcript.toLowerCase().match(/[a-z]+/g) ?? [];
   if (words.some((word) => step.reject.includes(word))) {

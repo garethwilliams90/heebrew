@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { TextQuote, Volume2, VolumeX, WholeWord } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCue } from "@/components/settings/use-cue";
 import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "webrew.sound";
@@ -93,9 +92,6 @@ export function SoundControls({
   className?: string;
 }) {
   const t = useTranslations("Flashcards");
-  const playOn = useCue("/sounds/samples/pop-up-on.mp3");
-  const playOff = useCue("/sounds/samples/pop-down.mp3");
-
   return (
     <div
       className={className ?? "flex flex-wrap items-center gap-1.5"}
@@ -120,16 +116,8 @@ export function SoundControls({
             } ${!prefs.general && channel.id !== "general" ? "opacity-50" : ""}`}
             aria-pressed={enabled}
             aria-label={enabled ? t(channel.mute) : t(channel.unmute)}
-            onClick={() => {
-              if (prefs.general || channel.id === "general") {
-                if (enabled) {
-                  playOff();
-                } else {
-                  playOn();
-                }
-              }
-              onToggle(channel.id);
-            }}
+            sound={prefs.general || channel.id === "general" ? (enabled ? "popDown" : "popUp") : false}
+            onClick={() => onToggle(channel.id)}
           >
             <Icon />
             {t(channel.label)}

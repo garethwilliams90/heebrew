@@ -194,6 +194,7 @@ export function StudyCardView({
             aria-keyshortcuts="R"
             aria-label={wordPlaying ? t("listening") : t("listen")}
             disabled={!soundPrefs.general || !soundPrefs.word || wordPlaying}
+            sound={false}
             onClick={onSpeak}
           >
             <Volume2 />
@@ -229,6 +230,7 @@ export function StudyCardView({
               }`}
               aria-label={sentencePlaying ? t("listening") : t("listenSentence")}
               disabled={!soundPrefs.general || !soundPrefs.sentence || sentencePlaying}
+              sound={false}
               onClick={onSpeakExample}
             >
               <Volume2 />

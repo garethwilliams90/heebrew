@@ -6,11 +6,14 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
 import { Link } from "@/i18n/navigation";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { curriculumLevel } from "@/lib/learn/curriculum";
 import { StonePath } from "@/components/learn/nature-scene";
 import { letterCatalog } from "@/lib/alephbet/letter-info";
 import { letterPairLevels } from "@/lib/learn/letter-pairs";
 import { hasLearningStarted } from "@/lib/learn/started";
+
+const alphabetOrder = letterCatalog.filter((item) => item.kind === "letter");
 
 const levelStages: Record<number, { id: string; href: "/learn" | `/learn?from=${string}`; practice?: boolean }[]> = {
   1: [
@@ -52,18 +55,34 @@ export function LevelPath() {
     return null;
   }
 
-  const nodes = [
-    { level: 1, mark: "אב", href: "/learn" as const },
-    { level: 2, mark: "דג", href: "/learn?from=2.0" as const },
-    ...letterPairLevels.map((item) => ({
-      level: item.level,
-      mark: item.letterIds.map((id) => letterCatalog.find((letter) => letter.id === id)?.letter ?? "").join(""),
-      href: `/learn?level=${item.level}` as const,
-    })),
-    { level: 12, mark: "אמא", href: "/learn?level=12" as const },
-    { level: 13, mark: "של", href: "/learn?level=13" as const },
-    { level: 14, mark: "אוהב", href: "/learn?level=14" as const },
+  const hrefs = [
+    "/learn" as const,
+    "/learn?from=2.0" as const,
+    ...letterPairLevels.map((item) => `/learn?level=${item.level}` as const),
+    "/learn?level=12" as const,
+    "/learn?level=13" as const,
+    "/learn?level=14" as const,
   ];
+  const nodes = hrefs.map((href, index) => ({
+    level: index + 1,
+    mark: alphabetOrder[index]?.letter ?? "",
+    href,
+  }));
+
+  function lessonText(level: number) {
+    const pair = letterPairLevels.find((item) => item.level === level);
+    if (pair) {
+      const letters = pair.letterIds
+        .map((id) => letterCatalog.find((item) => item.id === id)?.letter ?? "")
+        .join(" & ");
+      return {
+        title: t("lessonLettersTitle", { letters }),
+        about: t("lessonLettersAbout", { letters, count: pair.letterIds.length }),
+      };
+    }
+    const key = `lesson${level}` as "lesson1" | "lesson2" | "lesson12" | "lesson13" | "lesson14";
+    return { title: t(`${key}Title`), about: t(`${key}About`) };
+  }
 
   return (
     <div className="flex w-full max-w-3xl flex-col items-center gap-6">
@@ -72,8 +91,8 @@ export function LevelPath() {
         {nodes.map((node, index) => {
           const level = node.level;
           const open = pathLevel >= level;
-          const stages = levelStages[level];
-          const expanded = hovered === level && open && Boolean(stages);
+          const stages = open ? levelStages[level] : undefined;
+          const lesson = lessonText(level);
           const shifts = [4, 36, 12, 42, 18, 30];
           const shift = `${shifts[index % shifts.length]}%`;
 
@@ -85,9 +104,17 @@ export function LevelPath() {
               onHoverStart={() => setHovered(level)}
               onHoverEnd={() => setHovered((current) => (current === level ? null : current))}
             >
-              <LevelNode letter={node.mark} level={level} open={open} href={node.href} label={t("openLevel", { level })} />
+              <LevelNode
+                letter={node.mark}
+                level={level}
+                open={open}
+                href={node.href}
+                label={t("openLevel", { level })}
+                lesson={t("lessonName", { level, title: lesson.title })}
+                about={lesson.about}
+              />
               <AnimatePresence initial={false}>
-                {expanded ? (
+                {hovered === level && stages ? (
                   <motion.div
                     key="stages"
                     initial={{ height: 0, opacity: 0 }}
@@ -131,12 +158,16 @@ function LevelNode({
   open,
   href,
   label,
+  lesson,
+  about,
 }: {
   letter: string;
   level: number;
   open: boolean;
   href?: "/learn" | `/learn?from=${string}` | `/learn?level=${number}`;
   label: string;
+  lesson: string;
+  about: string;
 }) {
   const className = cn(
     printFont.className,
@@ -146,19 +177,30 @@ function LevelNode({
       : "cursor-not-allowed border-emerald-950/5 bg-white/40 text-emerald-950/30",
   );
 
-  if (!open || !href) {
-    return (
-      <span className={className} aria-disabled={!open} lang="he">
+  const card =
+    !open || !href ? (
+      <span className={className} aria-disabled={!open} lang="he" tabIndex={0}>
         {letter}
         <span className="font-sans text-sm tracking-wide text-emerald-800">{level}</span>
       </span>
+    ) : (
+      <Link href={href} className={className} lang="he" aria-label={label}>
+        {letter}
+        <span className="font-sans text-sm tracking-wide text-emerald-800">{level}</span>
+      </Link>
     );
-  }
 
   return (
-    <Link href={href} className={className} lang="he" aria-label={label}>
-      {letter}
-      <span className="font-sans text-sm tracking-wide text-emerald-800">{level}</span>
-    </Link>
+    <Tooltip>
+      <TooltipTrigger asChild>{card}</TooltipTrigger>
+      <TooltipContent
+        side="bottom"
+        className="max-w-xs flex-col items-start gap-1 bg-white px-3 py-2 text-left text-emerald-950 shadow-[0_16px_40px_-24px_rgba(6,78,59,0.8)]"
+        arrowClassName="bg-white fill-white"
+      >
+        <p className="text-sm font-semibold">{lesson}</p>
+        <p className="text-xs text-emerald-900/75">{about}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }

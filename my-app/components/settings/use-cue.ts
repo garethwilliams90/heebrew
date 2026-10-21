@@ -1,17 +1,10 @@
 "use client";
 
-import { useCallback, useRef } from "react";
-import useSound from "use-sound";
-import { useSettings } from "@/components/settings/settings-provider";
+import { useCallback } from "react";
+import { usePlaySample, type SampleName } from "@/components/settings/settings-provider";
 
-export function useCue(src: string, base = 0.5) {
-  const { sound, volume } = useSettings();
-  const audible = sound ? base * volume : 0;
-  const [play] = useSound(src, { interrupt: true, volume: audible, soundEnabled: audible > 0 });
-  const playRef = useRef(play);
-  playRef.current = play;
-
-  return useCallback(() => {
-    playRef.current();
-  }, []);
+// For sounds that depend on an outcome, such as a right or wrong answer.
+export function useCue(name: SampleName) {
+  const playSample = usePlaySample();
+  return useCallback(() => playSample(name), [name, playSample]);
 }

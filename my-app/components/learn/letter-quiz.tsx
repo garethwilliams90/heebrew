@@ -77,8 +77,8 @@ export function SoundQuiz({
   const [halves, setHalves] = useState(10);
   const [hidden, setHidden] = useState<string[]>([]);
   const [failed, setFailed] = useState(false);
-  const playWrong = useCue("/sounds/samples/disable-sound.mp3");
-  const playSuccess = useCue("/sounds/samples/success.mp3", 0.55);
+  const playWrong = useCue("wrong");
+  const playSuccess = useCue("success");
   const playRef = useRef(onPlay);
   const learnRef = useRef(onLearn);
   const armed = useRef(false);
@@ -95,6 +95,11 @@ export function SoundQuiz({
   useEffect(() => {
     if (!round) {
       return;
+    }
+
+    const learned = round.choices.find((item) => item.id === round.correctId);
+    if (learned) {
+      learnRef.current?.(learned);
     }
 
     return holdOptions(round.prompt, playRef, armed, armTimer);
@@ -305,6 +310,7 @@ export function SoundQuiz({
             onPointerDown={() => setReplayDown(true)}
             onPointerUp={() => setReplayDown(false)}
             onPointerLeave={() => setReplayDown(false)}
+            sound={false}
             onClick={() => holdOptions(round.prompt, playRef, armed, armTimer)}
           >
             {t("quizHear")}

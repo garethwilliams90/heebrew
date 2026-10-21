@@ -6,6 +6,17 @@ import { setMasterVolume } from "@/lib/settings/master-volume";
 
 const STORAGE_KEY = "webrew.settings";
 
+export type SampleName = "switchOn" | "switchOff" | "popUp" | "popDown" | "success" | "wrong";
+
+const samples: Record<SampleName, { src: string; gain: number }> = {
+  switchOn: { src: "/sounds/samples/switch-on.mp3", gain: 0.5 },
+  switchOff: { src: "/sounds/samples/switch-off.mp3", gain: 0.5 },
+  popUp: { src: "/sounds/samples/pop-up-on.mp3", gain: 0.5 },
+  popDown: { src: "/sounds/samples/pop-down.mp3", gain: 0.5 },
+  success: { src: "/sounds/samples/success.mp3", gain: 0.55 },
+  wrong: { src: "/sounds/samples/disable-sound.mp3", gain: 0.5 },
+};
+
 type StoredSettings = {
   sound: boolean;
   volume: number;
@@ -17,6 +28,7 @@ type SettingsContextValue = StoredSettings & {
   toggleClock: () => void;
   setVolume: (volume: number) => void;
   playSwitch: (on: boolean) => void;
+  playSample: (name: SampleName) => void;
 };
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -45,6 +57,13 @@ function readStored(): StoredSettings {
   }
 }
 
+function useSample(name: SampleName, sound: boolean, volume: number) {
+  const { src, gain } = samples[name];
+  const audible = sound ? gain * volume : 0;
+  const [play] = useSound(src, { interrupt: true, volume: audible, soundEnabled: audible > 0 });
+  return play;
+}
+
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [sound, setSound] = useState(true);
   const [volume, setVolumeState] = useState(0.8);
@@ -52,16 +71,34 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const soundRef = useRef(sound);
   const clockRef = useRef(clock);
+  // Toggling sound itself stays audible, so muting still clicks.
   const switchGain = Math.max(volume, 0.45);
-  const [playOn] = useSound("/sounds/samples/switch-on.mp3", { interrupt: true, volume: switchGain });
-  const [playOff] = useSound("/sounds/samples/switch-off.mp3", { interrupt: true, volume: switchGain });
+  const [playOn] = useSound(samples.switchOn.src, { interrupt: true, volume: switchGain });
+  const [playOff] = useSound(samples.switchOff.src, { interrupt: true, volume: switchGain });
+  const playSwitchOn = useSample("switchOn", sound, volume);
+  const playSwitchOff = useSample("switchOff", sound, volume);
+  const playPopUp = useSample("popUp", sound, volume);
+  const playPopDown = useSample("popDown", sound, volume);
+  const playSuccess = useSample("success", sound, volume);
+  const playWrong = useSample("wrong", sound, volume);
+  const players = useRef<Record<SampleName, () => void> | null>(null);
   const playOnRef = useRef(playOn);
   const playOffRef = useRef(playOff);
 
-  soundRef.current = sound;
-  clockRef.current = clock;
-  playOnRef.current = playOn;
-  playOffRef.current = playOff;
+  useEffect(() => {
+    players.current = {
+      switchOn: playSwitchOn,
+      switchOff: playSwitchOff,
+      popUp: playPopUp,
+      popDown: playPopDown,
+      success: playSuccess,
+      wrong: playWrong,
+    };
+    soundRef.current = sound;
+    clockRef.current = clock;
+    playOnRef.current = playOn;
+    playOffRef.current = playOff;
+  });
 
   useEffect(() => {
     const stored = readStored();
@@ -88,6 +125,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     play();
   }, []);
 
+  const playSample = useCallback((name: SampleName) => {
+    if (!soundRef.current) {
+      return;
+    }
+    players.current?.[name]();
+  }, []);
+
   const toggleSound = useCallback(() => {
     const next = !soundRef.current;
     soundRef.current = next;
@@ -107,8 +151,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ sound, volume, clock, toggleSound, toggleClock, setVolume, playSwitch }),
-    [sound, volume, clock, toggleSound, toggleClock, setVolume, playSwitch],
+    () => ({ sound, volume, clock, toggleSound, toggleClock, setVolume, playSwitch, playSample }),
+    [sound, volume, clock, toggleSound, toggleClock, setVolume, playSwitch, playSample],
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
@@ -120,4 +164,13 @@ export function useSettings() {
     throw new Error("useSettings must be used inside SettingsProvider");
   }
   return value;
+}
+
+export function useOptionalSettings() {
+  return useContext(SettingsContext);
+}
+
+export function usePlaySample() {
+  const playSample = useOptionalSettings()?.playSample;
+  return useCallback((name: SampleName) => playSample?.(name), [playSample]);
 }

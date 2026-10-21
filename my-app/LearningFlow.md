@@ -83,6 +83,8 @@ A list of 50 pointed two-letter words is the bank for this level. Shva is not us
 
 After level 2, each level introduces the next two letters, in aleph-bet order, starting at vav. Level 1 already focuses on the first five letters (א through ה). Level 11 is tav on its own.
 
+All words covered in these levels should be added to the flashcard deck if they are not yet seen by the user.
+
 | Level | Letters |
 | --- | --- |
 | 3 | ו ז |
@@ -95,13 +97,27 @@ After level 2, each level introduces the next two letters, in aleph-bet order, s
 | 10 | ר ש |
 | 11 | ת |
 
-Each letter has an intro slide and one simple pointed word. Kaf, mem, nun, pe, and tsadi also show one final-form word. A practice quiz then uses only that level's letters. Passing the level opens the next one.
+Each level opens on an intro page for its letters. Each letter shows its name, its sound, a short description, and a control to hear its consonant - use the consanant sounds recorded in hebrew_letter_sounds_24_mp3 for best audio. Below them is the whole aleph-bet, with this level's letters in bold blue, and a line giving their place in it, such as letters 6 and 7 of 22. Each letter then has an intro slide and one simple pointed word. Kaf, mem, nun, pe, and tsadi also show one final-form word. A practice quiz then uses only that level's letters. Passing the level opens the next one.
+
+Hovering over each level card in the level-pathway should reveal a brief description of the content covered in the lesson and give a lesson name. Example: Lesson 3: Learning ז & ו 
+
 
 ## Level 12
 
-Fifty pointed three-letter words. The learner hears the word, then chooses among three spellings that use the same letters and different nikud. Shva is not a choice. Hovering a choice does not play it.
+Nikud are not need in this level unless necessary it will overcomplicate things - let the user know that in modern Hebrew nikud are only sometimes used and words will start to become familiar and recognisable without nikud.
+
+Begin with an intoduction to this level: now we are going to start reading real hebrew words and forming sentences - your vocabulary will really start to grow with useful words now which is essential to becoming fluent and confident. You can practice any words you learn in the flashcard "Decks" tab.
+
+Fifty three-letter words. Do not use דּ instead use ד regular. The learner hears the word, then chooses among three spellings that use the same letters and different nikud. Shva is not a choice and no two options should be the same sound (patach and kamatz for example should not appear in the same question). Hovering a choice does not play it.
+
 
 ## Level 13
+
+Introduce the level with an explanation of the concept of של what the word means literally, and how it is used in Hebrew.
+
+For the following levels we are building the sentences in the practice - the user is presented a sentence and shown the words that comprise it below, the user can hover over each word and see its translation in their language, they must drag and drop the words in the correct order to a form the sentence.
+
+Once complete the user is shown the sentence written in full, with a translation of the sentence.
 
 Forty basic sentences built on את ה and של. של varies across שלי, שלך, שלו, שלה, שלנו, שלכם, and שלכן. An example of the shape is הוא אוכל את הדג שלי, or זה הכלב שלנו.
 

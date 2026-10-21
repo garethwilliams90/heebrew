@@ -491,6 +491,7 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
                         aria-keyshortcuts="R"
                         aria-label={speaking ? flashcards("listening") : flashcards("listen")}
                         disabled={!sound.prefs.general || !sound.prefs.word || speaking}
+                        sound={false}
                         onClick={(event) => {
                           event.stopPropagation();
                           replay();

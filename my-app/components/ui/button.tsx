@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 import { motion } from "motion/react"
 import { Slot } from "radix-ui"
+import { usePlaySample, type SampleName } from "@/components/settings/settings-provider"
 
 const buttonHover = {
   scale: 1.04,
@@ -70,6 +71,7 @@ type ButtonProps = Omit<
 > &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    sound?: SampleName | false
   }
 
 function Button({
@@ -77,8 +79,20 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
-  ...props
+  sound = "switchOn",
+  onClick,
+  ...rest
 }: ButtonProps) {
+  const playSample = usePlaySample()
+  const props = {
+    ...rest,
+    onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (sound) {
+        playSample(sound)
+      }
+      onClick?.(event)
+    },
+  }
   const shared = {
     "data-slot": "button",
     "data-variant": variant,
