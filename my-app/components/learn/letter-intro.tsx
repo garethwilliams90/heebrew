@@ -7,7 +7,7 @@ import { printFont } from "@/components/alephbet/print-font";
 import { Button } from "@/components/ui/button";
 import { consonantCue, type SpeechCue } from "@/lib/alephbet/intro-alphabet";
 import { letterCatalog, type LetterFact } from "@/lib/alephbet/letter-info";
-import { letterConsonantSrc } from "@/lib/learn/consonant-sounds";
+import { consonantForms, consonantSrc, letterConsonantSrc, type ConsonantForm } from "@/lib/learn/consonant-sounds";
 import { playAudio } from "@/lib/settings/master-volume";
 import { cn } from "cn";
 
@@ -16,11 +16,9 @@ const alphabet = letterCatalog.filter((item) => item.kind === "letter");
 export function LetterIntro({
   letters,
   onPlay,
-  onNext,
 }: {
   letters: readonly LetterFact[];
   onPlay: (cue: SpeechCue) => void;
-  onNext: () => void;
 }) {
   const t = useTranslations("Learn");
   const focus = new Set(letters.map((item) => item.id));
@@ -40,8 +38,15 @@ export function LetterIntro({
     void playAudio(audio).catch(() => onPlay(consonantCue(letter)));
   }
 
+  function hearFile(file: string, letter: LetterFact) {
+    clipRef.current?.pause();
+    const audio = new Audio(consonantSrc(file));
+    clipRef.current = audio;
+    void playAudio(audio).catch(() => onPlay(consonantCue(letter)));
+  }
+
   return (
-    <div className="flex max-h-full w-full max-w-4xl flex-col items-center gap-5 overflow-y-auto px-2 py-2 text-center">
+    <div className="flex h-full min-h-0 w-full max-w-4xl flex-col items-center gap-5 overflow-y-auto px-2 py-2 text-center">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight text-emerald-950 sm:text-4xl">
           {t("letterIntroTitle", { count: letters.length })}
@@ -57,26 +62,41 @@ export function LetterIntro({
       </div>
 
       <div className={cn("grid w-full gap-4", letters.length > 1 ? "sm:grid-cols-2" : "max-w-md")}>
-        {letters.map((letter) => (
-          <section key={letter.id} className="flex flex-col items-center gap-2 rounded-3xl bg-white/80 px-5 py-4 shadow-sm">
-            <p className={cn(printFont.className, "text-7xl leading-none text-black sm:text-8xl")} dir="rtl" lang="he">
-              {letter.letter}
-            </p>
-            <h2 className="text-2xl font-semibold text-emerald-950">{letter.name}</h2>
-            <p className="text-base font-medium text-emerald-900">{t("letterIntroSound", { sound: letter.sound })}</p>
-            <p className="max-w-xs text-sm text-emerald-900/75">{t(`letterNotes.${letter.id}`)}</p>
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-1 h-10 px-4"
-              aria-label={t("hearLetter", { name: letter.name })}
-              sound={false}
-              onClick={() => hearConsonant(letter)}
-            >
-              <Volume2 /> {t("letterIntroHear")}
-            </Button>
-          </section>
-        ))}
+        {letters.map((letter) => {
+          const forms = consonantForms(letter.id);
+          return (
+            <section key={letter.id} className="flex flex-col items-center gap-2 rounded-3xl bg-white/80 px-5 py-4 shadow-sm">
+              {forms ? (
+                <div className="flex flex-wrap items-start justify-center gap-6">
+                  {forms.map((form) => (
+                    <LetterForm key={form.file} form={form} letter={letter} onHear={() => hearFile(form.file, letter)} />
+                  ))}
+                </div>
+              ) : (
+                <p className={cn(printFont.className, "text-7xl leading-none text-black sm:text-8xl")} dir="rtl" lang="he">
+                  {letter.letter}
+                </p>
+              )}
+              <h2 className="text-2xl font-semibold text-emerald-950">{letter.name}</h2>
+              {forms ? null : (
+                <p className="text-base font-medium text-emerald-900">{t("letterIntroSound", { sound: letter.sound })}</p>
+              )}
+              <p className="max-w-xs text-sm text-emerald-900/75">{t(`letterNotes.${letter.id}`)}</p>
+              {forms ? null : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-1 h-10 px-4"
+                  aria-label={t("hearLetter", { name: letter.name })}
+                  sound={false}
+                  onClick={() => hearConsonant(letter)}
+                >
+                  <Volume2 /> {t("letterIntroHear")}
+                </Button>
+              )}
+            </section>
+          );
+        })}
       </div>
 
       <p
@@ -92,8 +112,36 @@ export function LetterIntro({
         ))}
       </p>
 
-      <Button type="button" className="h-11 shrink-0 bg-emerald-800 px-5 text-white hover:bg-emerald-900" onClick={onNext}>
-        {t("next")}
+    </div>
+  );
+}
+
+function LetterForm({
+  form,
+  letter,
+  onHear,
+}: {
+  form: ConsonantForm;
+  letter: LetterFact;
+  onHear: () => void;
+}) {
+  const t = useTranslations("Learn");
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <p className={cn(printFont.className, "text-6xl leading-none text-black sm:text-7xl")} dir="rtl" lang="he">
+        {form.glyph}
+      </p>
+      <p className="text-base font-medium text-emerald-900">{t("letterIntroSound", { sound: form.sound })}</p>
+      <Button
+        type="button"
+        variant="outline"
+        className="h-10 px-4"
+        aria-label={t("hearLetter", { name: `${letter.name} ${form.sound}` })}
+        sound={false}
+        onClick={onHear}
+      >
+        <Volume2 /> {t("letterIntroHear")}
       </Button>
     </div>
   );

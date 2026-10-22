@@ -14,8 +14,8 @@ lib/repositories/
 └── index.ts
 ```
 
-`ProgressRepository` is unused until a later slice migrates `loadDeckMastery`
-and `readDeckMemory`.
+`loadDeckMastery`, `readDeckMemory`, `writeCardMastery`, and
+`saveSessionProgress` use `ProgressRepository`.
 
 ## Usage
 
@@ -44,5 +44,6 @@ call site, then pass it in.
 
 ## Migration strategy
 
+`saveCard`, `removeCard`, and `deleteDeck` card wipes use `CardRepository`.
 `loadDeckMastery`, `readDeckMemory`, `writeCardMastery`, and
 `saveSessionProgress` use `ProgressRepository`.

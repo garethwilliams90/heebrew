@@ -21,5 +21,5 @@ export default async function Learn({
     return <LetterPairLevel key={major} level={Math.floor(major)} />;
   }
 
-  return <AlphabetIntro initialStep={stepForStage(from)} />;
+  return <AlphabetIntro key={from ?? "start"} initialStep={stepForStage(from)} />;
 }

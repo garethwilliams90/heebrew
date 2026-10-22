@@ -60,8 +60,8 @@ export function toCardRow(
 }
 
 /**
- * Cards table writes. Mirrors `saveCard` / `removeCard` in library.ts
- * but is unused until a later slice migrates those functions.
+ * Cards table writes. `saveCard` uses insert/update/upsert. `removeCard`
+ * still talks to Supabase directly until a later slice.
  */
 export class CardRepository extends BaseRepository {
   constructor(supabase: RepositoryClient) {

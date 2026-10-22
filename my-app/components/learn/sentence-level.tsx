@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ExperienceTube } from "@/components/learn/experience-tube";
 import { ConceptSlide, HearCards, HebrewMark } from "@/components/learn/hear-cards";
+import { LevelNav } from "@/components/learn/level-nav";
 import { NextLevelLink } from "@/components/learn/level-finish";
 import { LevelFrame } from "@/components/learn/level-frame";
 import { SentenceBuilder } from "@/components/learn/sentence-builder";
@@ -74,6 +75,16 @@ function advance(level: number, step: Step): Step {
   return order[Math.min(index + 1, order.length - 1)] ?? "done";
 }
 
+function previous(level: number, step: Step): Step | null {
+  const order = level === 13 ? thirteenOrder : fourteenOrder;
+  const index = order.indexOf(step);
+  if (index <= 0) {
+    return null;
+  }
+  const prior = order[index - 1];
+  return prior && prior !== "done" ? prior : null;
+}
+
 export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }) {
   const t = useTranslations("Learn");
   const locale = useLocale();
@@ -131,12 +142,23 @@ export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }
 
   const passed = step === "done";
   const labelId = step === "intro" || step === "done" ? String(level) : step.replace("p", "");
+  const prior = previous(level, step);
+  const concept = !passed && !step.endsWith("p");
 
   return (
     <LevelFrame
       label={t("level", { id: labelId })}
       finished={passed || curriculumLevel() > level}
       aside={passed ? <ExperienceTube /> : null}
+      footer={
+        passed ? null : (
+          <LevelNav
+            backHref={prior ? undefined : "/"}
+            onBack={prior ? () => setStep(prior) : undefined}
+            onNext={concept ? goNext : undefined}
+          />
+        )
+      }
     >
       {passed ? (
         <div className="flex max-w-xl flex-col items-center text-center">
@@ -144,7 +166,7 @@ export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }
           <NextLevelLink level={level} />
         </div>
       ) : step === "intro" ? (
-        <ConceptSlide title={t.rich("shelTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} onNext={goNext}>
+        <ConceptSlide title={t.rich("shelTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} >
           <p className="text-base text-emerald-900/80 sm:text-lg">
             {t.rich("shelMeaning", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })}
           </p>
@@ -155,14 +177,14 @@ export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }
           <HearCards cards={thirteenIntroForms} onHear={(text) => void hear(text)} />
         </ConceptSlide>
       ) : step === "13.1" ? (
-        <ConceptSlide title={t("shelStage1Title")} onNext={goNext}>
+        <ConceptSlide title={t("shelStage1Title")} >
           <p className="text-base text-emerald-900/80">{t("shelStage1Body")}</p>
           <HearCards cards={thirteenStage1Forms} onHear={(text) => void hear(text)} />
         </ConceptSlide>
       ) : step === "13.1p" ? (
         <SentenceBuilder rounds={stage1} onPass={goNext} />
       ) : step === "13.2" ? (
-        <ConceptSlide title={t("shelStage2Title")} onNext={goNext}>
+        <ConceptSlide title={t("shelStage2Title")} >
           <p className="text-base text-emerald-900/80">
             {t.rich("shelStage2Body", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })}
           </p>
@@ -172,26 +194,26 @@ export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }
       ) : step === "13.2p" ? (
         <SentenceBuilder rounds={stage2} onPass={goNext} />
       ) : step === "13.3" ? (
-        <ConceptSlide title={t("shelStage3Title")} onNext={goNext}>
+        <ConceptSlide title={t("shelStage3Title")} >
           <p className="text-base text-emerald-900/80">{t("shelStage3Body")}</p>
           <HearCards cards={thirteenStage3Forms} onHear={(text) => void hear(text)} />
         </ConceptSlide>
       ) : step === "13.3p" ? (
         <SentenceBuilder rounds={stage3} onPass={goNext} />
       ) : step === "13.4" ? (
-        <ConceptSlide title={t("shelStage4Title")} onNext={goNext}>
+        <ConceptSlide title={t("shelStage4Title")} >
           <p className="text-base text-emerald-900/80">{t("shelStage4Body")}</p>
           <HearCards cards={thirteenStage4Forms} onHear={(text) => void hear(text)} />
         </ConceptSlide>
       ) : step === "13.4p" ? (
         <SentenceBuilder rounds={stage4} onPass={finishLevel} />
       ) : step === "14.1" ? (
-        <ConceptSlide title={t.rich("eatTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} onNext={goNext}>
+        <ConceptSlide title={t.rich("eatTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} >
           <p className="text-base text-emerald-900/80">{t("eatBody")}</p>
           <HearCards cards={eatForms} onHear={(text) => void hear(text)} />
         </ConceptSlide>
       ) : step === "14.2" ? (
-        <ConceptSlide title={t.rich("etHaTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} onNext={goNext}>
+        <ConceptSlide title={t.rich("etHaTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} >
           <p className="text-base text-emerald-900/80">
             {t.rich("etHaBody", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })}
           </p>
@@ -203,7 +225,7 @@ export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }
       ) : step === "14.3" ? (
         <SentenceBuilder rounds={eatRounds} onPass={goNext} />
       ) : step === "14.4" ? (
-        <ConceptSlide title={t.rich("drinkLearnTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} onNext={goNext}>
+        <ConceptSlide title={t.rich("drinkLearnTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} >
           <p className="text-base text-emerald-900/80">{t("drinkLearnBody")}</p>
           <p className="text-sm font-medium text-emerald-900">{t("verbDrink")}</p>
           <HearCards cards={drinkForms} onHear={(text) => void hear(text)} />
