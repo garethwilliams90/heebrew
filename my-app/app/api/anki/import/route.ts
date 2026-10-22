@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import { withAuth } from "@/lib/api/middleware";
+import { ApiError, ApiResponse } from "@/lib/api/responses";
 import { ANKI_NOTE_LIMIT, ANKI_PACKAGE_LIMIT, issueFor } from "@/lib/flashcards/anki-note";
 import { readApkg, readApkgSounds, type AnkiCardPreview } from "@/lib/flashcards/apkg";
 import { createClient } from "@/lib/supabase/server";
@@ -31,13 +33,7 @@ type IncomingCard = {
   hebrewExample: string;
 };
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) {
-    return Response.json({ error: "signed-out" }, { status: 401 });
-  }
-
+export const POST = withAuth(async (request, { user, supabase }) => {
   let file: File | null = null;
   let title = "";
   let description = "";
@@ -56,15 +52,15 @@ export async function POST(request: Request) {
       cards = payload.cards;
     }
   } catch {
-    return Response.json({ error: "unreadable" }, { status: 400 });
+    return ApiError.badRequest("unreadable");
   }
 
   if (!file || !file.name.toLowerCase().endsWith(".apkg") || !cards) {
-    return Response.json({ error: "unreadable" }, { status: 400 });
+    return ApiError.badRequest("unreadable");
   }
 
   if (file.size > ANKI_PACKAGE_LIMIT) {
-    return Response.json({ error: "too-big" }, { status: 413 });
+    return ApiError.payloadTooLarge("too-big");
   }
 
   if (
@@ -74,7 +70,7 @@ export async function POST(request: Request) {
     cards.length === 0 ||
     cards.length > ANKI_NOTE_LIMIT
   ) {
-    return Response.json({ error: "unreadable" }, { status: 400 });
+    return ApiError.badRequest("unreadable");
   }
 
   const bytes = Buffer.from(await file.arrayBuffer());
@@ -82,7 +78,7 @@ export async function POST(request: Request) {
   try {
     notes = readApkg(bytes).decks.flatMap((deck) => deck.cards);
   } catch {
-    return Response.json({ error: "unreadable" }, { status: 422 });
+    return ApiError.unprocessable("unreadable");
   }
 
   const byId = new Map(notes.map((card) => [card.id, card]));
@@ -110,27 +106,27 @@ export async function POST(request: Request) {
   });
 
   if (chosen.length !== cards.length || new Set(chosen.map((card) => card.id)).size !== chosen.length) {
-    return Response.json({ error: "unreadable" }, { status: 422 });
+    return ApiError.unprocessable("unreadable");
   }
 
   const created = await supabase
     .from("decks")
-    .insert({ user_id: data.user.id, title, description })
+    .insert({ user_id: user.id, title, description })
     .select("id")
     .single();
 
   if (created.error || typeof created.data?.id !== "string") {
-    return Response.json({ error: "unreadable" }, { status: 422 });
+    return ApiError.unprocessable("unreadable");
   }
 
   const deckId = created.data.id;
   const uploaded: string[] = [];
 
   try {
-    const urls = await uploadSounds(supabase, data.user.id, deckId, bytes, chosen, uploaded);
+    const urls = await uploadSounds(supabase, user.id, deckId, bytes, chosen, uploaded);
     for (let index = 0; index < chosen.length; index += INSERT_CHUNK) {
       const rows = chosen.slice(index, index + INSERT_CHUNK).map((card) => ({
-        user_id: data.user.id,
+        user_id: user.id,
         deck_id: deckId,
         source_card_id: null,
         english: card.english,
@@ -150,13 +146,13 @@ export async function POST(request: Request) {
     }
   } catch {
     await supabase.storage.from(BUCKET).remove(uploaded);
-    await supabase.from("cards").delete().eq("user_id", data.user.id).eq("deck_id", deckId);
-    await supabase.from("decks").delete().eq("user_id", data.user.id).eq("id", deckId);
-    return Response.json({ error: "unreadable" }, { status: 422 });
+    await supabase.from("cards").delete().eq("user_id", user.id).eq("deck_id", deckId);
+    await supabase.from("decks").delete().eq("user_id", user.id).eq("id", deckId);
+    return ApiError.unprocessable("unreadable");
   }
 
-  return Response.json({ id: deckId });
-}
+  return ApiResponse.json({ id: deckId });
+}, "signed-out");
 
 async function uploadSounds(
   supabase: Awaited<ReturnType<typeof createClient>>,

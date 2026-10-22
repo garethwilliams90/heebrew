@@ -1,32 +1,31 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "motion/react";
-import { useCue } from "@/components/settings/use-cue";
 import { LetterIntro } from "@/components/learn/letter-intro";
+import { LevelNav } from "@/components/learn/level-nav";
+import { NikudDropQuiz } from "@/components/learn/nikud-drop-quiz";
 import { SoundSpeak } from "@/components/learn/sound-speak";
 import { ExperienceTube } from "@/components/learn/experience-tube";
 import { NextLevelLink } from "@/components/learn/level-finish";
 import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/navigation";
 import type { SpeechCue } from "@/lib/alephbet/intro-alphabet";
 import { letterCatalog } from "@/lib/alephbet/letter-info";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { playAudio } from "@/lib/settings/master-volume";
 import { completeCurriculumLevel, curriculumLevel, stageLevel } from "@/lib/learn/curriculum";
+import { nikudPracticeLetters } from "@/lib/learn/nikud-drop";
 import { soundPromptsForLevel } from "@/lib/learn/sound-exercises";
 import { learnStages } from "@/lib/learn/stages";
 import { markLearningStarted } from "@/lib/learn/started";
 import { useLocalhost } from "@/components/learn/dev-level";
 import { LevelFrame } from "@/components/learn/level-frame";
 import { useRouter } from "@/i18n/navigation";
-import { ArrowLeftIcon } from "lucide-react";
 
 const levels = learnStages;
-const stepButton = "h-12 min-w-36 px-8 text-lg";
 const levelOneLetters = ["aleph", "bet", "gimel"] as const;
-const levelTwoLetters = ["aleph", "bet", "gimel", "dalet", "he"] as const;
+const levelTwoLetters = ["dalet", "he"] as const;
 const levelOnePrompts = soundPromptsForLevel(1);
 const levelTwoPrompts = soundPromptsForLevel(2);
 
@@ -50,8 +49,6 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   const [step, setStep] = useState(initialStep);
   const [direction, setDirection] = useState(1);
   const [busy, setBusy] = useState(false);
-  const [held, setHeld] = useState<"back" | null>(null);
-  const playSwitch = useCue("switchOn");
 
   useEffect(() => {
     markLearningStarted();
@@ -67,51 +64,6 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
       router.replace("/");
     }
   }, [router, step]);
-
-  const goRef = useRef<(next: number) => void>(() => {});
-  const playRef = useRef(playSwitch);
-  playRef.current = playSwitch;
-
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      const target = event.target;
-      if (target instanceof HTMLElement && target.closest("input, textarea")) {
-        return;
-      }
-
-      const backward = event.key === "ArrowLeft";
-      if (!backward) {
-        return;
-      }
-
-      event.preventDefault();
-      if (event.type === "keydown") {
-        if (event.repeat) {
-          return;
-        }
-        setHeld("back");
-        return;
-      }
-
-      setHeld(null);
-      if (busy) {
-        return;
-      }
-      playRef.current();
-      if (step === 0) {
-        router.push("/");
-        return;
-      }
-      goRef.current(step - 1);
-    }
-
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("keyup", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("keyup", onKey);
-    };
-  }, [busy, router, step]);
 
   async function playCue(cue: SpeechCue) {
     const audio = await loadSpeechClip(cue.text, cue.phoneme);
@@ -139,49 +91,46 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
     setStep(next);
   }
 
-  goRef.current = go;
-
   const stage = levels[step] ?? "1.0";
-  const finished = step === 2 || step === 5 || curriculumLevel() > stageLevel(stage);
+  const finished = stage === "1" || stage === "2" || curriculumLevel() > stageLevel(stage);
+  const showNext = stage === "1.0" || stage === "2.0";
+
+  function goStage(id: (typeof learnStages)[number]) {
+    go(levels.indexOf(id));
+  }
 
   return (
     <LevelFrame
       label={t("level", { id: stage })}
       finished={finished}
-      aside={step === 5 && finished ? <ExperienceTube /> : null}
+      aside={stage === "2" ? <ExperienceTube /> : null}
       footer={
-        <div className="flex shrink-0 items-center justify-center gap-4 py-3">
-          {local ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="h-16 px-6 text-xl"
-              onClick={() => {
-                if (step >= levels.length - 1) {
-                  return;
-                }
-                setDirection(1);
-                setBusy(false);
-                setStep(step + 1);
-              }}
-            >
-              {t("skip")}
-            </Button>
-          ) : null}
-          <motion.span animate={{ scale: held === "back" ? 0.96 : 1 }} transition={{ type: "spring", bounce: 0.05, visualDuration: 0.12 }}>
-            {step === 0 ? (
-              <Button asChild variant="outline" className={stepButton}>
-                <Link href="/">
-                  <ArrowLeftIcon className="size-6" /> {t("back")}
-                </Link>
+        <LevelNav
+          leading={
+            local ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-16 px-6 text-xl"
+                onClick={() => {
+                  if (step >= levels.length - 1) {
+                    return;
+                  }
+                  setDirection(1);
+                  setBusy(false);
+                  setStep(step + 1);
+                }}
+              >
+                {t("skip")}
               </Button>
-            ) : (
-              <Button type="button" variant="outline" className={stepButton} disabled={busy} onClick={() => go(step - 1)}>
-                <ArrowLeftIcon className="size-6" /> {t("back")}
-              </Button>
-            )}
-          </motion.span>
-        </div>
+            ) : null
+          }
+          backHref={step === 0 ? "/" : undefined}
+          onBack={step === 0 ? undefined : () => go(step - 1)}
+          backDisabled={busy}
+          onNext={showNext ? () => go(step + 1) : undefined}
+          nextDisabled={busy}
+        />
       }
     >
       <AnimatePresence mode="wait" custom={direction} initial={false}>
@@ -200,38 +149,44 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
             }
           }}
         >
-          {step === 0 ? (
-            <LetterIntro letters={lettersByIds(levelOneLetters)} onPlay={(cue) => void playCue(cue)} onNext={() => go(1)} />
+          {stage === "1.0" ? (
+            <LetterIntro letters={lettersByIds(levelOneLetters)} onPlay={(cue) => void playCue(cue)} />
           ) : null}
-          {step === 1 ? (
+          {stage === "1.1" ? (
+            <NikudDropQuiz letterIds={nikudPracticeLetters[1]} onPlay={(cue) => void playCue(cue)} onPass={() => goStage("1.2")} />
+          ) : null}
+          {stage === "1.2" ? (
             <SoundSpeak
               items={levelOnePrompts}
               onPass={() => {
                 completeCurriculumLevel(1);
-                go(2);
+                goStage("1");
               }}
             />
           ) : null}
-          {step === 2 ? (
+          {stage === "1" ? (
             <div className="max-w-xl text-center">
               <h1 className="text-3xl font-semibold tracking-tight text-emerald-950 sm:text-4xl">{t("levelOneDoneTitle")}</h1>
               <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("levelOneDoneBody")}</p>
               <NextLevelLink level={1} />
             </div>
           ) : null}
-          {step === 3 ? (
-            <LetterIntro letters={lettersByIds(levelTwoLetters)} onPlay={(cue) => void playCue(cue)} onNext={() => go(4)} />
+          {stage === "2.0" ? (
+            <LetterIntro letters={lettersByIds(levelTwoLetters)} onPlay={(cue) => void playCue(cue)} />
           ) : null}
-          {step === 4 ? (
+          {stage === "2.1" ? (
+            <NikudDropQuiz letterIds={nikudPracticeLetters[2]} onPlay={(cue) => void playCue(cue)} onPass={() => goStage("2.2")} />
+          ) : null}
+          {stage === "2.2" ? (
             <SoundSpeak
               items={levelTwoPrompts}
               onPass={() => {
                 completeCurriculumLevel(2);
-                go(5);
+                goStage("2");
               }}
             />
           ) : null}
-          {step === 5 ? (
+          {stage === "2" ? (
             <div className="flex max-w-xl flex-col items-center text-center">
               <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("levelClear", { level: 2 })}</h1>
               <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("levelTwoDoneBody")}</p>

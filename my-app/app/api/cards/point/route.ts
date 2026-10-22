@@ -1,17 +1,12 @@
+import { withAuth } from "@/lib/api/middleware";
+import { ApiError, ApiResponse } from "@/lib/api/responses";
 import { pointHebrew } from "@/lib/dicta/nakdan";
-import { createClient } from "@/lib/supabase/server";
 
 const TEXT_LIMIT = 400;
 const MAX_TEXTS = 2;
 const HEBREW = /\p{Script=Hebrew}/u;
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) {
-    return Response.json({ error: "Sign in required" }, { status: 401 });
-  }
-
+export const POST = withAuth(async (request) => {
   let texts: string[] = [];
 
   try {
@@ -24,7 +19,7 @@ export async function POST(request: Request) {
   }
 
   if (texts.length === 0 || texts.length > MAX_TEXTS || texts.some((text) => text.length > TEXT_LIMIT)) {
-    return Response.json({ error: "Invalid Hebrew text" }, { status: 400 });
+    return ApiError.badRequest("Invalid Hebrew text");
   }
 
   try {
@@ -39,8 +34,8 @@ export async function POST(request: Request) {
       }),
     );
 
-    return Response.json({ texts: pointed });
+    return ApiResponse.json({ texts: pointed });
   } catch {
-    return Response.json({ error: "Nikud failed" }, { status: 502 });
+    return ApiError.badGateway("Nikud failed");
   }
-}
+});

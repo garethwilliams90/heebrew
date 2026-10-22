@@ -43,5 +43,5 @@ call site, then pass it in.
 
 ## Migration strategy
 
-`CardRepository` is unused scaffolding. The next slice migrates `saveCard`
-in `lib/flashcards/library.ts`, then the rest of that file one function at a time.
+`saveCard` uses `CardRepository`. `removeCard` and deck deletes still use
+inline queries until later slices.

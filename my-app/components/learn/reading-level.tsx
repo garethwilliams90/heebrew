@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ExperienceTube } from "@/components/learn/experience-tube";
 import { SoundQuiz } from "@/components/learn/letter-quiz";
+import { LevelNav } from "@/components/learn/level-nav";
 import { NextLevelLink } from "@/components/learn/level-finish";
 import { LevelFrame } from "@/components/learn/level-frame";
 import { ReadingIntro } from "@/components/learn/reading-intro";
@@ -54,6 +55,15 @@ export function ReadingLevel({ level }: { level: number }) {
       label={t("level", { id: String(level) })}
       finished={passed || curriculumLevel() > level}
       aside={passed ? <ExperienceTube /> : null}
+      footer={
+        passed ? null : (
+          <LevelNav
+            backHref={intro ? "/" : undefined}
+            onBack={intro ? undefined : () => setIntro(true)}
+            onNext={intro ? () => setIntro(false) : undefined}
+          />
+        )
+      }
     >
       {passed ? (
         <div className="flex max-w-xl flex-col items-center text-center">
@@ -61,7 +71,7 @@ export function ReadingLevel({ level }: { level: number }) {
           <NextLevelLink level={level} />
         </div>
       ) : intro ? (
-        <ReadingIntro onNext={() => setIntro(false)} />
+        <ReadingIntro />
       ) : (
         <SoundQuiz
           rounds={rounds}
