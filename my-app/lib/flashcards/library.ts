@@ -1,6 +1,7 @@
 import { isBuiltinDeck, isUserCardId } from "@/lib/flashcards/builtin";
 import type { SaveResult } from "@/lib/flashcards/progress";
 import { isPartOfSpeech, type Flashcard, type GrammaticalGender, type PartOfSpeech } from "@/lib/flashcards/types";
+import { CardRepository } from "@/lib/repositories";
 import { createClient } from "@/lib/supabase/client";
 
 export type CardDraft = {
@@ -214,6 +215,16 @@ export async function removeCard(deckId: string, card: Flashcard): Promise<SaveR
     return "signed-out";
   }
 
+  const cards = new CardRepository(auth.supabase);
+  const draft = {
+    english: card.english,
+    partOfSpeech: card.partOfSpeech,
+    example: card.example,
+    hebrew: card.hebrew,
+    hebrewExample: card.hebrewExample,
+    gender: card.gender,
+  };
+
   if (isUserCardId(card.id)) {
     const progress = await auth.supabase
       .from("card_progress")
@@ -225,11 +236,7 @@ export async function removeCard(deckId: string, card: Flashcard): Promise<SaveR
       return "error";
     }
 
-    const { error } = await auth.supabase
-      .from("cards")
-      .delete()
-      .eq("user_id", auth.userId)
-      .eq("id", card.id);
+    const { error } = await cards.deleteOwned(auth.userId, card.id);
     if (!error) {
       try {
         await removeAudioUrls(auth.supabase, auth.userId, [card.audioUrl, card.exampleAudioUrl]);
@@ -240,25 +247,7 @@ export async function removeCard(deckId: string, card: Flashcard): Promise<SaveR
     return error ? "error" : "ok";
   }
 
-  const { error } = await auth.supabase.from("cards").upsert(
-    {
-      ...cardRow(
-        deckId,
-        auth.userId,
-        {
-          english: card.english,
-          partOfSpeech: card.partOfSpeech,
-          example: card.example,
-          hebrew: card.hebrew,
-          hebrewExample: card.hebrewExample,
-          gender: card.gender,
-        },
-        card.id,
-      ),
-      hidden: true,
-    },
-    { onConflict: "user_id,deck_id,source_card_id" },
-  );
+  const { error } = await cards.upsertSource(deckId, auth.userId, draft, card.id, true);
   return error ? "error" : "ok";
 }
 
