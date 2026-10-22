@@ -1,6 +1,7 @@
 import { readKnownWords } from "@/lib/learn/known-words";
 import { verbConjugations, getForm, type VerbRecord, type ConjugatedForm } from "./verb-conjugations";
 import { sentenceTemplates, type SentenceTemplate } from "./sentence-templates";
+import { checkSentenceCogency } from "./sentence-cogency";
 import type { TrainingQuestion } from "./questions";
 
 export type UserLevel = 1 | 2 | 3;
@@ -155,18 +156,44 @@ export function selectDistractors(
 }
 
 /**
- * Generates a single training question
+ * Generates a single training question with cogency checking
  */
-export function generateQuestion(
+export async function generateQuestion(
   verb: VerbRecord,
   template: SentenceTemplate,
   userLevel: UserLevel,
-): TrainingQuestion | null {
+  options?: {
+    checkCogency?: boolean;
+    useModel?: boolean;
+  },
+): Promise<TrainingQuestion | null> {
+  const { checkCogency: shouldCheck = true, useModel = true } = options || {};
   const { tense, person, gender, number } = template.verbRequirement;
   
   // Get the correct form
   const correctForm = getForm(verb, tense, person, gender, number);
   if (!correctForm) return null;
+  
+  // Fill in the template with the verb
+  const sentence = template.pattern.replace("{verb}", "{}");
+  const englishPattern = template.englishPattern.replace("{verb}", verb.english);
+  
+  // Cogency check: validate the sentence makes sense
+  if (shouldCheck) {
+    const cogencyResult = await checkSentenceCogency(
+      verb,
+      template.pattern,
+      englishPattern,
+      { useModel, modelTimeout: 2000 }, // 2 second timeout for speed
+    );
+    
+    if (!cogencyResult.cogent) {
+      console.log(
+        `Rejected sentence for cogency: "${englishPattern}" (${cogencyResult.method}: ${cogencyResult.reason || "incompatible verb-object"})`,
+      );
+      return null;
+    }
+  }
   
   // Generate distractors
   const allDistractors = generateDistractors(verb, correctForm, userLevel);
@@ -174,9 +201,6 @@ export function generateQuestion(
   
   const selectedDistractors = selectDistractors(allDistractors, userLevel, 2);
   if (selectedDistractors.length < 2) return null;
-  
-  // Fill in the template
-  const sentence = template.pattern.replace("{verb}", "{}");
   
   // Create choices array: [correct, distractor1, distractor2]
   const choices: [string[], string[], string[]] = [
@@ -193,9 +217,16 @@ export function generateQuestion(
 }
 
 /**
- * Generates N training questions based on known verbs
+ * Generates N training questions based on known verbs with cogency checking
  */
-export function generateTrainingQuestions(count: number = 5): TrainingQuestion[] {
+export async function generateTrainingQuestions(
+  count: number = 5,
+  options?: {
+    checkCogency?: boolean;
+    useModel?: boolean;
+  },
+): Promise<TrainingQuestion[]> {
+  const { checkCogency = true, useModel = true } = options || {};
   const knownVerbInfinitives = getUserKnownVerbs();
   const userLevel = getUserLevel();
   
@@ -212,8 +243,12 @@ export function generateTrainingQuestions(count: number = 5): TrainingQuestion[]
   }
   
   const questions: TrainingQuestion[] = [];
-  const maxAttempts = count * 10; // Avoid infinite loops
+  const maxAttempts = count * 20; // Increased attempts to account for cogency filtering
   let attempts = 0;
+  
+  // Generate questions in batches to allow parallel cogency checks
+  const batchSize = 5;
+  const candidates: Array<{ verb: VerbRecord; template: SentenceTemplate }> = [];
   
   while (questions.length < count && attempts < maxAttempts) {
     attempts++;
@@ -226,15 +261,34 @@ export function generateTrainingQuestions(count: number = 5): TrainingQuestion[]
     // Pick a random template
     const template = availableTemplates[Math.floor(Math.random() * availableTemplates.length)];
     
-    // Generate question
-    const question = generateQuestion(verb, template, userLevel);
-    if (question) {
-      // Check for duplicates
-      const isDuplicate = questions.some((q) => q.id === question.id);
-      if (!isDuplicate) {
-        questions.push(question);
+    candidates.push({ verb, template });
+    
+    // Process batch when full or when we're done collecting
+    if (candidates.length >= batchSize || attempts >= maxAttempts) {
+      const generatedQuestions = await Promise.all(
+        candidates.map(({ verb, template }) =>
+          generateQuestion(verb, template, userLevel, { checkCogency, useModel }),
+        ),
+      );
+      
+      for (const question of generatedQuestions) {
+        if (question && questions.length < count) {
+          // Check for duplicates
+          const isDuplicate = questions.some((q) => q.id === question.id);
+          if (!isDuplicate) {
+            questions.push(question);
+          }
+        }
       }
+      
+      candidates.length = 0; // Clear batch
     }
+  }
+  
+  if (questions.length < count) {
+    console.warn(
+      `Only generated ${questions.length} cogent questions out of ${count} requested after ${attempts} attempts`,
+    );
   }
   
   return questions;

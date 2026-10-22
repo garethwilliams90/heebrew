@@ -18,7 +18,7 @@ import { addExperience, loadExperience } from "@/lib/flashcards/experience";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { playAudio } from "@/lib/settings/master-volume";
 import {
-  buildTrainingRound,
+  buildTrainingRoundAsync,
   CORRECT_EXPERIENCE,
   ROUND_SIZE,
   type RoundQuestion,
@@ -52,6 +52,8 @@ export function TrainingSession() {
   const playCorrect = useCue("popUp");
   const playWrong = useCue("popDown");
   const playSuccess = useCue("success");
+
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -148,16 +150,31 @@ export function TrainingSession() {
   }, [question, selected, failed, hear]);
 
   function start() {
-    setRound(buildTrainingRound());
-    setIndex(0);
-    setSelected(null);
-    setCorrectCount(0);
-    setReward(null);
-    setSaveError(false);
-    setHalves(10);
-    setFailed(false);
-    rewardedRef.current = false;
-    setPhase("question");
+    setGenerating(true);
+    
+    buildTrainingRoundAsync(null, undefined, {
+      checkCogency: true,
+      useModel: true,
+    })
+      .then((questions) => {
+        setRound(questions);
+        setIndex(0);
+        setSelected(null);
+        setCorrectCount(0);
+        setReward(null);
+        setSaveError(false);
+        setHalves(10);
+        setFailed(false);
+        rewardedRef.current = false;
+        setPhase("question");
+      })
+      .catch((error) => {
+        console.error("Failed to generate training round:", error);
+        setSaveError(true);
+      })
+      .finally(() => {
+        setGenerating(false);
+      });
   }
 
   function loseHeart(cost: number) {
@@ -292,7 +309,7 @@ export function TrainingSession() {
     <main className="flex flex-1 flex-col items-center px-4 pb-10 sm:px-8">
       <AccountNotice signedOut={signedIn === false} saveError={saveError} />
 
-      {phase === "intro" ? <TrainingIntro onStart={start} /> : null}
+      {phase === "intro" ? <TrainingIntro onStart={start} generating={generating} /> : null}
 
       {phase === "question" && question ? (
         <section className="flex w-full max-w-3xl flex-1 flex-col justify-center gap-3">

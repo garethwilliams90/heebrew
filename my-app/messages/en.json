@@ -224,7 +224,8 @@
     "trainAgain": "Train again",
     "hear": "Hear",
     "outOfHearts": "No hearts left. Try this practice again.",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "generating": "Generating questions..."
   },
   "Home": {
     "nav": "Home",

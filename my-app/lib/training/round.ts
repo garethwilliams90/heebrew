@@ -35,12 +35,9 @@ export function buildTrainingRound(
   let isDynamic = false;
   
   if (source === null) {
-    // Try to generate dynamic questions
-    const dynamicQuestions = generateTrainingQuestions(ROUND_SIZE);
-    
-    // Fallback to hard-coded questions if generation fails
-    questionsToUse = dynamicQuestions.length > 0 ? dynamicQuestions : questions;
-    isDynamic = dynamicQuestions.length > 0;
+    // For now, use empty array - the caller should use buildTrainingRoundAsync
+    console.warn("buildTrainingRound called without source - use buildTrainingRoundAsync for dynamic questions");
+    questionsToUse = questions;
   } else {
     questionsToUse = source;
   }
@@ -55,7 +52,53 @@ export function buildTrainingRound(
       
       // Extract verb info for dynamic questions
       let verb: VerbRecord | undefined;
-      if (isDynamic && item.id.startsWith("dynamic-")) {
+      if (item.id.startsWith("dynamic-")) {
+        const infinitive = item.id.split("-")[1];
+        verb = verbConjugations.find((v) => v.infinitive === infinitive);
+      }
+
+      return {
+        id: item.id,
+        sentence: item.sentence,
+        choices: order.map((index) => item.choices[index]),
+        correct: order.indexOf(0),
+        verb,
+      };
+    });
+}
+
+export async function buildTrainingRoundAsync(
+  source: readonly TrainingQuestion[] | null = null,
+  random: () => number = Math.random,
+  options?: {
+    checkCogency?: boolean;
+    useModel?: boolean;
+  },
+): Promise<RoundQuestion[]> {
+  // Use dynamic questions if no source provided
+  let questionsToUse: readonly TrainingQuestion[];
+  
+  if (source === null) {
+    // Generate dynamic questions with cogency checking
+    const dynamicQuestions = await generateTrainingQuestions(ROUND_SIZE, options);
+    
+    // Fallback to hard-coded questions if generation fails
+    questionsToUse = dynamicQuestions.length > 0 ? dynamicQuestions : questions;
+  } else {
+    questionsToUse = source;
+  }
+  
+  // If we have fewer questions than needed, use what we have
+  const questionCount = Math.min(ROUND_SIZE, questionsToUse.length);
+  
+  return shuffle(questionsToUse, random)
+    .slice(0, questionCount)
+    .map((item) => {
+      const order = shuffle([0, 1, 2], random);
+      
+      // Extract verb info for dynamic questions
+      let verb: VerbRecord | undefined;
+      if (item.id.startsWith("dynamic-")) {
         const infinitive = item.id.split("-")[1];
         verb = verbConjugations.find((v) => v.infinitive === infinitive);
       }
