@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "motion/react";
-import { useCue } from "@/components/settings/use-cue";
 import { LetterIntro } from "@/components/learn/letter-intro";
 import { LevelNav } from "@/components/learn/level-nav";
 import { NikudDropQuiz } from "@/components/learn/nikud-drop-quiz";
@@ -26,7 +25,7 @@ import { useRouter } from "@/i18n/navigation";
 
 const levels = learnStages;
 const levelOneLetters = ["aleph", "bet", "gimel"] as const;
-const levelTwoLetters = ["aleph", "bet", "gimel", "dalet", "he"] as const;
+const levelTwoLetters = ["dalet", "he"] as const;
 const levelOnePrompts = soundPromptsForLevel(1);
 const levelTwoPrompts = soundPromptsForLevel(2);
 
@@ -50,8 +49,6 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   const [step, setStep] = useState(initialStep);
   const [direction, setDirection] = useState(1);
   const [busy, setBusy] = useState(false);
-  const [held, setHeld] = useState<"back" | null>(null);
-  const playSwitch = useCue("switchOn");
 
   useEffect(() => {
     markLearningStarted();
@@ -67,51 +64,6 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
       router.replace("/");
     }
   }, [router, step]);
-
-  const goRef = useRef<(next: number) => void>(() => {});
-  const playRef = useRef(playSwitch);
-  playRef.current = playSwitch;
-
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      const target = event.target;
-      if (target instanceof HTMLElement && target.closest("input, textarea")) {
-        return;
-      }
-
-      const backward = event.key === "ArrowLeft";
-      if (!backward) {
-        return;
-      }
-
-      event.preventDefault();
-      if (event.type === "keydown") {
-        if (event.repeat) {
-          return;
-        }
-        setHeld("back");
-        return;
-      }
-
-      setHeld(null);
-      if (busy) {
-        return;
-      }
-      playRef.current();
-      if (step === 0) {
-        router.push("/");
-        return;
-      }
-      goRef.current(step - 1);
-    }
-
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("keyup", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("keyup", onKey);
-    };
-  }, [busy, router, step]);
 
   async function playCue(cue: SpeechCue) {
     const audio = await loadSpeechClip(cue.text, cue.phoneme);
@@ -138,8 +90,6 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
     window.setTimeout(() => setBusy(false), 700);
     setStep(next);
   }
-
-  goRef.current = go;
 
   const stage = levels[step] ?? "1.0";
   const finished = stage === "1" || stage === "2" || curriculumLevel() > stageLevel(stage);
@@ -178,7 +128,6 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
           backHref={step === 0 ? "/" : undefined}
           onBack={step === 0 ? undefined : () => go(step - 1)}
           backDisabled={busy}
-          backHeld={held === "back"}
           onNext={showNext ? () => go(step + 1) : undefined}
           nextDisabled={busy}
         />
