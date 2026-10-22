@@ -31,7 +31,7 @@ export const sentenceTemplates: SentenceTemplate[] = [
       number: "singular",
     },
     level: 1,
-    englishPattern: "He {verb} a good book",
+    englishPattern: "He {verb}s a good book",
   },
   {
     id: "present-fem-sing-1",
@@ -43,7 +43,7 @@ export const sentenceTemplates: SentenceTemplate[] = [
       number: "singular",
     },
     level: 1,
-    englishPattern: "She {verb} a letter to her friend",
+    englishPattern: "She {verb}s a letter to her friend",
   },
   {
     id: "present-masc-plur-1",
@@ -81,7 +81,7 @@ export const sentenceTemplates: SentenceTemplate[] = [
       number: "singular",
     },
     level: 2,
-    englishPattern: "Yesterday I {verb} the lesson in the evening",
+    englishPattern: "Yesterday I {verb}d the lesson in the evening",
   },
   {
     id: "past-second-masc-sing-1",
@@ -93,7 +93,7 @@ export const sentenceTemplates: SentenceTemplate[] = [
       number: "singular",
     },
     level: 2,
-    englishPattern: "You {verb} a nice letter to a friend",
+    englishPattern: "You {verb}d a nice letter to a friend",
   },
   {
     id: "past-third-masc-sing-1",
@@ -105,7 +105,7 @@ export const sentenceTemplates: SentenceTemplate[] = [
       number: "singular",
     },
     level: 2,
-    englishPattern: "Danny {verb} the door in the morning",
+    englishPattern: "Danny {verb}d the door in the morning",
   },
   {
     id: "past-third-fem-sing-1",
@@ -117,7 +117,7 @@ export const sentenceTemplates: SentenceTemplate[] = [
       number: "singular",
     },
     level: 2,
-    englishPattern: "Sarah {verb} a new book at the store",
+    englishPattern: "Sarah {verb}d a new book at the store",
   },
   {
     id: "past-first-plur-1",
@@ -129,7 +129,7 @@ export const sentenceTemplates: SentenceTemplate[] = [
       number: "plural",
     },
     level: 2,
-    englishPattern: "We {verb} the room before the guests",
+    englishPattern: "We {verb}d the room before the guests",
   },
   {
     id: "past-third-plur-1",
@@ -141,7 +141,7 @@ export const sentenceTemplates: SentenceTemplate[] = [
       number: "plural",
     },
     level: 2,
-    englishPattern: "The students {verb} in the class all day",
+    englishPattern: "The students {verb}d in the class all day",
   },
   
   // Level 3: Future tense sentences

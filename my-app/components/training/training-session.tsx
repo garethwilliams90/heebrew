@@ -58,7 +58,6 @@ export function TrainingSession() {
   const playWrong = useCue("popDown");
   const playSuccess = useCue("success");
 
-  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     let cancel = false;
