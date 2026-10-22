@@ -11,11 +11,11 @@ import { readSoundPrefs } from "@/components/flashcards/sound-toggle";
 import { HeartRow, HintButton } from "@/components/learn/practice-hearts";
 import { Button } from "@/components/ui/button";
 import { BlankSentence } from "@/components/training/blank-sentence";
-import { TrainingChoice } from "@/components/training/training-choice";
 import { TrainingSetup } from "@/components/training/training-setup";
 import { TrainingResults } from "@/components/training/training-screens";
 import { VerbConjugationModal } from "@/components/training/verb-conjugation-modal";
 import { LevelFrame } from "@/components/learn/level-frame";
+import { AnswerOption } from "@/components/shared/answer-option";
 import { addExperience, loadExperience } from "@/lib/flashcards/experience";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { playAudio } from "@/lib/settings/master-volume";
@@ -108,9 +108,7 @@ export function TrainingSession() {
       return;
     }
     
-    // Load and play the sentence audio
-    void loadSpeechClip(question.sentence.replace("{}", ""));
-    void hear(question.sentence.replace("{}", ""));
+    // Audio is now handled by BlankSentence component
     
     return () => {
       playId.current += 1;
@@ -398,22 +396,22 @@ export function TrainingSession() {
                 )}
               </motion.div>
 
-              <div className="mt-4 flex flex-col gap-2" role="group" aria-label={t("title")}>
+              <div className="mt-4 flex flex-row flex-wrap justify-center gap-3" role="group" aria-label={t("title")}>
                 {question.choices.map((choice, choiceIndex) => (
                   <motion.div
                     key={choiceIndex}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ ...cardSpring, delay: choiceIndex * 0.05 }}
+                    className="w-full sm:flex-1 sm:min-w-[200px]"
                   >
-                    <TrainingChoice
+                    <AnswerOption
                       number={choiceIndex + 1}
                       words={choice}
                       answered={selected !== null}
                       correct={choiceIndex === question.correct}
                       selected={choiceIndex === selected}
                       onChoose={() => choose(choiceIndex)}
-                      tooltip={getChoiceTooltip(choiceIndex)}
                     />
                   </motion.div>
                 ))}
