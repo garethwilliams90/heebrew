@@ -97,33 +97,6 @@ const words: readonly BankWord[] = [
   { id: "marak", hebrew: "מָרָק", gloss: { en: "soup", fr: "soupe", es: "sopa" }, partOfSpeech: noun, gender: m },
 ];
 
-const possessives = [
-  { he: "שֶׁלִּי", en: "my", fr: { m: "mon", f: "ma" }, es: { m: "mi", f: "mi" } },
-  { he: "שֶׁלְּךָ", en: "your", fr: { m: "ton", f: "ta" }, es: { m: "tu", f: "tu" } },
-  { he: "שֶׁלּוֹ", en: "his", fr: { m: "son", f: "sa" }, es: { m: "su", f: "su" } },
-  { he: "שֶׁלָּהּ", en: "her", fr: { m: "son", f: "sa" }, es: { m: "su", f: "su" } },
-  { he: "שֶׁלָּנוּ", en: "our", fr: { m: "notre", f: "notre" }, es: { m: "nuestro", f: "nuestra" } },
-  { he: "שֶׁלָּכֶם", en: "your", fr: { m: "votre", f: "votre" }, es: { m: "vuestro", f: "vuestra" } },
-  { he: "שֶׁלָּכֶן", en: "your", fr: { m: "votre", f: "votre" }, es: { m: "vuestro", f: "vuestra" } },
-];
-
-const nouns = [
-  { he: "הַכֶּלֶב", en: "dog", fr: "chien", es: "perro", gender: "m" as const },
-  { he: "הַחָתוּל", en: "cat", fr: "chat", es: "gato", gender: "m" as const },
-  { he: "הַדָּג", en: "fish", fr: "poisson", es: "pez", gender: "m" as const },
-  { he: "הַלֶּחֶם", en: "bread", fr: "pain", es: "pan", gender: "m" as const },
-  { he: "הַסֵּפֶר", en: "book", fr: "livre", es: "libro", gender: "m" as const },
-  { he: "הַבַּיִת", en: "house", fr: "maison", es: "casa", gender: "f" as const },
-];
-
-const verbPairs = [
-  { m: "אוֹהֵב", f: "אוֹהֶבֶת", en: "loves", fr: "aime", es: "ama" },
-  { m: "אוֹכֵל", f: "אוֹכֶלֶת", en: "eats", fr: "mange", es: "come" },
-  { m: "שׁוֹתֶה", f: "שׁוֹתֶה", en: "drinks", fr: "boit", es: "bebe" },
-  { m: "רוֹצֶה", f: "רוֹצָה", en: "wants", fr: "veut", es: "quiere" },
-  { m: "רוֹאֶה", f: "רוֹאָה", en: "sees", fr: "voit", es: "ve" },
-];
-
 // Two respellings of the word, each with a first vowel that sounds unlike the real one and each other.
 function otherPointings(hebrew: string) {
   const chars = [...withoutDaletDagesh(hebrew)];
@@ -193,75 +166,8 @@ export const readingKnownWords: readonly BasicWord[] = words.map((word) => ({
   gender: word.gender,
 }));
 
-type Sentence = { id: string; hebrew: string; gloss: Gloss };
-
-function sentenceBank(): Sentence[] {
-  const bank: Sentence[] = [];
-  nouns.forEach((noun, nounIndex) => {
-    possessives.forEach((owner, ownerIndex) => {
-      const hebrew = `זֶה ${noun.he} ${owner.he}`;
-      bank.push({
-        id: `ze-${nounIndex}-${ownerIndex}`,
-        hebrew,
-        gloss: {
-          en: `This is ${owner.en} ${noun.en}`,
-          fr: `C'est ${owner.fr[noun.gender]} ${noun.fr}`,
-          es: `${noun.gender === "f" ? "Esta es" : "Este es"} ${owner.es[noun.gender]} ${noun.es}`,
-        },
-      });
-    });
-  });
-  return bank.slice(0, 40);
-}
-
-function verbBank(): Sentence[] {
-  const subjects = [
-    { he: "הוּא", en: "He", fr: "Il", es: "Él", gender: "m" as const },
-    { he: "הִיא", en: "She", fr: "Elle", es: "Ella", gender: "f" as const },
-  ];
-  const bank: Sentence[] = [];
-  subjects.forEach((subject) => {
-    verbPairs.forEach((verb, verbIndex) => {
-      nouns.forEach((noun, nounIndex) => {
-        possessives.slice(0, 4).forEach((owner, ownerIndex) => {
-          const action = subject.gender === "f" ? verb.f : verb.m;
-          bank.push({
-            id: `verb-${subject.gender}-${verbIndex}-${nounIndex}-${ownerIndex}`,
-            hebrew: `${subject.he} ${action} אֶת ${noun.he} ${owner.he}`,
-            gloss: {
-              en: `${subject.en} ${verb.en} ${owner.en} ${noun.en}`,
-              fr: `${subject.fr} ${verb.fr} ${owner.fr[noun.gender]} ${noun.fr}`,
-              es: `${subject.es} ${verb.es} ${owner.es[noun.gender]} ${noun.es}`,
-            },
-          });
-        });
-      });
-    });
-  });
-  return bank.slice(0, 40);
-}
-
-function sentenceRounds(bank: readonly Sentence[], locale: string): QuizRound[] {
-  return mix(bank)
-    .slice(0, 8)
-    .map((item) => {
-      const others = mix(bank.filter((entry) => entry.id !== item.id)).slice(0, 2);
-      const choices = mix([
-        card(item.id, item.hebrew, glossOf(item.gloss, locale)),
-        ...others.map((entry) => card(entry.id, entry.hebrew, glossOf(entry.gloss, locale))),
-      ]);
-      return { id: item.id, correctId: item.id, prompt: { text: item.hebrew }, choices };
-    });
-}
-
-export function readingRounds(level: number, locale: string): QuizRound[] {
-  if (level === 13) {
-    return sentenceRounds(sentenceBank(), locale);
-  }
-  if (level === 14) {
-    return sentenceRounds(verbBank(), locale);
-  }
+export function readingRounds(locale: string): QuizRound[] {
   return wordRounds(locale);
 }
 
-export const readingLevels = [12, 13, 14] as const;
+export const readingLevels = [12] as const;

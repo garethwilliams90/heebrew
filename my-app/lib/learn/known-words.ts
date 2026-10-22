@@ -2,13 +2,19 @@ import { createDeck, saveCard } from "@/lib/flashcards/library";
 import { createClient } from "@/lib/supabase/client";
 import { basicWords, type BasicWord } from "@/lib/learn/basic-words";
 import { letterPairLevels, pairKnownWord } from "@/lib/learn/letter-pairs";
+import { thirteenKnownWords } from "@/lib/learn/level-thirteen";
+import { fourteenKnownWords } from "@/lib/learn/level-fourteen";
 import { readingKnownWords } from "@/lib/learn/reading-levels";
+import { soundKnownWords } from "@/lib/learn/sound-exercises";
 
 // Every word the curriculum can teach. Ids are shared only when the Hebrew is the same.
 const learnableWords: readonly BasicWord[] = [
   ...basicWords,
+  ...soundKnownWords,
   ...letterPairLevels.flatMap((level) => level.words.map(pairKnownWord)),
   ...readingKnownWords,
+  ...thirteenKnownWords,
+  ...fourteenKnownWords,
 ];
 
 const STORAGE_KEY = "webrew.known-words";

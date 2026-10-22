@@ -18,9 +18,9 @@ export function ReadingLevel({ level }: { level: number }) {
   const t = useTranslations("Learn");
   const locale = useLocale();
   const [allowed, setAllowed] = useState<boolean | null>(null);
-  const [intro, setIntro] = useState(level === 12 || level === 13);
+  const [intro, setIntro] = useState(true);
   const [passed, setPassed] = useState(false);
-  const [rounds] = useState(() => readingRounds(level, locale));
+  const [rounds] = useState(() => readingRounds(locale));
 
   useEffect(() => {
     const host = window.location.hostname;
@@ -60,24 +60,19 @@ export function ReadingLevel({ level }: { level: number }) {
           <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("levelClear", { level })}</h1>
           <NextLevelLink level={level} />
         </div>
-      ) : intro && (level === 12 || level === 13) ? (
-        <ReadingIntro level={level} onNext={() => setIntro(false)} />
+      ) : intro ? (
+        <ReadingIntro onNext={() => setIntro(false)} />
       ) : (
         <SoundQuiz
           rounds={rounds}
-          dense={level >= 13}
-          prompt={level >= 13 ? t("sentencePrompt") : t("wordPrompt")}
+          prompt={t("wordPrompt")}
           onPlay={playCue}
-          onLearn={
-            level === 12
-              ? (card) => {
-                  const word = readingKnownWords.find((item) => item.id === card.id);
-                  if (word) {
-                    void rememberKnownWord(word);
-                  }
-                }
-              : undefined
-          }
+          onLearn={(card) => {
+            const word = readingKnownWords.find((item) => item.id === card.id);
+            if (word) {
+              void rememberKnownWord(word);
+            }
+          }}
           onPass={() => {
             completeCurriculumLevel(level);
             setPassed(true);

@@ -1,6 +1,7 @@
 import { AlphabetIntro } from "@/components/learn/alphabet-intro";
 import { LetterPairLevel } from "@/components/learn/letter-pair-level";
 import { ReadingLevel } from "@/components/learn/reading-level";
+import { SentenceLevel } from "@/components/learn/sentence-level";
 import { stepForStage } from "@/lib/learn/stages";
 
 export default async function Learn({
@@ -10,6 +11,9 @@ export default async function Learn({
 }) {
   const { from, level } = await searchParams;
   const major = Number(level);
+  if (major === 13 || major === 14) {
+    return <SentenceLevel key={major} level={major} from={from} />;
+  }
   if (Number.isFinite(major) && major >= 12) {
     return <ReadingLevel key={major} level={Math.floor(major)} />;
   }

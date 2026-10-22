@@ -81,6 +81,7 @@ export function LetterPairLevel({ level }: { level: number }) {
       {passed ? (
         <div className="flex max-w-xl flex-col items-center text-center">
           <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("levelClear", { level })}</h1>
+          {level === 4 ? <p className="mt-3 text-base text-emerald-900/80">{t("flashcardsUnlockedBody")}</p> : null}
           <NextLevelLink level={level} />
         </div>
       ) : quizzing ? (

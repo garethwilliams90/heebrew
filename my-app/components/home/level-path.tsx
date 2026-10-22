@@ -15,23 +15,51 @@ import { hasLearningStarted } from "@/lib/learn/started";
 
 const alphabetOrder = letterCatalog.filter((item) => item.kind === "letter");
 
-const levelStages: Record<number, { id: string; href: "/learn" | `/learn?from=${string}`; practice?: boolean }[]> = {
+type LearnHref = "/learn" | `/learn?from=${string}` | `/learn?level=${number}` | `/learn?level=${number}&from=${string}`;
+
+const levelStages: Record<number, { id: string; href: LearnHref; practice?: boolean }[]> = {
   1: [
     { id: "1.0", href: "/learn" },
     { id: "1.1", href: "/learn?from=1.1", practice: true },
-    { id: "1.2", href: "/learn?from=1.2" },
-    { id: "1.3", href: "/learn?from=1.3" },
-    { id: "1.4", href: "/learn?from=1.4", practice: true },
-    { id: "1.5", href: "/learn?from=1.5", practice: true },
   ],
   2: [
     { id: "2.0", href: "/learn?from=2.0" },
-    { id: "2.1", href: "/learn?from=2.1" },
-    { id: "2.2", href: "/learn?from=2.2" },
-    { id: "2.3", href: "/learn?from=2.3" },
-    { id: "2.4", href: "/learn?from=2.4", practice: true },
+    { id: "2.1", href: "/learn?from=2.1", practice: true },
+  ],
+  13: [
+    { id: "13.1", href: "/learn?level=13&from=13.1" },
+    { id: "13.1", href: "/learn?level=13&from=13.1p", practice: true },
+    { id: "13.2", href: "/learn?level=13&from=13.2" },
+    { id: "13.2", href: "/learn?level=13&from=13.2p", practice: true },
+    { id: "13.3", href: "/learn?level=13&from=13.3" },
+    { id: "13.3", href: "/learn?level=13&from=13.3p", practice: true },
+    { id: "13.4", href: "/learn?level=13&from=13.4" },
+    { id: "13.4", href: "/learn?level=13&from=13.4p", practice: true },
+  ],
+  14: [
+    { id: "14.1", href: "/learn?level=14&from=14.1" },
+    { id: "14.2", href: "/learn?level=14&from=14.2" },
+    { id: "14.3", href: "/learn?level=14&from=14.3", practice: true },
+    { id: "14.4", href: "/learn?level=14&from=14.4" },
+    { id: "14.5", href: "/learn?level=14&from=14.5", practice: true },
   ],
 };
+
+function pathSection(level: number) {
+  if (level === 1) {
+    return "pathIntroLetters" as const;
+  }
+  if (level === 3) {
+    return "pathAlephBet" as const;
+  }
+  if (level === 12) {
+    return "pathWordsGrammar" as const;
+  }
+  if (level === 14) {
+    return "pathPresentVerbs" as const;
+  }
+  return null;
+}
 
 export function LevelPath() {
   const t = useTranslations("Home");
@@ -96,6 +124,8 @@ export function LevelPath() {
           const shifts = [4, 36, 12, 42, 18, 30];
           const shift = `${shifts[index % shifts.length]}%`;
 
+          const section = pathSection(level);
+
           return (
             <motion.div
               key={level}
@@ -104,6 +134,13 @@ export function LevelPath() {
               onHoverStart={() => setHovered(level)}
               onHoverEnd={() => setHovered((current) => (current === level ? null : current))}
             >
+              {section ? (
+                <div className="mb-4 flex w-full max-w-md items-center gap-3" dir="ltr">
+                  <span className="h-px flex-1 bg-emerald-900/20" />
+                  <p className="text-center text-sm font-semibold tracking-wide text-emerald-800 uppercase">{t(section)}</p>
+                  <span className="h-px flex-1 bg-emerald-900/20" />
+                </div>
+              ) : null}
               <LevelNode
                 letter={node.mark}
                 level={level}
@@ -126,7 +163,7 @@ export function LevelPath() {
                     <div className="flex flex-wrap justify-center gap-2 py-3" dir="ltr">
                       {stages.map((stage) => (
                         <Link
-                          key={stage.id}
+                          key={`${stage.id}-${stage.practice ? "p" : "t"}`}
                           href={stage.href}
                           className={cn(
                             "rounded-full border px-3 py-1.5 text-sm font-medium",
@@ -164,7 +201,7 @@ function LevelNode({
   letter: string;
   level: number;
   open: boolean;
-  href?: "/learn" | `/learn?from=${string}` | `/learn?level=${number}`;
+  href?: LearnHref;
   label: string;
   lesson: string;
   about: string;

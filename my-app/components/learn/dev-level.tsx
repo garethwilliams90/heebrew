@@ -54,7 +54,7 @@ export function DevLevelControl() {
         id="dev-level"
         type="number"
         min={1}
-        max={14}
+        max={15}
         value={level}
         onChange={(event) => setLevel(event.target.value)}
         className="w-16 rounded-lg border border-emerald-950/15 px-2 py-1"
