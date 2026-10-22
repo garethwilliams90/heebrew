@@ -1,19 +1,11 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { Volume2 } from "lucide-react";
-import { printFont } from "@/components/alephbet/print-font";
-import { Button } from "@/components/ui/button";
+import { HebrewGlyph } from "@/components/learn/hebrew-glyph";
+import { HearTile } from "@/components/learn/hear-tile";
 import type { HearCard } from "@/lib/learn/sentences";
-import { cn } from "cn";
 
 export function HebrewMark({ children }: { children: ReactNode }) {
-  return (
-    <span className={cn(printFont.className, "text-[1.15em] text-black")} dir="rtl" lang="he">
-      {children}
-    </span>
-  );
+  return <HebrewGlyph className="text-[1.15em]">{children}</HebrewGlyph>;
 }
 
 export function HearCards({
@@ -28,25 +20,12 @@ export function HearCards({
   return (
     <ul className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
       {cards.map((card) => (
-        <li key={card.id} className="flex flex-col items-center gap-2 rounded-3xl bg-white/80 px-4 py-3 shadow-sm">
-          <span className={cn(printFont.className, "text-4xl text-black")} dir="rtl" lang="he">
-            {card.hebrew}
-          </span>
-          <span className="text-sm text-emerald-900/80">{t(card.label)}</span>
-          {card.example ? (
-            <span className={cn(printFont.className, "text-lg text-emerald-950")} dir="rtl" lang="he">
-              {card.example}
-            </span>
-          ) : null}
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 px-4"
-            sound={false}
-            onClick={() => onHear(card.example ?? card.hebrew)}
-          >
-            <Volume2 /> {t("letterIntroHear")}
-          </Button>
+        <li key={card.id}>
+          <HearTile hearLabel={t("letterIntroHear")} onHear={() => onHear(card.example ?? card.hebrew)}>
+            <HebrewGlyph className="text-4xl">{card.hebrew}</HebrewGlyph>
+            <span className="text-sm text-emerald-900/80">{t(card.label)}</span>
+            {card.example ? <HebrewGlyph className="text-lg text-emerald-950">{card.example}</HebrewGlyph> : null}
+          </HearTile>
         </li>
       ))}
     </ul>

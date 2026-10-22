@@ -4,17 +4,16 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "motion/react";
 import { LetterIntro } from "@/components/learn/letter-intro";
+import { LevelClear } from "@/components/learn/level-clear";
 import { LevelNav } from "@/components/learn/level-nav";
 import { NikudDropQuiz } from "@/components/learn/nikud-drop-quiz";
 import { SoundSpeak } from "@/components/learn/sound-speak";
 import { ExperienceTube } from "@/components/learn/experience-tube";
-import { NextLevelLink } from "@/components/learn/level-finish";
 import { Button } from "@/components/ui/button";
-import type { SpeechCue } from "@/lib/alephbet/intro-alphabet";
-import { letterCatalog } from "@/lib/alephbet/letter-info";
-import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
-import { playAudio } from "@/lib/settings/master-volume";
+import { lettersByIds } from "@/lib/alephbet/letter-lookup";
+import { playCue } from "@/lib/learn/play-cue";
 import { completeCurriculumLevel, curriculumLevel, stageLevel } from "@/lib/learn/curriculum";
+import { isLocalHost } from "@/lib/learn/local-host";
 import { nikudPracticeLetters } from "@/lib/learn/nikud-drop";
 import { soundPromptsForLevel } from "@/lib/learn/sound-exercises";
 import { learnStages } from "@/lib/learn/stages";
@@ -35,13 +34,6 @@ const slide = {
   exit: (direction: number) => ({ y: direction > 0 ? -72 : 72, opacity: 0 }),
 };
 
-function lettersByIds(ids: readonly string[]) {
-  return ids.flatMap((id) => {
-    const letter = letterCatalog.find((item) => item.id === id);
-    return letter ? [letter] : [];
-  });
-}
-
 export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   const t = useTranslations("Learn");
   const router = useRouter();
@@ -55,8 +47,7 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   }, []);
 
   useEffect(() => {
-    const host = window.location.hostname;
-    if (host === "localhost" || host === "127.0.0.1") {
+    if (isLocalHost()) {
       return;
     }
     const stage = levels[step];
@@ -65,20 +56,9 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
     }
   }, [router, step]);
 
-  async function playCue(cue: SpeechCue) {
-    const audio = await loadSpeechClip(cue.text, cue.phoneme);
-    if (!audio) {
-      return;
-    }
-    audio.currentTime = 0;
-    await playAudio(audio);
-  }
-
   function go(next: number) {
     const stage = levels[next];
-    const host = typeof window === "undefined" ? "" : window.location.hostname;
-    const localHost = host === "localhost" || host === "127.0.0.1";
-    if (!localHost && stage && stageLevel(stage) > curriculumLevel()) {
+    if (!isLocalHost() && stage && stageLevel(stage) > curriculumLevel()) {
       return;
     }
     if (busy || next === step || next < 0 || next >= levels.length) {
@@ -165,11 +145,7 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
             />
           ) : null}
           {stage === "1" ? (
-            <div className="max-w-xl text-center">
-              <h1 className="text-3xl font-semibold tracking-tight text-emerald-950 sm:text-4xl">{t("levelOneDoneTitle")}</h1>
-              <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("levelOneDoneBody")}</p>
-              <NextLevelLink level={1} />
-            </div>
+            <LevelClear level={1} title={t("levelOneDoneTitle")} body={t("levelOneDoneBody")} />
           ) : null}
           {stage === "2.0" ? (
             <LetterIntro letters={lettersByIds(levelTwoLetters)} onPlay={(cue) => void playCue(cue)} />
@@ -187,11 +163,7 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
             />
           ) : null}
           {stage === "2" ? (
-            <div className="flex max-w-xl flex-col items-center text-center">
-              <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("levelClear", { level: 2 })}</h1>
-              <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("levelTwoDoneBody")}</p>
-              <NextLevelLink level={2} />
-            </div>
+            <LevelClear level={2} body={t("levelTwoDoneBody")} />
           ) : null}
         </motion.div>
       </AnimatePresence>

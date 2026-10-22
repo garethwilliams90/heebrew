@@ -7,6 +7,7 @@ import { animate, motion, useAnimation, useMotionValue } from "motion/react";
 import { useCue } from "@/components/settings/use-cue";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
+import { HearReplayButton } from "@/components/learn/hear-replay";
 import { HeartRow, HintButton } from "@/components/learn/practice-hearts";
 import { PointedLetter } from "@/components/learn/pointed-letter";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
@@ -277,28 +278,9 @@ export function NikudDropQuiz({
             {t("tryAgain")}
           </Button>
         ) : null}
-        <motion.span
-          className="relative inline-flex"
-          animate={{ scale: replayDown ? 0.96 : 1 }}
-          transition={{ type: "spring", bounce: 0.05, visualDuration: 0.12 }}
-        >
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 px-5"
-            aria-keyshortcuts="R"
-            onPointerDown={() => setReplayDown(true)}
-            onPointerUp={() => setReplayDown(false)}
-            onPointerLeave={() => setReplayDown(false)}
-            sound={false}
-            onClick={replay}
-          >
-            {t("quizHear")}
-          </Button>
-          <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-emerald-800 text-[10px] font-semibold text-white">
-            R
-          </span>
-        </motion.span>
+        <HearReplayButton pressed={replayDown} onHear={replay}>
+          {t("quizHear")}
+        </HearReplayButton>
         <motion.div
           animate={zoneMotion}
           className={cn(

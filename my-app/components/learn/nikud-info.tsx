@@ -8,12 +8,12 @@ import { printFont } from "@/components/alephbet/print-font";
 import { PointedLetter } from "@/components/learn/pointed-letter";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { nikudCue, nikudCycle } from "@/lib/alephbet/intro-alphabet";
-import { letterCatalog } from "@/lib/alephbet/letter-info";
+import { letterById } from "@/lib/alephbet/letter-lookup";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { playAudio } from "@/lib/settings/master-volume";
 
 const betLetter = "\u05D1";
-const bet = letterCatalog.find((item) => item.id === "bet");
+const bet = letterById.get("bet");
 
 const groups = [
   [
