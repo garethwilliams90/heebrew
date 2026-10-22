@@ -135,7 +135,7 @@ export async function writeCardMastery(
     return "signed-out";
   }
 
-  const { error } = await auth.supabase.from("card_progress").upsert(
+  const { error } = await new ProgressRepository(auth.supabase).upsertRow(
     {
       user_id: auth.userId,
       deck_id: deckId,
@@ -166,15 +166,12 @@ export async function saveSessionProgress(
     return "signed-out";
   }
 
-  const { data, error: readError } = await auth.supabase
-    .from("card_progress")
-    .select("card_id, practice_count")
-    .eq("user_id", auth.userId)
-    .eq("deck_id", deckId)
-    .in(
-      "card_id",
-      updates.map((item) => item.cardId),
-    );
+  const progress = new ProgressRepository(auth.supabase);
+  const { data, error: readError } = await progress.listPracticeCounts(
+    auth.userId,
+    deckId,
+    updates.map((item) => item.cardId),
+  );
 
   if (readError) {
     return "error";
@@ -189,7 +186,7 @@ export async function saveSessionProgress(
   }
 
   const practicedAt = new Date().toISOString();
-  const { error } = await auth.supabase.from("card_progress").upsert(
+  const { error } = await progress.upsertRows(
     updates.map((item) => ({
       user_id: auth.userId,
       deck_id: deckId,

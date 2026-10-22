@@ -14,7 +14,8 @@ lib/repositories/
 └── index.ts
 ```
 
-`loadDeckMastery` and `readDeckMemory` use `ProgressRepository`.
+`loadDeckMastery`, `readDeckMemory`, `writeCardMastery`, and
+`saveSessionProgress` use `ProgressRepository`.
 
 ## Usage
 
@@ -44,5 +45,5 @@ call site, then pass it in.
 ## Migration strategy
 
 `saveCard`, `removeCard`, and `deleteDeck` card wipes use `CardRepository`.
-`loadDeckMastery` and `readDeckMemory` use `ProgressRepository`. Session
-writes still talk to Supabase directly.
+`loadDeckMastery`, `readDeckMemory`, `writeCardMastery`, and
+`saveSessionProgress` use `ProgressRepository`.
