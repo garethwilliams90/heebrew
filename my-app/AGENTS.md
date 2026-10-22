@@ -107,3 +107,9 @@ Login, logout, and registration through Supabase. Email and password are at `/lo
 - The shared `Button` plays the switch-on sound on click. Pass `sound` to choose another sample (`switchOff`, `popUp`, `popDown`, `success`, `wrong`), or `sound={false}` when the button plays its own audio, such as a Hear or Listen control. The global sound setting silences all of them. Sounds that depend on an outcome, like a right or wrong answer, use `useCue`.
 - Every curriculum level renders inside `LevelFrame`, which holds the panel, the level badge, and the exit button.
 - When a feature touches the database or auth, use Supabase. Browser code uses `lib/supabase/client.ts`. Server Components, Server Actions, and Route Handlers use `lib/supabase/server.ts`. `proxy.ts` refreshes the auth session, then applies locale routing. Credentials live in `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Do not commit that file.
+
+## Local development
+
+Run commands from `my-app`. `npm run dev` serves the app at `http://localhost:3000`. `127.0.0.1` is listed in `allowedDevOrigins` so that host stays interactive too.
+
+Auth and saved decks use a local Supabase stack. If `supabase/config.toml` is missing, run `supabase init` before `supabase start`. Copy `API_URL` and `PUBLISHABLE_KEY` from `supabase status -o json` into `.env.local`, then restart `npm run dev`. Azure speech and translator keys are only needed for synthesized speech and new-card translation. Letter audio and the lesson path work without them.
