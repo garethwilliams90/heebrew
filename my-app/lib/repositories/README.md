@@ -44,5 +44,6 @@ call site, then pass it in.
 
 ## Migration strategy
 
-`ProgressRepository` is unused. The next slice migrates `loadDeckMastery`
-and `readDeckMemory` to `listMastery` / `listMemory`.
+`saveCard`, `removeCard`, and `deleteDeck` card wipes use `CardRepository`.
+`ProgressRepository` is unused until a later slice migrates `loadDeckMastery`
+and `readDeckMemory`.

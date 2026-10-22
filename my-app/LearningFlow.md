@@ -27,14 +27,15 @@ On a first visit, the home entry offers two actions:
 
 Start here opens Level 1. The screens are labelled like a game level:
 
-- **1.0** — hear א, ב, and ג. Each card has the letter, its name, its sound, and a control to hear the consonant. The full aleph-bet is shown with these three in bold blue.
-- **1.1** — four spoken sound exercises that use only those letters. The learner hears generated Hebrew, records, and passes when Hebrew speech-to-text matches the expected word. Next stays off until that item is accepted.
+- **1.0** — hear א, ב, and ג. Each card has the letter, its name, its sound, and a control to hear the consonant. ב is shown as both ב and בּ. The full aleph-bet is shown with these three in bold blue.
+- **1.1** — nikud practice for those letters.
+- **1.2** — four spoken sound exercises that use only those letters. The learner hears generated Hebrew, records, and passes when Hebrew speech-to-text matches the expected word. Next stays off until that item is accepted. Skip exercise moves on when recording is unavailable.
 
-### 0.3 / 1.1 Say the word
+### 0.3 / 1.2 Say the word
 
 Speaking is scored in Hebrew, not English. The app plays a generated Hebrew sample, the learner records, and the server transcribes with Hebrew speech-to-text (`he-IL`). A pass is a match to the expected Hebrew (after stripping niqqud and punctuation). English romanization such as gah or geh is not the pass gate. Wrong answers replay the sample and retry. The microphone works in any browser that can record audio.
 
-The older full-alphabet hover, dalet vowel cards, listening quiz, and nikud-drag trial are not part of Level 1. The vowel set below still applies in later practice.
+Levels 1, 2, and 3 include a nikud practice. The learner hears one letter from that level with a vowel, then drags one of three nikud onto the letter. The three choices are different sounds. A nikud guide sits at the top left of those levels and plays each sound on ב. The vowel set below is that guide.
 
 ## Vowel set
 
@@ -53,8 +54,9 @@ Later practice uses this set. It is the curriculum vowel set. It does not change
 
 Letters in this level: only **א, ב, ג**.
 
-- **1.0** — a short intro to hear those three letters.
-- **1.1** — four sound exercises, each a 2–3 letter pointed Hebrew string made only from א, ב, ג. Mix real-ish syllables and mini-words (בַּב, אַבָּא, בַּג, גַּג). Play the generated Hebrew sample, record, pass on a Hebrew match, then Next.
+- **1.0** — a short intro to hear those three letters. ב is shown as both ב and בּ, each with its recorded consonant.
+- **1.1** — nikud practice. One of א, ב, ג is shown, a vowel sound for that letter plays, and the learner drags the matching nikud from three choices that all sound different.
+- **1.2** — four sound exercises, each a 2–3 letter pointed Hebrew string made only from א, ב, ג. Mix real-ish syllables and mini-words (בַּב, אַבָּא, בַּג, גַּג). Play the generated Hebrew sample, record, pass on a Hebrew match, then Next. Skip exercise moves to the next sound when the microphone cannot be used.
 
 Passing those four speaking items unlocks Level 2.
 
@@ -62,8 +64,9 @@ Passing those four speaking items unlocks Level 2.
 
 Letters in this level: **א, ב, ג, ד, ה**.
 
-- **2.0** — hear those five letters (review א ב ג, introduce ד and ה).
-- **2.1** — four more sound exercises from letters available here (גַּד, הַא, בַּד, דָג). Same hear → record → Hebrew match → Next flow.
+- **2.0** — hear those five letters (review א ב ג, introduce ד and ה). ב is shown as both ב and בּ.
+- **2.1** — nikud practice with א, ב, ג, ד, and ה. Same drag flow as level 1.
+- **2.2** — four more sound exercises from letters available here (גַּד, הַא, בַּד, דָג). Same hear → record → Hebrew match → Next flow, with Skip exercise when the microphone cannot be used.
 
 Passing those four speaking items unlocks Level 3. Real words from these exercises are saved to the Known words flashcard deck.
 
@@ -88,7 +91,7 @@ All words covered in these levels should be added to the flashcard deck if they 
 | 10 | ר ש |
 | 11 | ת |
 
-Each level opens on an intro page for its letters. Each letter shows its name, its sound, a short description, and a control to hear its consonant - use the consanant sounds recorded in hebrew_letter_sounds_24_mp3 for best audio. Below them is the whole aleph-bet, with this level's letters in bold blue, and a line giving their place in it, such as letters 6 and 7 of 22. Each letter then has an intro slide and one simple pointed word. Kaf, mem, nun, pe, and tsadi also show one final-form word. A practice quiz then uses only that level's letters. Passing the level opens the next one.
+Each level opens on an intro page for its letters. Each letter shows its name, its sound, a short description, and a control to hear its consonant - use the consanant sounds recorded in hebrew_letter_sounds_24_mp3 for best audio. ב, כ, and ש each show both sounds: ב/בּ with clips 02 and 03, כ/כּ with clips 12 and 13, and שׁ/שׂ with the shin clip and the samekh clip. Below them is the whole aleph-bet, with this level's letters in bold blue, and a line giving their place in it, such as letters 6 and 7 of 22. Level 3 then runs the nikud drag practice with the letters learned so far, א through ז. Each letter then has an intro slide and one simple pointed word. Kaf, mem, nun, pe, and tsadi also show one final-form word. A practice quiz then uses only that level's letters. Passing the level opens the next one.
 
 Hovering in the region of the level card in the level-pathway should reveal a brief description of the content covered in the lesson and give a lesson name. Example: Lesson 3: Learning ז & ו 
 

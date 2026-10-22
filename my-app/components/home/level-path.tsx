@@ -21,10 +21,12 @@ const levelStages: Record<number, { id: string; href: LearnHref; practice?: bool
   1: [
     { id: "1.0", href: "/learn" },
     { id: "1.1", href: "/learn?from=1.1", practice: true },
+    { id: "1.2", href: "/learn?from=1.2", practice: true },
   ],
   2: [
     { id: "2.0", href: "/learn?from=2.0" },
     { id: "2.1", href: "/learn?from=2.1", practice: true },
+    { id: "2.2", href: "/learn?from=2.2", practice: true },
   ],
   13: [
     { id: "13.1", href: "/learn?level=13&from=13.1" },

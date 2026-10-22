@@ -281,6 +281,26 @@ export function SoundSpeak({ items, onPass }: { items: readonly SoundPrompt[]; o
     })();
   }
 
+  function skipExercise() {
+    if (phase === "scoring" || phase === "correct") {
+      return;
+    }
+    session.current += 1;
+    clearTimers();
+    stopMic();
+    audioRef.current?.pause();
+    outcome.current = "idle";
+    setClosest("");
+    setPhase("ready");
+    setIndex((value) => {
+      const next = value + 1;
+      if (next >= items.length) {
+        passRef.current();
+      }
+      return next;
+    });
+  }
+
   function goNext() {
     if (outcome.current !== "hit") {
       return;
@@ -353,6 +373,9 @@ export function SoundSpeak({ items, onPass }: { items: readonly SoundPrompt[]; o
           </Button>
           <Button type="button" className="h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" disabled={phase !== "correct"} onClick={goNext}>
             {t("speakNext")}
+          </Button>
+          <Button type="button" variant="outline" className="h-11 px-5" disabled={phase === "scoring" || phase === "correct"} onClick={skipExercise}>
+            {t("speakSkip")}
           </Button>
         </div>
         <MicMeter

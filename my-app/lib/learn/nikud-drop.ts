@@ -23,30 +23,52 @@ const vowelSound: Record<NikudId, string> = {
   holamVav: "oh",
 };
 
-type Trial = {
-  letterId: string;
-  answer: NikudId;
-  options: readonly [NikudId, NikudId, NikudId];
-};
-
-const trials: readonly Trial[] = [
-  { letterId: "dalet", answer: "patach", options: ["patach", "tsere", "hiriq"] },
-  { letterId: "bet", answer: "kamatz", options: ["kamatz", "segol", "holam"] },
-  { letterId: "gimel", answer: "tsere", options: ["tsere", "patach", "kubutz"] },
-  { letterId: "lamed", answer: "segol", options: ["segol", "shva", "holamVav"] },
-  { letterId: "mem", answer: "shva", options: ["shva", "kamatz", "hiriq"] },
-  { letterId: "nun", answer: "hiriq", options: ["hiriq", "patach", "shuruk"] },
-  { letterId: "reish", answer: "kubutz", options: ["kubutz", "segol", "holam"] },
-  { letterId: "shin", answer: "shuruk", options: ["shuruk", "tsere", "kamatz"] },
-  { letterId: "tav", answer: "holam", options: ["holam", "patach", "hiriq"] },
-  { letterId: "kaf", answer: "holamVav", options: ["holamVav", "shva", "segol"] },
+const answerOrder: readonly NikudId[] = [
+  "kamatz",
+  "patach",
+  "tsere",
+  "segol",
+  "shva",
+  "hiriq",
+  "kubutz",
+  "shuruk",
+  "holam",
+  "holamVav",
 ];
 
-for (const trial of trials) {
-  const sounds = new Set(trial.options.map((id) => vowelSound[id]));
-  if (sounds.size !== trial.options.length || !trial.options.includes(trial.answer)) {
-    throw new Error(`Nikud trial for ${trial.letterId} repeats a vowel sound`);
+const soundOrder = ["ah", "eh", "none", "ee", "oo", "oh"] as const;
+
+const marksBySound: Record<(typeof soundOrder)[number], readonly NikudId[]> = {
+  ah: ["kamatz", "patach"],
+  eh: ["tsere", "segol"],
+  none: ["shva"],
+  ee: ["hiriq"],
+  oo: ["kubutz", "shuruk"],
+  oh: ["holam", "holamVav"],
+};
+
+export const nikudPracticeLetters: Record<1 | 2 | 3, readonly string[]> = {
+  1: ["aleph", "bet", "gimel"],
+  2: ["aleph", "bet", "gimel", "dalet", "he"],
+  3: ["aleph", "bet", "gimel", "dalet", "he", "vav", "zayin"],
+};
+
+function choiceIds(answer: NikudId, index: number): [NikudId, NikudId, NikudId] {
+  const sound = vowelSound[answer];
+  const others = soundOrder.filter((item) => item !== sound);
+  const first = others[index % others.length];
+  const second = others[(index + 1) % others.length];
+  if (!first || !second) {
+    throw new Error(`Nikud trial for ${answer} has no distractors`);
   }
+  const leftMarks = marksBySound[first];
+  const rightMarks = marksBySound[second];
+  const left = leftMarks[index % leftMarks.length];
+  const right = rightMarks[(index + 1) % rightMarks.length];
+  if (!left || !right) {
+    throw new Error(`Nikud trial for ${answer} is missing a choice`);
+  }
+  return [answer, left, right];
 }
 
 export type NikudDropOption = {
@@ -96,21 +118,28 @@ function nikudById(id: NikudId) {
   return nikud;
 }
 
-export function nikudDropRounds(): NikudDropRound[] {
+export function nikudDropRounds(letterIds: readonly string[]): NikudDropRound[] {
   const letters = new Map(alphabetLetters().map((letter) => [letter.id, letter]));
 
-  return trials.map((trial) => {
-    const letter = letters.get(trial.letterId);
+  return answerOrder.map((answer, index) => {
+    const letterId = letterIds[index % letterIds.length];
+    const letter = letters.get(letterId);
     if (!letter) {
-      throw new Error(`Missing letter ${trial.letterId}`);
+      throw new Error(`Missing letter ${letterId}`);
+    }
+
+    const options = choiceIds(answer, index);
+    const sounds = new Set(options.map((id) => vowelSound[id]));
+    if (sounds.size !== options.length || !options.includes(answer)) {
+      throw new Error(`Nikud trial for ${letterId} repeats a vowel sound`);
     }
 
     return {
-      id: `${letter.id}-${trial.answer}`,
+      id: `${letter.id}-${answer}`,
       letter,
-      prompt: nikudCue(letter, trial.answer),
-      answerId: trial.answer,
-      options: mixOptions(trial.options, `${letter.id}-${trial.answer}`).map((id) => {
+      prompt: nikudCue(letter, answer),
+      answerId: answer,
+      options: mixOptions(options, `${letter.id}-${answer}`).map((id) => {
         const nikud = nikudById(id);
         return { id: nikud.id, nameKey: nikud.label, mark: nikud.mark, tail: nikud.tail };
       }),
