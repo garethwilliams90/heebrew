@@ -44,7 +44,7 @@ type ProgressQuery = {
 };
 
 /**
- * card_progress reads used by `loadDeckMastery` and `readDeckMemory`.
+ * card_progress reads and writes used by mastery, memory, and session saves.
  */
 export class ProgressRepository extends BaseRepository {
   constructor(supabase: RepositoryClient) {
