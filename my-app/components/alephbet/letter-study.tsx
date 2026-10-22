@@ -1,7 +1,6 @@
 "use client";
 
-import { Volume2 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { cursiveFont } from "@/components/alephbet/cursive-font";
@@ -16,6 +15,8 @@ import { CardFace, SwipeCard, type SwipeDirection } from "@/components/flashcard
 import { StudyTools } from "@/components/flashcards/study-tools";
 import { LeafHeroScreen } from "@/components/leaf-hero-screen";
 import { StudyGradeBar } from "@/components/study/study-grade-bar";
+import { StudyReplayButton } from "@/components/study/study-replay-button";
+import { useReplayPulse } from "@/components/study/use-replay-pulse";
 import { useSpeechClipCache } from "@/components/study/use-speech-clip-cache";
 import { useStudyCardKeyboard } from "@/components/study/use-study-card-keyboard";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,7 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
   const [saveError, setSaveError] = useState(false);
   const [speechError, setSpeechError] = useState(false);
   const [speaking, setSpeaking] = useState(false);
-  const [replayOn, setReplayOn] = useState(false);
+  const { replayOn, pulse } = useReplayPulse();
   const masteryRef = useRef<Record<string, number>>({});
   const updatesRef = useRef(new Map<string, { mastery: number; practices: number }>());
   const deckRef = useRef(letterDeckId);
@@ -72,7 +73,6 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
   const savedRef = useRef(false);
   const savingRef = useRef<Promise<void> | null>(null);
   const { clips, stopClips, disposeClips, loadSpeechTexts } = useSpeechClipCache();
-  const replayTimer = useRef<number | null>(null);
   const doneTimer = useRef<number | null>(null);
   const card = queue[index];
   const cardRef = useRef(card);
@@ -89,9 +89,6 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
     return () => {
       stopClip();
       disposeClips();
-      if (replayTimer.current !== null) {
-        window.clearTimeout(replayTimer.current);
-      }
       if (doneTimer.current !== null) {
         window.clearTimeout(doneTimer.current);
       }
@@ -148,11 +145,7 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    setReplayOn(true);
-    if (replayTimer.current !== null) {
-      window.clearTimeout(replayTimer.current);
-    }
-    replayTimer.current = window.setTimeout(() => setReplayOn(false), 450);
+    pulse();
   }
 
   function grade(known: boolean) {
@@ -419,39 +412,16 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
                     <Prompt card={card} label={card.cursive ? t("cursiveScript") : t("printScript")} />
                   </CardFace>
                   <CardFace className={`transform-[rotateY(180deg)] ${flipped ? "" : "pointer-events-none"}`}>
-                    <span className="relative">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon-lg"
-                        className={`border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50 ${
-                          replayOn ? "ring-2 ring-emerald-500" : ""
-                        }`}
-                        aria-keyshortcuts="R"
-                        aria-label={speaking ? flashcards("listening") : flashcards("listen")}
-                        disabled={!sound.prefs.general || !sound.prefs.word || speaking}
-                        sound={false}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          replay();
-                        }}
-                      >
-                        <Volume2 />
-                      </Button>
-                      <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-emerald-800 text-[9px] font-semibold text-white">
-                        R
-                      </span>
-                      {replayOn ? (
-                        <motion.span
-                          aria-hidden
-                          className="pointer-events-none absolute inset-0 rounded-full border-2 border-emerald-600"
-                          initial={{ opacity: 0.75, scale: 1 }}
-                          animate={{ opacity: 0, scale: 1.5 }}
-                          transition={{ duration: 0.35, ease: "easeOut" }}
-                          style={{ willChange: "transform, opacity" }}
-                        />
-                      ) : null}
-                    </span>
+                    <StudyReplayButton
+                      label={speaking ? flashcards("listening") : flashcards("listen")}
+                      disabled={!sound.prefs.general || !sound.prefs.word || speaking}
+                      pulsing={replayOn}
+                      showShortcut
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        replay();
+                      }}
+                    />
                     <p className="mt-4 text-5xl font-semibold tracking-tight text-emerald-950 sm:text-6xl">{card.answer}</p>
                     {card.vowel ? <p className="mt-3 text-lg text-emerald-900/70">{t(`vowels.${card.vowel}`)}</p> : null}
                   </CardFace>
