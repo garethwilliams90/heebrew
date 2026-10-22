@@ -6,4 +6,10 @@ export {
   type CardWrite,
   type WriteResult,
 } from "./CardRepository";
+export {
+  ProgressRepository,
+  type MasteryRow,
+  type MemoryRow,
+  type ProgressWriteResult,
+} from "./ProgressRepository";
 export { PAGE_SIZE, type PageResult, type QueryPage } from "./types";

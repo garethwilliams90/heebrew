@@ -1,6 +1,7 @@
 import { isBuiltinDeck, isUserCardId } from "@/lib/flashcards/builtin";
 import type { SaveResult } from "@/lib/flashcards/progress";
 import { isPartOfSpeech, type Flashcard, type GrammaticalGender, type PartOfSpeech } from "@/lib/flashcards/types";
+import { CardRepository } from "@/lib/repositories";
 import { requireBrowserUser } from "@/lib/services/auth";
 
 export type CardDraft = {

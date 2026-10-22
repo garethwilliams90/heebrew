@@ -8,13 +8,14 @@ lib modules do not repeat pagination, table names, or session wiring.
 ```
 lib/repositories/
 ├── BaseRepository.ts   # Table + client, plus readAllPages
-├── CardRepository.ts   # cards inserts, updates, upserts, deletes
-├── types.ts            # PAGE_SIZE and page result shape
+├── CardRepository.ts      # cards inserts, updates, upserts, deletes
+├── ProgressRepository.ts  # card_progress paged reads
+├── types.ts               # PAGE_SIZE and page result shape
 └── index.ts
 ```
 
-`CardRepository` is unused until a later slice migrates `saveCard`. Deck and
-progress repositories come after that.
+`loadDeckMastery`, `readDeckMemory`, `writeCardMastery`, and
+`saveSessionProgress` use `ProgressRepository`.
 
 ## Usage
 
@@ -43,5 +44,6 @@ call site, then pass it in.
 
 ## Migration strategy
 
-`saveCard` uses `CardRepository`. `removeCard` and deck deletes still use
-inline queries until later slices.
+`saveCard`, `removeCard`, and `deleteDeck` card wipes use `CardRepository`.
+`loadDeckMastery`, `readDeckMemory`, `writeCardMastery`, and
+`saveSessionProgress` use `ProgressRepository`.
