@@ -1,5 +1,8 @@
 "use client";
 
+import { printFont } from "@/components/alephbet/print-font";
+import { cn } from "cn";
+
 export function BlankSentence({
   template,
   blankLabel,
@@ -12,7 +15,7 @@ export function BlankSentence({
   const parts = template.split("{}");
 
   return (
-    <p dir="rtl" lang="he" className="text-2xl leading-loose text-emerald-950 sm:text-3xl">
+    <p dir="rtl" lang="he" className={cn(printFont.className, "text-3xl leading-loose text-black sm:text-4xl")}>
       {parts.map((part, partIndex) => (
         <span key={`${partIndex}-${part}`}>
           {part}

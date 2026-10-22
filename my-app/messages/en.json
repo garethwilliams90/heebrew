@@ -221,7 +221,10 @@
     "seeResults": "See results",
     "completeTitle": "Round complete",
     "completeBody": "You answered {correct} of {total} correctly.",
-    "trainAgain": "Train again"
+    "trainAgain": "Train again",
+    "hear": "Hear",
+    "outOfHearts": "No hearts left. Try this practice again.",
+    "tryAgain": "Try again"
   },
   "Home": {
     "nav": "Home",
