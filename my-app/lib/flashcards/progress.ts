@@ -5,8 +5,7 @@ import {
   normalizeMemory,
   type CardMemory,
 } from "@/lib/flashcards/schedule";
-
-const PAGE_SIZE = 1000;
+import { ProgressRepository } from "@/lib/repositories";
 
 export type SaveResult = "ok" | "signed-out" | "error";
 
@@ -45,31 +44,12 @@ export async function loadDeckMastery(deckId: string): Promise<{
   }
 
   const mastery: Record<string, number> = {};
+  const rows = await new ProgressRepository(auth.supabase).listMastery(auth.userId, deckId);
 
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await auth.supabase
-      .from("card_progress")
-      .select("card_id, mastery")
-      .eq("user_id", auth.userId)
-      .eq("deck_id", deckId)
-      .order("card_id", { ascending: true })
-      .range(from, from + PAGE_SIZE - 1);
-
-    if (error) {
-      throw error;
-    }
-
-    const rows = data ?? [];
-
-    for (const row of rows) {
-      const level = masteryLevel(row.mastery);
-      if (typeof row.card_id === "string" && level !== null) {
-        mastery[row.card_id] = level;
-      }
-    }
-
-    if (rows.length < PAGE_SIZE) {
-      break;
+  for (const row of rows) {
+    const level = masteryLevel(row.mastery);
+    if (typeof row.card_id === "string" && level !== null) {
+      mastery[row.card_id] = level;
     }
   }
 
@@ -109,41 +89,22 @@ async function readDeckMemory(deckId: string): Promise<{
   }
 
   const memory: Record<string, CardMemory> = {};
+  const rows = await new ProgressRepository(auth.supabase).listMemory(auth.userId, deckId);
 
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await auth.supabase
-      .from("card_progress")
-      .select("card_id, ease, interval_minutes, due_at, reps, lapses, learning_step, card_state")
-      .eq("user_id", auth.userId)
-      .eq("deck_id", deckId)
-      .order("card_id", { ascending: true })
-      .range(from, from + PAGE_SIZE - 1);
-
-    if (error) {
-      throw error;
+  for (const row of rows) {
+    if (typeof row.card_id !== "string" || !isCardPhase(row.card_state)) {
+      continue;
     }
 
-    const rows = data ?? [];
-
-    for (const row of rows) {
-      if (typeof row.card_id !== "string" || !isCardPhase(row.card_state)) {
-        continue;
-      }
-
-      memory[row.card_id] = normalizeMemory({
-        phase: row.card_state,
-        ease: typeof row.ease === "number" ? row.ease : undefined,
-        intervalMinutes: typeof row.interval_minutes === "number" ? row.interval_minutes : undefined,
-        dueAt: typeof row.due_at === "string" ? row.due_at : null,
-        reps: typeof row.reps === "number" ? row.reps : undefined,
-        lapses: typeof row.lapses === "number" ? row.lapses : undefined,
-        learningStep: typeof row.learning_step === "number" ? row.learning_step : undefined,
-      });
-    }
-
-    if (rows.length < PAGE_SIZE) {
-      break;
-    }
+    memory[row.card_id] = normalizeMemory({
+      phase: row.card_state,
+      ease: typeof row.ease === "number" ? row.ease : undefined,
+      intervalMinutes: typeof row.interval_minutes === "number" ? row.interval_minutes : undefined,
+      dueAt: typeof row.due_at === "string" ? row.due_at : null,
+      reps: typeof row.reps === "number" ? row.reps : undefined,
+      lapses: typeof row.lapses === "number" ? row.lapses : undefined,
+      learningStep: typeof row.learning_step === "number" ? row.learning_step : undefined,
+    });
   }
 
   return { signedIn: true, memory };
