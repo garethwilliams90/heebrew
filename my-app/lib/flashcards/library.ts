@@ -1,6 +1,7 @@
 import { isBuiltinDeck, isUserCardId } from "@/lib/flashcards/builtin";
 import type { SaveResult } from "@/lib/flashcards/progress";
 import { isPartOfSpeech, type Flashcard, type GrammaticalGender, type PartOfSpeech } from "@/lib/flashcards/types";
+import { CardRepository } from "@/lib/repositories";
 import { createClient } from "@/lib/supabase/client";
 
 export type CardDraft = {
@@ -180,31 +181,19 @@ export async function saveCard(
     return "signed-out";
   }
 
+  const cards = new CardRepository(auth.supabase);
+
   if (cardId && isUserCardId(cardId)) {
-    const { error } = await auth.supabase
-      .from("cards")
-      .update({
-        english: next.english,
-        part_of_speech: next.partOfSpeech,
-        example: next.example,
-        hebrew: next.hebrew,
-        hebrew_example: next.hebrewExample,
-        gender: next.gender,
-        hidden: false,
-      })
-      .eq("user_id", auth.userId)
-      .eq("id", cardId);
+    const { error } = await cards.updateOwned(auth.userId, cardId, next);
     return error ? "error" : "ok";
   }
 
   if (!cardId) {
-    const { error } = await auth.supabase.from("cards").insert(cardRow(deckId, auth.userId, next, null));
+    const { error } = await cards.insertNew(deckId, auth.userId, next);
     return error ? "error" : "ok";
   }
 
-  const { error } = await auth.supabase.from("cards").upsert(cardRow(deckId, auth.userId, next, cardId), {
-    onConflict: "user_id,deck_id,source_card_id",
-  });
+  const { error } = await cards.upsertSource(deckId, auth.userId, next, cardId);
   return error ? "error" : "ok";
 }
 
