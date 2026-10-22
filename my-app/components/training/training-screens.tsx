@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { ExperienceAward } from "@/components/flashcards/experience-award";
 import { Button } from "@/components/ui/button";
 
-export function TrainingIntro({ onStart }: { onStart: () => void }) {
+export function TrainingIntro({ onStart, generating }: { onStart: () => void; generating?: boolean }) {
   const t = useTranslations("Training");
 
   return (
@@ -13,8 +13,12 @@ export function TrainingIntro({ onStart }: { onStart: () => void }) {
       <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />
       <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("title")}</h1>
       <p className="mt-3 max-w-md text-emerald-900/70">{t("description")}</p>
-      <Button className="mt-8 h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" onClick={onStart}>
-        {t("start")}
+      <Button 
+        className="mt-8 h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" 
+        onClick={onStart}
+        disabled={generating}
+      >
+        {generating ? t("generating") : t("start")}
       </Button>
     </section>
   );
