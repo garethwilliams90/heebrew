@@ -403,7 +403,7 @@ export function TrainingSession() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ ...cardSpring, delay: choiceIndex * 0.05 }}
-                    className="w-full sm:flex-1 sm:min-w-[200px]"
+                    className=""
                   >
                     <AnswerOption
                       number={choiceIndex + 1}
