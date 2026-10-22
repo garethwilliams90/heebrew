@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Leaf } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { ProgramLoader } from "@/components/program-loader";
 import { AccountNotice } from "@/components/flashcards/account-notice";
@@ -9,9 +8,10 @@ import { useSoundPrefs, type SoundChannel } from "@/components/flashcards/sound-
 import { SessionSummary, type SessionCardResult } from "@/components/flashcards/session-summary";
 import { StudyCardView, type StudyCard } from "@/components/flashcards/study-card";
 import { useCardDisplay } from "@/components/flashcards/study-tools";
+import { LeafHeroScreen } from "@/components/leaf-hero-screen";
+import { useSpeechClipCache } from "@/components/study/use-speech-clip-cache";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { prepareSpeechClip, requestDeckSpeech } from "@/lib/flashcards/deck-speech";
 import { recordDailyCards } from "@/lib/flashcards/daily-practice";
 import { addExperience, flashcardExperience, loadExperience } from "@/lib/flashcards/experience";
 import { loadDeckMemory, saveSessionProgress } from "@/lib/flashcards/progress";
@@ -91,8 +91,7 @@ export function FlashcardSession({
   const bestRef = useRef(1);
   const correctRef = useRef(0);
   const endTrialRef = useRef<() => void>(() => {});
-  const clips = useRef(new Map<string, HTMLAudioElement>());
-  const clipUrls = useRef<string[]>([]);
+  const { clips, stopClips, disposeClips, loadSpeechTexts } = useSpeechClipCache();
   const pendingPlay = useRef<{
     text: string;
     nextClip: string | null;
@@ -172,11 +171,7 @@ export function FlashcardSession({
     return () => {
       cancelled = true;
       stopClip();
-      clips.current.clear();
-      for (const url of clipUrls.current) {
-        URL.revokeObjectURL(url);
-      }
-      clipUrls.current = [];
+      disposeClips();
     };
   }, [count, deckId, mode]);
 
@@ -251,31 +246,7 @@ export function FlashcardSession({
     }
 
     const texts = spoken.filter((text) => !clips.current.has(text)).slice(0, MAX_STUDY_COUNT * 2);
-    if (texts.length === 0) {
-      return;
-    }
-
-    const clipsForDeck = await requestDeckSpeech(texts);
-    if (isCancelled()) {
-      return;
-    }
-
-    await Promise.all(
-      clipsForDeck.map(async (clip) => {
-        if (clips.current.has(clip.text)) {
-          return;
-        }
-
-        const { url, audio } = await prepareSpeechClip(clip.audio);
-        if (isCancelled()) {
-          URL.revokeObjectURL(url);
-          return;
-        }
-
-        clipUrls.current.push(url);
-        clips.current.set(clip.text, audio);
-      }),
-    );
+    await loadSpeechTexts(texts, isCancelled);
   }
 
   function playClip(text: string, nextClip: string | null, kind: "word" | "sentence") {
@@ -347,13 +318,7 @@ export function FlashcardSession({
   function stopClip() {
     pendingPlay.current = null;
     speakingKindRef.current = null;
-
-    for (const clip of clips.current.values()) {
-      clip.onended = null;
-      clip.pause();
-      clip.currentTime = 0;
-    }
-
+    stopClips();
     setSpeakingClip(null);
   }
 
@@ -691,33 +656,33 @@ export function FlashcardSession({
           trial={mode === "trial" ? { secondsLeft, multiplier } : null}
         />
       ) : phase === "caught-up" ? (
-        <section className="flex flex-1 flex-col items-center justify-center text-center">
-          <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />
-          <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">
-            {t("caughtUpTitle")}
-          </h1>
-          <p className="mt-3 max-w-sm text-emerald-900/70">
-            {nextDue
+        <LeafHeroScreen
+          title={t("caughtUpTitle")}
+          body={
+            nextDue
               ? t("caughtUpBody", {
                   when: new Intl.DateTimeFormat(locale, {
                     dateStyle: "medium",
                     timeStyle: "short",
                   }).format(new Date(nextDue)),
                 })
-              : t("caughtUpSoon")}
-          </p>
-          <Button asChild variant="outline" size="lg" className="mt-8">
-            <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
-          </Button>
-        </section>
+              : t("caughtUpSoon")
+          }
+          actions={
+            <Button asChild variant="outline" size="lg">
+              <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
+            </Button>
+          }
+        />
       ) : cards.length === 0 ? (
-        <section className="flex flex-1 flex-col items-center justify-center text-center">
-          <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />
-          <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("emptyDeck")}</h1>
-          <Button asChild size="lg" className="mt-8">
-            <Link href={`/decks?deck=${deckId}&view=cards`}>{t("addCard")}</Link>
-          </Button>
-        </section>
+        <LeafHeroScreen
+          title={t("emptyDeck")}
+          actions={
+            <Button asChild size="lg">
+              <Link href={`/decks?deck=${deckId}&view=cards`}>{t("addCard")}</Link>
+            </Button>
+          }
+        />
       ) : (
         <SessionSummary
           title={mode === "trial" ? t("trialTitle") : t("completeTitle")}

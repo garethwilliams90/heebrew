@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
+import { Volume2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -11,6 +11,8 @@ import { MasteryRing } from "@/components/flashcards/mastery-ring";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { type SoundChannel, type SoundPrefs } from "@/components/flashcards/sound-toggle";
 import { StudyTools, type CardDisplay } from "@/components/flashcards/study-tools";
+import { StudyGradeBar } from "@/components/study/study-grade-bar";
+import { useStudyCardKeyboard } from "@/components/study/use-study-card-keyboard";
 import { Button } from "@/components/ui/button";
 import { withoutNiqqud } from "@/lib/flashcards/bold";
 import type { CardMemory, FlashcardGrade } from "@/lib/flashcards/schedule";
@@ -61,9 +63,6 @@ export function StudyCardView({
   const [direction, setDirection] = useState<SwipeDirection>(1);
   const flippedRef = useRef(flipped);
   const busyRef = useRef(false);
-  const flipRef = useRef(onFlip);
-  const requestRef = useRef<(grade: FlashcardGrade) => void>(() => {});
-  const replayRef = useRef<() => void>(() => {});
   const [replayTick, setReplayTick] = useState(0);
   const [replayTarget, setReplayTarget] = useState<"word" | "sentence" | null>(null);
   const [replayOn, setReplayOn] = useState(false);
@@ -81,54 +80,10 @@ export function StudyCardView({
   const sentencePlaying = speakingClip === sentenceKey;
 
   flippedRef.current = flipped;
-  flipRef.current = onFlip;
 
   useEffect(() => {
     busyRef.current = false;
   }, [appearance]);
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      const target = event.target;
-      if (target instanceof HTMLElement && target.closest("input, textarea, select")) {
-        return;
-      }
-
-      if (event.repeat || busyRef.current) {
-        return;
-      }
-
-      if (event.key === " " || event.code === "Space") {
-        if (target instanceof HTMLElement && target.closest("button, a")) {
-          return;
-        }
-
-        event.preventDefault();
-        flipRef.current();
-        return;
-      }
-
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        requestRef.current("dontKnow");
-        return;
-      }
-
-      if (event.key === "ArrowRight") {
-        event.preventDefault();
-        requestRef.current("know");
-        return;
-      }
-
-      if (event.key === "r" || event.key === "R") {
-        event.preventDefault();
-        replayRef.current();
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   function grade(next: FlashcardGrade) {
     if (!flippedRef.current || busyRef.current) {
@@ -139,8 +94,6 @@ export function StudyCardView({
     setDirection(next === "dontKnow" ? -1 : next === "know" ? 1 : 0);
     onGrade(next);
   }
-
-  requestRef.current = grade;
 
   function replay() {
     const played = onReplay();
@@ -157,7 +110,13 @@ export function StudyCardView({
     replayTimer.current = window.setTimeout(() => setReplayOn(false), 450);
   }
 
-  replayRef.current = replay;
+  useStudyCardKeyboard({
+    busy: busyRef,
+    onFlip,
+    onLeft: () => grade("dontKnow"),
+    onRight: () => grade("know"),
+    onReplay: replay,
+  });
 
   const hebrewWord = display.nikud ? { text: card.hebrew } : withoutNiqqud(card.hebrew);
   const hebrewSentence = display.nikud
@@ -319,42 +278,15 @@ export function StudyCardView({
         </p>
       ) : null}
 
-      <div
-        className={`mt-4 transition-opacity duration-200 ${flipped ? "opacity-100" : "pointer-events-none opacity-0"}`}
-      >
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-14 border-red-200 bg-white text-red-800 hover:bg-red-50"
-            disabled={!flipped}
-            onClick={() => grade("dontKnow")}
-          >
-            {t("dontKnow")}
-            <ArrowLeft className="size-5" strokeWidth={3} />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-14 border-emerald-300 bg-white text-emerald-900 hover:bg-emerald-50"
-            disabled={!flipped}
-            onClick={() => grade("know")}
-          >
-            {t("know")}
-            <ArrowRight className="size-5" strokeWidth={3} />
-          </Button>
-        </div>
-        <div className="flex justify-center">
-          <Button
-            type="button"
-            className="mt-3 h-12 w-2/3 bg-emerald-800 text-white hover:bg-emerald-900"
-            disabled={!flipped}
-            onClick={() => grade("mastered")}
-            >
-            {t("mastered")}
-          </Button>
-          </div>
-      </div>
+      <StudyGradeBar
+        flipped={flipped}
+        dontKnowLabel={t("dontKnow")}
+        knowLabel={t("know")}
+        masteredLabel={t("mastered")}
+        onDontKnow={() => grade("dontKnow")}
+        onKnow={() => grade("know")}
+        onMastered={() => grade("mastered")}
+      />
     </div>
   );
 }

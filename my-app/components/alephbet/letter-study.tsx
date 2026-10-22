@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
+import { Volume2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -14,6 +14,10 @@ import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { useSoundPrefs, type SoundChannel } from "@/components/flashcards/sound-toggle";
 import { CardFace, SwipeCard, type SwipeDirection } from "@/components/flashcards/swipe-card";
 import { StudyTools } from "@/components/flashcards/study-tools";
+import { LeafHeroScreen } from "@/components/leaf-hero-screen";
+import { StudyGradeBar } from "@/components/study/study-grade-bar";
+import { useSpeechClipCache } from "@/components/study/use-speech-clip-cache";
+import { useStudyCardKeyboard } from "@/components/study/use-study-card-keyboard";
 import { Button } from "@/components/ui/button";
 import { cn } from "cn";
 import { playAudio } from "@/lib/settings/master-volume";
@@ -26,7 +30,6 @@ import {
   takeForPractice,
 } from "@/lib/alephbet/letters";
 import { nikudDeck, nikudDeckId } from "@/lib/alephbet/nikud-deck";
-import { prepareSpeechClip, requestDeckSpeech } from "@/lib/flashcards/deck-speech";
 import { loadDeckMastery, saveSessionProgress } from "@/lib/flashcards/progress";
 import { nextMastery } from "@/lib/flashcards/review";
 
@@ -68,11 +71,7 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
   const busyRef = useRef(false);
   const savedRef = useRef(false);
   const savingRef = useRef<Promise<void> | null>(null);
-  const gradeRef = useRef<(known: boolean) => void>(() => {});
-  const flipRef = useRef<() => void>(() => {});
-  const replayRef = useRef<() => void>(() => {});
-  const clips = useRef(new Map<string, HTMLAudioElement>());
-  const clipUrls = useRef<string[]>([]);
+  const { clips, stopClips, disposeClips, loadSpeechTexts } = useSpeechClipCache();
   const replayTimer = useRef<number | null>(null);
   const doneTimer = useRef<number | null>(null);
   const card = queue[index];
@@ -87,58 +86,9 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
   }, [card?.id, index]);
 
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (phaseRef.current !== "study") {
-        return;
-      }
-
-      const target = event.target;
-      if (target instanceof HTMLElement && target.closest("input, textarea, select")) {
-        return;
-      }
-
-      if (event.repeat || busyRef.current) {
-        return;
-      }
-
-      if (event.key === " " || event.code === "Space") {
-        if (target instanceof HTMLElement && target.closest("button, a")) {
-          return;
-        }
-
-        event.preventDefault();
-        flipRef.current();
-        return;
-      }
-
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        gradeRef.current(false);
-        return;
-      }
-
-      if (event.key === "ArrowRight") {
-        event.preventDefault();
-        gradeRef.current(true);
-        return;
-      }
-
-      if (event.key === "r" || event.key === "R") {
-        event.preventDefault();
-        replayRef.current();
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  useEffect(() => {
     return () => {
       stopClip();
-      for (const url of clipUrls.current) {
-        URL.revokeObjectURL(url);
-      }
+      disposeClips();
       if (replayTimer.current !== null) {
         window.clearTimeout(replayTimer.current);
       }
@@ -150,10 +100,7 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
   }, []);
 
   function stopClip() {
-    for (const clip of clips.current.values()) {
-      clip.pause();
-      clip.currentTime = 0;
-    }
+    stopClips();
     setSpeaking(false);
   }
 
@@ -180,21 +127,6 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
     return true;
   }
 
-  async function loadSounds(texts: string[]) {
-    const clipsForDeck = await requestDeckSpeech(texts);
-    await Promise.all(
-      clipsForDeck.map(async (clip) => {
-        if (clips.current.has(clip.text)) {
-          return;
-        }
-
-        const { url, audio } = await prepareSpeechClip(clip.audio);
-        clipUrls.current.push(url);
-        clips.current.set(clip.text, audio);
-      }),
-    );
-  }
-
   function flip() {
     const next = !flippedRef.current;
     flippedRef.current = next;
@@ -210,8 +142,6 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
     stopClip();
   }
 
-  flipRef.current = flip;
-
   function replay() {
     const current = cardRef.current;
     if (!flippedRef.current || !current || !playSpeak(current.speak)) {
@@ -224,8 +154,6 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
     }
     replayTimer.current = window.setTimeout(() => setReplayOn(false), 450);
   }
-
-  replayRef.current = replay;
 
   function grade(known: boolean) {
     const current = cardRef.current;
@@ -268,7 +196,14 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
     }, 340);
   }
 
-  gradeRef.current = grade;
+  useStudyCardKeyboard({
+    enabled: phase === "study",
+    busy: busyRef,
+    onFlip: flip,
+    onLeft: () => grade(false),
+    onRight: () => grade(true),
+    onReplay: replay,
+  });
 
   function toggleSound(channel: SoundChannel) {
     const next = !sound.prefsRef.current[channel];
@@ -379,7 +314,7 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
     setQueue(nextQueue);
 
     try {
-      await loadSounds(nextQueue.map((item) => item.speak));
+      await loadSpeechTexts(nextQueue.map((item) => item.speak));
     } catch {
       setSpeechError(true);
     }
@@ -422,19 +357,23 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
 
   if (phase === "done") {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center px-4 pb-10 text-center sm:px-8">
-        <AccountNotice signedOut={signedOut} saveError={saveError} />
-        <h1 className="text-4xl font-bold">{flashcards("completeTitle")}</h1>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">{flashcards("completeBody")}</p>
-        <div className="mt-8 flex flex-wrap justify-center gap-2">
-          <Button type="button" size="lg" onClick={() => void studyAgain()}>
-            {flashcards("studyAgain")}
-          </Button>
-          <Button type="button" variant="outline" size="lg" onClick={() => void leave()}>
-            {t("backToAlphabet")}
-          </Button>
-        </div>
-      </main>
+      <LeafHeroScreen
+        as="main"
+        className="flex flex-1 flex-col items-center justify-center px-4 pb-10 text-center sm:px-8"
+        before={<AccountNotice signedOut={signedOut} saveError={saveError} />}
+        title={flashcards("completeTitle")}
+        body={flashcards("completeBody")}
+        actions={
+          <>
+            <Button type="button" size="lg" onClick={() => void studyAgain()}>
+              {flashcards("studyAgain")}
+            </Button>
+            <Button type="button" variant="outline" size="lg" onClick={() => void leave()}>
+              {t("backToAlphabet")}
+            </Button>
+          </>
+        }
+      />
     );
   }
 
@@ -526,30 +465,13 @@ export function LetterStudy({ onClose }: { onClose: () => void }) {
                 {flashcards("speechError")}
               </p>
             ) : null}
-            <div className={`mt-4 grid grid-cols-2 gap-3 transition-opacity duration-200 ${flipped ? "opacity-100" : "pointer-events-none opacity-0"}`}>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-14 border-red-200 bg-white text-red-800 hover:bg-red-50"
-                aria-keyshortcuts="ArrowLeft"
-                disabled={!flipped}
-                onClick={() => grade(false)}
-              >
-                {flashcards("dontKnow")}
-                <ArrowLeft className="size-5" strokeWidth={3} />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-14 border-emerald-300 bg-white text-emerald-900 hover:bg-emerald-50"
-                aria-keyshortcuts="ArrowRight"
-                disabled={!flipped}
-                onClick={() => grade(true)}
-              >
-                {flashcards("know")}
-                <ArrowRight className="size-5" strokeWidth={3} />
-              </Button>
-            </div>
+            <StudyGradeBar
+              flipped={flipped}
+              dontKnowLabel={flashcards("dontKnow")}
+              knowLabel={flashcards("know")}
+              onDontKnow={() => grade(false)}
+              onKnow={() => grade(true)}
+            />
           </>
         )}
       </div>

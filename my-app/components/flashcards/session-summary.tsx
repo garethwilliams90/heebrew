@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Leaf } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { ExperienceAward } from "@/components/flashcards/experience-award";
 import { MasteryMark } from "@/components/flashcards/mastery-ring";
+import { LeafHeroScreen } from "@/components/leaf-hero-screen";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { PartOfSpeech } from "@/lib/flashcards/types";
@@ -44,12 +44,22 @@ export function SessionSummary({
   const known = cards.filter((card) => !card.missed);
 
   return (
-    <section className="flex w-full max-w-2xl flex-1 flex-col items-center px-1 py-6 text-center">
-      <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />
-      <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{title}</h1>
-      <p className="mt-3 max-w-sm text-emerald-900/70">{body}</p>
+    <LeafHeroScreen
+      className="flex w-full max-w-2xl flex-1 flex-col items-center px-1 py-6 text-center"
+      title={title}
+      body={body}
+      actions={
+        <>
+          <Button type="button" size="lg" disabled={saving} onClick={onStudyAgain}>
+            {t("studyAgain")}
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
+          </Button>
+        </>
+      }
+    >
       {reward ? <ExperienceAward from={reward.from} to={reward.to} /> : null}
-
       {cards.length > 0 ? (
         <div className="mt-8 w-full text-left">
           <CardGroup
@@ -66,16 +76,7 @@ export function SessionSummary({
           />
         </div>
       ) : null}
-
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Button type="button" size="lg" disabled={saving} onClick={onStudyAgain}>
-          {t("studyAgain")}
-        </Button>
-        <Button asChild variant="outline" size="lg">
-          <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
-        </Button>
-      </div>
-    </section>
+    </LeafHeroScreen>
   );
 }
 

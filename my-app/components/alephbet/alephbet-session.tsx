@@ -5,15 +5,19 @@ import { Info, Volume2, VolumeX } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Popover } from "radix-ui";
+import dynamic from "next/dynamic";
 import { LetterDialog } from "@/components/alephbet/letter-dialog";
 import { letterCells, LetterCard } from "@/components/alephbet/letter-card";
-import { LetterStudy } from "@/components/alephbet/letter-study";
 import { useSoundPrefs } from "@/components/flashcards/sound-toggle";
 import { Button } from "@/components/ui/button";
 import { letterDeckId, spokenNames } from "@/lib/alephbet/letters";
 import { loadDeckMastery } from "@/lib/flashcards/progress";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { playAudio } from "@/lib/settings/master-volume";
+
+const LetterStudy = dynamic(() =>
+  import("@/components/alephbet/letter-study").then((mod) => mod.LetterStudy),
+);
 
 const scrimFade = { duration: 0.2, ease: "easeOut" as const };
 
