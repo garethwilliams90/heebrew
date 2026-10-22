@@ -11,7 +11,7 @@ lib/api/
 │   ├── success.ts
 │   ├── error.ts
 │   └── named.ts
-└── middleware/        # Auth and other wrappers (future)
+└── middleware/        # withAuth for Route Handlers
 ```
 
 ## Response contract
@@ -40,6 +40,19 @@ export async function GET() {
 Pass the existing route message when migrating. Anki routes use codes such as
 `signed-out`; card routes use sentences such as `Sign in required`.
 
+## Auth
+
+```typescript
+import { withAuth } from "@/lib/api/middleware";
+
+export const POST = withAuth(async (request, { user, supabase }) => {
+  return ApiResponse.json({ id: user.id });
+});
+```
+
+`/api/cards/suggest` is the first migrated route. Other routes still check
+auth inline. Pass `"signed-out"` as the second argument for Anki routes.
+
 ## Migration strategy
 
-Helpers are unused until a later slice. Routes will switch one file at a time.
+Routes switch one file at a time. Keep each existing error string.
