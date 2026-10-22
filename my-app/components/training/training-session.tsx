@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { BlankSentence } from "@/components/training/blank-sentence";
 import { TrainingChoice } from "@/components/training/training-choice";
 import { TrainingIntro, TrainingResults } from "@/components/training/training-screens";
+import { VerbConjugationModal } from "@/components/training/verb-conjugation-modal";
 import { addExperience, loadExperience } from "@/lib/flashcards/experience";
 import {
   buildTrainingRound,
@@ -30,6 +31,7 @@ export function TrainingSession() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [saveError, setSaveError] = useState(false);
   const [reward, setReward] = useState<{ from: number; to: number } | null>(null);
+  const [showVerbModal, setShowVerbModal] = useState(false);
   const experienceRef = useRef(0);
   const rewardedRef = useRef(false);
   const playCorrect = useCue("popUp");
@@ -140,7 +142,11 @@ export function TrainingSession() {
           />
 
           <div className="mt-6 rounded-2xl border-2 border-emerald-900 bg-white px-6 py-8 shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]">
-            <BlankSentence template={question.sentence} blankLabel={t("blank")} />
+            <BlankSentence
+              template={question.sentence}
+              blankLabel={t("blank")}
+              onBlankClick={question.verb ? () => setShowVerbModal(true) : undefined}
+            />
           </div>
 
           <div className="mt-4 flex flex-col gap-3" role="group" aria-label={t("title")}>
@@ -175,6 +181,10 @@ export function TrainingSession() {
 
       {phase === "done" ? (
         <TrainingResults correct={correctCount} total={ROUND_SIZE} reward={reward} onAgain={start} />
+      ) : null}
+
+      {showVerbModal && question?.verb ? (
+        <VerbConjugationModal verb={question.verb} onClose={() => setShowVerbModal(false)} />
       ) : null}
     </main>
   );

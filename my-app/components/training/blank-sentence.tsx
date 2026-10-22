@@ -1,9 +1,13 @@
+"use client";
+
 export function BlankSentence({
   template,
   blankLabel,
+  onBlankClick,
 }: {
   template: string;
   blankLabel: string;
+  onBlankClick?: () => void;
 }) {
   const parts = template.split("{}");
 
@@ -13,9 +17,14 @@ export function BlankSentence({
         <span key={`${partIndex}-${part}`}>
           {part}
           {partIndex < parts.length - 1 ? (
-            <span className="mx-1 inline-block min-w-16 border-b-2 border-emerald-900 align-middle">
+            <button
+              type="button"
+              className="mx-1 inline-block min-w-16 border-b-2 border-emerald-900 align-middle transition-colors hover:border-emerald-700 hover:bg-emerald-50"
+              onClick={onBlankClick}
+              disabled={!onBlankClick}
+            >
               <span className="sr-only">{blankLabel}</span>
-            </span>
+            </button>
           ) : null}
         </span>
       ))}
