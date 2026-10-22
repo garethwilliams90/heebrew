@@ -1,6 +1,7 @@
 import { isBuiltinDeck, isUserCardId } from "@/lib/flashcards/builtin";
 import type { SaveResult } from "@/lib/flashcards/progress";
 import { isPartOfSpeech, type Flashcard, type GrammaticalGender, type PartOfSpeech } from "@/lib/flashcards/types";
+import { CardRepository } from "@/lib/repositories";
 import { createClient } from "@/lib/supabase/client";
 
 export type CardDraft = {
@@ -150,7 +151,7 @@ export async function deleteDeck(deckId: string): Promise<SaveResult> {
     return "error";
   }
 
-  const cards = await auth.supabase.from("cards").delete().eq("user_id", auth.userId).eq("deck_id", deckId);
+  const cards = await new CardRepository(auth.supabase).deleteByDeck(auth.userId, deckId);
   if (cards.error) {
     return "error";
   }
