@@ -1,4 +1,4 @@
-export const learnStages = ["1.0", "1.1", "1", "2.0", "2.1", "2"] as const;
+export const learnStages = ["1.0", "1.1", "1.2", "1", "2.0", "2.1", "2.2", "2"] as const;
 
 export function stepForStage(from?: string) {
   if (!from) {

@@ -1,6 +1,7 @@
 import { isBuiltinDeck, isUserCardId } from "@/lib/flashcards/builtin";
 import type { SaveResult } from "@/lib/flashcards/progress";
 import { isPartOfSpeech, type Flashcard, type GrammaticalGender, type PartOfSpeech } from "@/lib/flashcards/types";
+import { CardRepository } from "@/lib/repositories";
 import { createClient } from "@/lib/supabase/client";
 
 export type CardDraft = {
@@ -150,7 +151,7 @@ export async function deleteDeck(deckId: string): Promise<SaveResult> {
     return "error";
   }
 
-  const cards = await auth.supabase.from("cards").delete().eq("user_id", auth.userId).eq("deck_id", deckId);
+  const cards = await new CardRepository(auth.supabase).deleteByDeck(auth.userId, deckId);
   if (cards.error) {
     return "error";
   }
@@ -180,31 +181,19 @@ export async function saveCard(
     return "signed-out";
   }
 
+  const cards = new CardRepository(auth.supabase);
+
   if (cardId && isUserCardId(cardId)) {
-    const { error } = await auth.supabase
-      .from("cards")
-      .update({
-        english: next.english,
-        part_of_speech: next.partOfSpeech,
-        example: next.example,
-        hebrew: next.hebrew,
-        hebrew_example: next.hebrewExample,
-        gender: next.gender,
-        hidden: false,
-      })
-      .eq("user_id", auth.userId)
-      .eq("id", cardId);
+    const { error } = await cards.updateOwned(auth.userId, cardId, next);
     return error ? "error" : "ok";
   }
 
   if (!cardId) {
-    const { error } = await auth.supabase.from("cards").insert(cardRow(deckId, auth.userId, next, null));
+    const { error } = await cards.insertNew(deckId, auth.userId, next);
     return error ? "error" : "ok";
   }
 
-  const { error } = await auth.supabase.from("cards").upsert(cardRow(deckId, auth.userId, next, cardId), {
-    onConflict: "user_id,deck_id,source_card_id",
-  });
+  const { error } = await cards.upsertSource(deckId, auth.userId, next, cardId);
   return error ? "error" : "ok";
 }
 
@@ -213,6 +202,16 @@ export async function removeCard(deckId: string, card: Flashcard): Promise<SaveR
   if (!auth) {
     return "signed-out";
   }
+
+  const cards = new CardRepository(auth.supabase);
+  const draft = {
+    english: card.english,
+    partOfSpeech: card.partOfSpeech,
+    example: card.example,
+    hebrew: card.hebrew,
+    hebrewExample: card.hebrewExample,
+    gender: card.gender,
+  };
 
   if (isUserCardId(card.id)) {
     const progress = await auth.supabase
@@ -225,11 +224,7 @@ export async function removeCard(deckId: string, card: Flashcard): Promise<SaveR
       return "error";
     }
 
-    const { error } = await auth.supabase
-      .from("cards")
-      .delete()
-      .eq("user_id", auth.userId)
-      .eq("id", card.id);
+    const { error } = await cards.deleteOwned(auth.userId, card.id);
     if (!error) {
       try {
         await removeAudioUrls(auth.supabase, auth.userId, [card.audioUrl, card.exampleAudioUrl]);
@@ -240,25 +235,7 @@ export async function removeCard(deckId: string, card: Flashcard): Promise<SaveR
     return error ? "error" : "ok";
   }
 
-  const { error } = await auth.supabase.from("cards").upsert(
-    {
-      ...cardRow(
-        deckId,
-        auth.userId,
-        {
-          english: card.english,
-          partOfSpeech: card.partOfSpeech,
-          example: card.example,
-          hebrew: card.hebrew,
-          hebrewExample: card.hebrewExample,
-          gender: card.gender,
-        },
-        card.id,
-      ),
-      hidden: true,
-    },
-    { onConflict: "user_id,deck_id,source_card_id" },
-  );
+  const { error } = await cards.upsertSource(deckId, auth.userId, draft, card.id, true);
   return error ? "error" : "ok";
 }
 
