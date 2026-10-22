@@ -8,11 +8,13 @@ lib modules do not repeat pagination, table names, or session wiring.
 ```
 lib/repositories/
 ├── BaseRepository.ts   # Table + client, plus readAllPages
+├── CardRepository.ts   # cards inserts, updates, upserts, deletes
 ├── types.ts            # PAGE_SIZE and page result shape
 └── index.ts
 ```
 
-Concrete repositories (cards, decks, progress) come in later slices.
+`CardRepository` is unused until a later slice migrates `saveCard`. Deck and
+progress repositories come after that.
 
 ## Usage
 
@@ -41,5 +43,5 @@ call site, then pass it in.
 
 ## Migration strategy
 
-This slice is unused scaffolding. Later slices add one repository, then
-migrate one function at a time (`saveCard`, then the rest of `library.ts`).
+`CardRepository` is unused scaffolding. The next slice migrates `saveCard`
+in `lib/flashcards/library.ts`, then the rest of that file one function at a time.
