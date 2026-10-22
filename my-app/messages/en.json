@@ -225,7 +225,20 @@
     "hear": "Hear",
     "outOfHearts": "No hearts left. Try this practice again.",
     "tryAgain": "Try again",
-    "generating": "Generating questions..."
+    "generating": "Generating questions...",
+    "setupTitle": "Training Setup",
+    "setupIntro": "Hebrew verbs are organized into patterns called binyanim (בניינים). Each binyan changes how the verb works:",
+    "setupBinyanim": "Active Binyanim:",
+    "setupPaal": "Pa'al (פעל) - Simple active verbs like 'write' (כתב), 'guard' (שמר)",
+    "setupPiel": "Pi'el (פיעל) - Intensive verbs like 'speak' (דבר), 'break' (שבר)",
+    "setupHifil": "Hif'il (הפעיל) - Causative verbs like 'enlarge' (הגדיל), 'explain' (הסביר)",
+    "setupLevels": "Each level adds more tenses: Level 1 (present), Level 2 (past), Level 3 (future).",
+    "setupQuestionCount": "Number of questions",
+    "setupDifficulty": "Difficulty level",
+    "setupLevel1": "Level 1",
+    "setupLevel2": "Level 2",
+    "setupLevel3": "Level 3",
+    "setupStart": "Start Training"
   },
   "Home": {
     "nav": "Home",

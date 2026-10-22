@@ -12,8 +12,10 @@ import { HeartRow, HintButton } from "@/components/learn/practice-hearts";
 import { Button } from "@/components/ui/button";
 import { BlankSentence } from "@/components/training/blank-sentence";
 import { TrainingChoice } from "@/components/training/training-choice";
-import { TrainingIntro, TrainingResults } from "@/components/training/training-screens";
+import { TrainingSetup } from "@/components/training/training-setup";
+import { TrainingResults } from "@/components/training/training-screens";
 import { VerbConjugationModal } from "@/components/training/verb-conjugation-modal";
+import { LevelFrame } from "@/components/learn/level-frame";
 import { addExperience, loadExperience } from "@/lib/flashcards/experience";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { playAudio } from "@/lib/settings/master-volume";
@@ -26,13 +28,13 @@ import {
 import { verbConjugations } from "@/lib/training/verb-conjugations";
 import { sentenceTemplates } from "@/lib/training/sentence-templates";
 
-type Phase = "intro" | "question" | "done";
+type Phase = "setup" | "question" | "done";
 
 const cardSpring = { type: "spring" as const, bounce: 0.28, visualDuration: 0.22 };
 
 export function TrainingSession() {
   const t = useTranslations("Training");
-  const [phase, setPhase] = useState<Phase>("intro");
+  const [phase, setPhase] = useState<Phase>("setup");
   const [round, setRound] = useState<RoundQuestion[]>([]);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -45,6 +47,9 @@ export function TrainingSession() {
   const [failed, setFailed] = useState(false);
   const [shake, setShake] = useState(false);
   const [replayDown, setReplayDown] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [roundSize, setRoundSize] = useState(5);
+  const [userLevel, setUserLevel] = useState<1 | 2 | 3>(1);
   const experienceRef = useRef(0);
   const rewardedRef = useRef(false);
   const playing = useRef<HTMLAudioElement | null>(null);
@@ -149,15 +154,17 @@ export function TrainingSession() {
     };
   }, [question, selected, failed, hear]);
 
-  function start() {
+  function start(questionCount: number, level: 1 | 2 | 3) {
     setGenerating(true);
+    setRoundSize(questionCount);
+    setUserLevel(level);
     
     buildTrainingRoundAsync(null, undefined, {
-      checkCogency: true,
-      useModel: true,
+      checkCogency: false, // Disabled - using better templates instead
+      useModel: false,
     })
       .then((questions) => {
-        setRound(questions);
+        setRound(questions.slice(0, questionCount));
         setIndex(0);
         setSelected(null);
         setCorrectCount(0);
@@ -306,20 +313,20 @@ export function TrainingSession() {
   };
 
   return (
-    <main className="flex flex-1 flex-col items-center px-4 pb-10 sm:px-8">
+    <LevelFrame label={t("title")} finished={phase === "done"}>
       <AccountNotice signedOut={signedIn === false} saveError={saveError} />
 
-      {phase === "intro" ? <TrainingIntro onStart={start} generating={generating} /> : null}
+      {phase === "setup" ? <TrainingSetup onStart={start} /> : null}
 
       {phase === "question" && question ? (
-        <section className="flex w-full max-w-3xl flex-1 flex-col justify-center gap-3">
+        <div className="flex w-full max-w-3xl flex-1 flex-col justify-center gap-3">
           <div className="w-full">
             <ProgressMeter
-              label={t("progress", { done: index + 1, total: ROUND_SIZE })}
+              label={t("progress", { done: index + 1, total: roundSize })}
               value={index + (selected !== null ? 1 : 0.45)}
-              max={ROUND_SIZE}
-              ratio={((index + (selected !== null ? 1 : 0.45)) / ROUND_SIZE) * 100}
-              sections={ROUND_SIZE}
+              max={roundSize}
+              ratio={((index + (selected !== null ? 1 : 0.45)) / roundSize) * 100}
+              sections={roundSize}
               className="h-2.5 rounded-full bg-emerald-950/10"
             />
           </div>
@@ -373,7 +380,7 @@ export function TrainingSession() {
               <motion.div
                 animate={shake ? { x: [0, -10, 10, -6, 6, 0] } : { x: 0 }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="rounded-3xl border-2 border-emerald-900 bg-white/90 px-6 py-8 shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)] backdrop-blur-sm"
+                className="rounded-2xl bg-white/90 px-6 py-8"
               >
                 <BlankSentence
                   template={question.sentence}
@@ -392,7 +399,7 @@ export function TrainingSession() {
                 )}
               </motion.div>
 
-              <div className="mt-4 flex flex-col gap-3" role="group" aria-label={t("title")}>
+              <div className="mt-4 flex flex-col gap-2" role="group" aria-label={t("title")}>
                 {question.choices.map((choice, choiceIndex) => (
                   <motion.div
                     key={choiceIndex}
@@ -430,16 +437,16 @@ export function TrainingSession() {
               ) : null}
             </>
           )}
-        </section>
+        </div>
       ) : null}
 
       {phase === "done" ? (
-        <TrainingResults correct={correctCount} total={ROUND_SIZE} reward={reward} onAgain={start} />
+        <TrainingResults correct={correctCount} total={roundSize} reward={reward} onAgain={() => setPhase("setup")} />
       ) : null}
 
       {showVerbModal && question?.verb ? (
         <VerbConjugationModal verb={question.verb} onClose={() => setShowVerbModal(false)} />
       ) : null}
-    </main>
+    </LevelFrame>
   );
 }
