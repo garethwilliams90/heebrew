@@ -1,17 +1,12 @@
+import { withAuth } from "@/lib/api/middleware";
+import { ApiError, ApiResponse } from "@/lib/api/responses";
 import { translateToHebrew } from "@/lib/azure/translate";
 import { pointHebrew } from "@/lib/dicta/nakdan";
-import { createClient } from "@/lib/supabase/server";
 
 const TEXT_LIMIT = 200;
 const EXAMPLE_LIMIT = 400;
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) {
-    return Response.json({ error: "Sign in required" }, { status: 401 });
-  }
-
+export const POST = withAuth(async (request) => {
   let english = "";
   let example = "";
 
@@ -28,7 +23,7 @@ export async function POST(request: Request) {
   }
 
   if (!english || english.length > TEXT_LIMIT || example.length > EXAMPLE_LIMIT) {
-    return Response.json({ error: "Invalid card" }, { status: 400 });
+    return ApiError.badRequest("Invalid card");
   }
 
   try {
@@ -36,7 +31,7 @@ export async function POST(request: Request) {
     const translated = await translateToHebrew(texts);
     const hebrew = translated[0] ?? "";
     if (!hebrew) {
-      return Response.json({ error: "Translation failed" }, { status: 502 });
+      return ApiError.badGateway("Translation failed");
     }
 
     let pointed = hebrew;
@@ -64,12 +59,12 @@ export async function POST(request: Request) {
       }
     }
 
-    return Response.json({
+    return ApiResponse.json({
       hebrew: pointed,
       hebrewExample,
       gender,
     });
   } catch {
-    return Response.json({ error: "Translation failed" }, { status: 502 });
+    return ApiError.badGateway("Translation failed");
   }
-}
+});
