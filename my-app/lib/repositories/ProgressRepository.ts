@@ -23,12 +23,24 @@ export type MemoryRow = {
 
 type FilterBuilder<T> = PromiseLike<{ data: T[] | null; error: ProgressWriteResult["error"] }> & {
   eq: (column: string, value: string) => FilterBuilder<T>;
+  in: (column: string, values: string[]) => FilterBuilder<T>;
   order: (column: string, options: { ascending: boolean }) => FilterBuilder<T>;
   range: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: ProgressWriteResult["error"] }>;
 };
 
+export type PracticeCountRow = {
+  card_id: string;
+  practice_count: number;
+};
+
+export type ProgressUpsertRow = Record<string, unknown>;
+
 type ProgressQuery = {
-  select: (columns: string) => FilterBuilder<MasteryRow & MemoryRow>;
+  select: (columns: string) => FilterBuilder<MasteryRow & MemoryRow & PracticeCountRow>;
+  upsert: (
+    row: ProgressUpsertRow | ProgressUpsertRow[],
+    options?: { onConflict?: string; defaultToNull?: boolean },
+  ) => PromiseLike<ProgressWriteResult>;
 };
 
 /**
@@ -63,6 +75,22 @@ export class ProgressRepository extends BaseRepository {
         .order("card_id", { ascending: true })
         .range(from, to),
     );
+  }
+
+  listPracticeCounts(userId: string, deckId: string, cardIds: string[]) {
+    return this.progress()
+      .select("card_id, practice_count")
+      .eq("user_id", userId)
+      .eq("deck_id", deckId)
+      .in("card_id", cardIds);
+  }
+
+  upsertRow(row: ProgressUpsertRow, options: { onConflict: string; defaultToNull?: boolean }) {
+    return this.progress().upsert(row, options);
+  }
+
+  upsertRows(rows: ProgressUpsertRow[], options: { onConflict: string }) {
+    return this.progress().upsert(rows, options);
   }
 }
 

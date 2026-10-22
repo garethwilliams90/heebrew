@@ -44,5 +44,5 @@ call site, then pass it in.
 
 ## Migration strategy
 
-`loadDeckMastery` and `readDeckMemory` use `ProgressRepository`. Session
-writes still talk to Supabase directly.
+`loadDeckMastery`, `readDeckMemory`, `writeCardMastery`, and
+`saveSessionProgress` use `ProgressRepository`.
