@@ -1,7 +1,7 @@
 import { isBuiltinDeck, isUserCardId } from "@/lib/flashcards/builtin";
 import type { SaveResult } from "@/lib/flashcards/progress";
 import { isPartOfSpeech, type Flashcard, type GrammaticalGender, type PartOfSpeech } from "@/lib/flashcards/types";
-import { createClient } from "@/lib/supabase/client";
+import { requireBrowserUser } from "@/lib/services/auth";
 
 export type CardDraft = {
   english: string;
@@ -60,12 +60,7 @@ function cardRow(deckId: string, userId: string, draft: CardDraft, sourceCardId:
 }
 
 async function requireUser() {
-  const supabase = createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) {
-    return null;
-  }
-  return { supabase, userId: data.user.id };
+  return requireBrowserUser();
 }
 
 export async function createDeck(title: string, description: string): Promise<{ id: string } | SaveResult> {
