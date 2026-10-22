@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/client";
 import {
   isCardPhase,
   memoryForStage,
@@ -6,23 +5,12 @@ import {
   type CardMemory,
 } from "@/lib/flashcards/schedule";
 import { ProgressRepository } from "@/lib/repositories";
+import { requireBrowserUser } from "@/lib/services/auth";
 
 export type SaveResult = "ok" | "signed-out" | "error";
 
-type AuthContext = {
-  supabase: ReturnType<typeof createClient>;
-  userId: string;
-};
-
-async function requireUser(): Promise<AuthContext | null> {
-  const supabase = createClient();
-  const { data, error } = await supabase.auth.getUser();
-
-  if (error || !data.user) {
-    return null;
-  }
-
-  return { supabase, userId: data.user.id };
+async function requireUser() {
+  return requireBrowserUser();
 }
 
 function masteryLevel(value: unknown) {
