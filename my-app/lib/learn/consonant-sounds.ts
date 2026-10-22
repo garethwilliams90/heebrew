@@ -1,3 +1,29 @@
+export type ConsonantForm = {
+  glyph: string;
+  file: string;
+  sound: string;
+};
+
+// These letters have two consonant sounds. Shin’s s sound uses the samekh clip.
+const forms: Record<string, readonly ConsonantForm[]> = {
+  bet: [
+    { glyph: "ב", file: "02_bet_soft_ב.mp3", sound: "v" },
+    { glyph: "ב\u05BC", file: "03_bet_hard_בּ.mp3", sound: "b" },
+  ],
+  kaf: [
+    { glyph: "כ", file: "12_kaf_soft_כ.mp3", sound: "kh" },
+    { glyph: "כ\u05BC", file: "13_kaf_hard_כּ.mp3", sound: "k" },
+  ],
+  shin: [
+    { glyph: "ש\u05C1", file: "23_shin_ש.mp3", sound: "sh" },
+    { glyph: "ש\u05C2", file: "17_samekh_ס.mp3", sound: "s" },
+  ],
+};
+
+export function consonantForms(letterId: string) {
+  return forms[letterId] ?? null;
+}
+
 const letters: readonly { id: string; file: string }[] = [
   { id: "aleph", file: "01_alef_א.mp3" },
   { id: "bet", file: "03_bet_hard_בּ.mp3" },

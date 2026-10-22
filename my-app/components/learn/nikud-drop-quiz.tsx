@@ -36,14 +36,16 @@ const attractDistance = 118;
 const lockDistance = 36;
 
 export function NikudDropQuiz({
+  letterIds,
   onPlay,
   onPass,
 }: {
+  letterIds: readonly string[];
   onPlay: (cue: SpeechCue) => void | Promise<void>;
   onPass: () => void;
 }) {
   const t = useTranslations("Learn");
-  const [rounds] = useState(() => nikudDropRounds());
+  const [rounds] = useState(() => nikudDropRounds(letterIds));
   const [index, setIndex] = useState(0);
   const [placed, setPlaced] = useState<string | null>(null);
   const [rejected, setRejected] = useState<string | null>(null);

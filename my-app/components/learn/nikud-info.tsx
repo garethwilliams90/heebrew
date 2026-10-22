@@ -7,26 +7,55 @@ import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
 import { PointedLetter } from "@/components/learn/pointed-letter";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { nikudCycle } from "@/lib/alephbet/intro-alphabet";
+import { nikudCue, nikudCycle } from "@/lib/alephbet/intro-alphabet";
+import { letterCatalog } from "@/lib/alephbet/letter-info";
+import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { playAudio } from "@/lib/settings/master-volume";
 
-const dalet = "\u05D3";
+const betLetter = "\u05D1";
+const bet = letterCatalog.find((item) => item.id === "bet");
 
-const soundKey = {
-  kamatz: "soundKamatz",
-  patach: "soundPatach",
-  tsere: "soundTsere",
-  segol: "soundSegol",
-  shva: "soundShva",
-  hiriq: "soundHiriq",
-  kubutz: "soundKubutz",
-  shuruk: "soundShuruk",
-  holam: "soundHolam",
-  holamVav: "soundHolamVav",
-} as const;
+const groups = [
+  [
+    { id: "kamatz", sound: "vowelAh" },
+    { id: "patach", sound: "vowelAh" },
+  ],
+  [
+    { id: "tsere", sound: "vowelEh" },
+    { id: "segol", sound: "vowelEh" },
+  ],
+  [{ id: "shva", sound: "vowelNone" }],
+  [{ id: "hiriq", sound: "vowelEe" }],
+  [
+    { id: "kubutz", sound: "vowelOo" },
+    { id: "shuruk", sound: "vowelOo" },
+  ],
+  [
+    { id: "holam", sound: "vowelOh" },
+    { id: "holamVav", sound: "vowelOh" },
+  ],
+] as const;
+
+type NikudId = (typeof groups)[number][number]["id"];
 
 export function NikudInfo() {
   const t = useTranslations("Learn");
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<NikudId | null>(null);
+
+  async function play(id: NikudId) {
+    if (!bet) {
+      return;
+    }
+    setSelected(id);
+    const cue = nikudCue(bet, id);
+    const audio = await loadSpeechClip(cue.text, cue.phoneme);
+    if (!audio) {
+      return;
+    }
+    audio.currentTime = 0;
+    await playAudio(audio);
+  }
 
   return (
     <Tooltip open={open} onOpenChange={setOpen}>
@@ -43,21 +72,40 @@ export function NikudInfo() {
       </TooltipTrigger>
       <TooltipContent
         side="bottom"
+        align="start"
         sideOffset={8}
         collisionPadding={16}
         arrowClassName="bg-white fill-white"
-        className="max-h-[70vh] max-w-md flex-col items-stretch gap-3 overflow-y-auto bg-white p-5 text-left text-lg text-emerald-950 whitespace-normal shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]"
+        className="w-max max-w-[calc(100vw-2rem)] flex-col items-stretch gap-0 bg-white p-2 text-emerald-950 whitespace-normal shadow-[0_16px_40px_-28px_rgba(6,78,59,0.45)]"
       >
-        <ul className="flex flex-col gap-3">
-          {nikudCycle.map((nikud) => (
-            <li key={nikud.id} className="flex items-center gap-4">
-              <span dir="rtl" lang="he" className={cn(printFont.className, "text-6xl leading-none")}>
-                <PointedLetter letter={dalet} mark={nikud.mark} tail={nikud.tail} />
-              </span>
-              <span className="text-xl leading-snug">{t(soundKey[nikud.id])}</span>
-            </li>
+        <div className="flex flex-wrap gap-1">
+          {groups.map((group) => (
+            <div key={group[0].id} className="flex items-center rounded-lg border border-dotted border-emerald-800/45 p-1">
+              {group.map((row) => {
+                const nikud = nikudCycle.find((item) => item.id === row.id);
+                if (!nikud) {
+                  return null;
+                }
+                return (
+                  <button
+                    key={row.id}
+                    type="button"
+                    aria-label={`${t(nikud.label)}, ${t(row.sound)}`}
+                    className={cn(
+                      "flex h-15 w-15 cursor-pointer items-center justify-center rounded-md p-3 outline-none hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-emerald-700/30",
+                      selected === row.id && "bg-emerald-100",
+                    )}
+                    onClick={() => void play(row.id)}
+                  >
+                    <span dir="rtl" lang="he" className={cn(printFont.className, "text-5xl leading-none")}>
+                      <PointedLetter letter={betLetter} mark={nikud.mark} tail={nikud.tail} />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           ))}
-        </ul>
+        </div>
       </TooltipContent>
     </Tooltip>
   );
