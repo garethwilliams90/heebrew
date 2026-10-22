@@ -23,10 +23,33 @@ import { LevelFrame } from "@/components/learn/level-frame";
 import { useRouter } from "@/i18n/navigation";
 
 const levels = learnStages;
-const levelOneLetters = ["aleph", "bet", "gimel"] as const;
-const levelTwoLetters = ["dalet", "he"] as const;
-const levelOnePrompts = soundPromptsForLevel(1);
-const levelTwoPrompts = soundPromptsForLevel(2);
+
+const alphabetTracks = [
+  {
+    intro: "1.0",
+    nikud: "1.1",
+    speak: "1.2",
+    done: "1",
+    complete: 1,
+    letters: ["aleph", "bet", "gimel"] as const,
+    nikudLetters: nikudPracticeLetters[1],
+    prompts: soundPromptsForLevel(1),
+    doneTitle: "levelOneDoneTitle" as const,
+    doneBody: "levelOneDoneBody" as const,
+  },
+  {
+    intro: "2.0",
+    nikud: "2.1",
+    speak: "2.2",
+    done: "2",
+    complete: 2,
+    letters: ["dalet", "he"] as const,
+    nikudLetters: nikudPracticeLetters[2],
+    prompts: soundPromptsForLevel(2),
+    doneTitle: undefined,
+    doneBody: "levelTwoDoneBody" as const,
+  },
+] as const;
 
 const slide = {
   enter: (direction: number) => ({ y: direction > 0 ? 72 : -72, opacity: 0 }),
@@ -129,42 +152,34 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
             }
           }}
         >
-          {stage === "1.0" ? (
-            <LetterIntro letters={lettersByIds(levelOneLetters)} onPlay={(cue) => void playCue(cue)} />
-          ) : null}
-          {stage === "1.1" ? (
-            <NikudDropQuiz letterIds={nikudPracticeLetters[1]} onPlay={(cue) => void playCue(cue)} onPass={() => goStage("1.2")} />
-          ) : null}
-          {stage === "1.2" ? (
-            <SoundSpeak
-              items={levelOnePrompts}
-              onPass={() => {
-                completeCurriculumLevel(1);
-                goStage("1");
-              }}
-            />
-          ) : null}
-          {stage === "1" ? (
-            <LevelClear level={1} title={t("levelOneDoneTitle")} body={t("levelOneDoneBody")} />
-          ) : null}
-          {stage === "2.0" ? (
-            <LetterIntro letters={lettersByIds(levelTwoLetters)} onPlay={(cue) => void playCue(cue)} />
-          ) : null}
-          {stage === "2.1" ? (
-            <NikudDropQuiz letterIds={nikudPracticeLetters[2]} onPlay={(cue) => void playCue(cue)} onPass={() => goStage("2.2")} />
-          ) : null}
-          {stage === "2.2" ? (
-            <SoundSpeak
-              items={levelTwoPrompts}
-              onPass={() => {
-                completeCurriculumLevel(2);
-                goStage("2");
-              }}
-            />
-          ) : null}
-          {stage === "2" ? (
-            <LevelClear level={2} body={t("levelTwoDoneBody")} />
-          ) : null}
+          {alphabetTracks.map((track) =>
+            stage === track.intro ? (
+              <LetterIntro key={track.intro} letters={lettersByIds(track.letters)} onPlay={(cue) => void playCue(cue)} />
+            ) : stage === track.nikud ? (
+              <NikudDropQuiz
+                key={track.nikud}
+                letterIds={track.nikudLetters}
+                onPlay={(cue) => void playCue(cue)}
+                onPass={() => goStage(track.speak)}
+              />
+            ) : stage === track.speak ? (
+              <SoundSpeak
+                key={track.speak}
+                items={track.prompts}
+                onPass={() => {
+                  completeCurriculumLevel(track.complete);
+                  goStage(track.done);
+                }}
+              />
+            ) : stage === track.done ? (
+              <LevelClear
+                key={track.done}
+                level={track.complete}
+                title={track.doneTitle ? t(track.doneTitle) : undefined}
+                body={t(track.doneBody)}
+              />
+            ) : null,
+          )}
         </motion.div>
       </AnimatePresence>
     </LevelFrame>

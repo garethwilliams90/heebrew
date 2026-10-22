@@ -9,8 +9,7 @@ import { PointedLetter } from "@/components/learn/pointed-letter";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { nikudCue, nikudCycle } from "@/lib/alephbet/intro-alphabet";
 import { letterById } from "@/lib/alephbet/letter-lookup";
-import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
-import { playAudio } from "@/lib/settings/master-volume";
+import { playCue } from "@/lib/learn/play-cue";
 
 const betLetter = "\u05D1";
 const bet = letterById.get("bet");
@@ -48,13 +47,7 @@ export function NikudInfo() {
       return;
     }
     setSelected(id);
-    const cue = nikudCue(bet, id);
-    const audio = await loadSpeechClip(cue.text, cue.phoneme);
-    if (!audio) {
-      return;
-    }
-    audio.currentTime = 0;
-    await playAudio(audio);
+    await playCue(nikudCue(bet, id));
   }
 
   return (

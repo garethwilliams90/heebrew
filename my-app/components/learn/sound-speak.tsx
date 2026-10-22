@@ -12,13 +12,13 @@ import { MicMeter } from "@/components/learn/mic-meter";
 import { BlueNikud } from "@/components/learn/pointed-letter";
 import { Button } from "@/components/ui/button";
 import { addExperience } from "@/lib/flashcards/experience";
+import { LESSON_EXPERIENCE } from "@/lib/learn/lesson-experience";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { rememberKnownWord } from "@/lib/learn/known-words";
 import { recordWavClip, wavBlob } from "@/lib/learn/record-clip";
 import type { SoundPrompt } from "@/lib/learn/sound-exercises";
 import { playAudio } from "@/lib/settings/master-volume";
 
-const lessonExperience = 6;
 const recordMs = 4000;
 const quietPeak = 0.04;
 const cardShadow = "0 24px 60px -32px rgba(6, 78, 59, 0.45)";
@@ -220,7 +220,7 @@ export function SoundSpeak({ items, onPass }: { items: readonly SoundPrompt[]; o
     if (result.pass) {
       outcome.current = "hit";
       playSuccess();
-      void addExperience(lessonExperience);
+      void addExperience(LESSON_EXPERIENCE);
       if (current.knownWord) {
         void rememberKnownWord(current.knownWord);
       }

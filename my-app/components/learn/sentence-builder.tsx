@@ -6,18 +6,18 @@ import { Volume2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useCue } from "@/components/settings/use-cue";
 import { printFont } from "@/components/alephbet/print-font";
-import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { HearReplayButton } from "@/components/learn/hear-replay";
-import { HeartRow, HintButton } from "@/components/learn/practice-hearts";
+import { PracticeQuizHeader } from "@/components/learn/practice-quiz-header";
+import { usePracticeHearts } from "@/components/learn/use-practice-hearts";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { addExperience } from "@/lib/flashcards/experience";
+import { LESSON_EXPERIENCE } from "@/lib/learn/lesson-experience";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { mix, glossOf, type BuilderSentence, type SentenceWord } from "@/lib/learn/sentences";
 import { playAudio } from "@/lib/settings/master-volume";
 import { cn } from "cn";
 
-const lessonExperience = 6;
 const cardSpring = { type: "spring" as const, bounce: 0.28, visualDuration: 0.22 };
 
 export function SentenceBuilder({
@@ -33,8 +33,7 @@ export function SentenceBuilder({
   const [placed, setPlaced] = useState<(string | null)[]>(() => rounds[0]?.words.map(() => null) ?? []);
   const [bank, setBank] = useState<SentenceWord[]>(() => mix(rounds[0]?.words ?? []));
   const [revealed, setRevealed] = useState(false);
-  const [halves, setHalves] = useState(10);
-  const [failed, setFailed] = useState(false);
+  const { halves, failed, loseHeart, resetHearts } = usePracticeHearts();
   const [shake, setShake] = useState(false);
   const playWrong = useCue("wrong");
   const playSuccess = useCue("success");
@@ -88,16 +87,6 @@ export function SentenceBuilder({
       }
     };
   }, [round, hear]);
-
-  function loseHeart(cost: number) {
-    setHalves((current) => {
-      const next = Math.max(0, current - cost);
-      if (next <= 0) {
-        setFailed(true);
-      }
-      return next;
-    });
-  }
 
   function placeWord(wordId: string, slot: number) {
     if (!round || revealed || failed) {
@@ -169,8 +158,7 @@ export function SentenceBuilder({
     if (!restart) {
       return;
     }
-    setHalves(10);
-    setFailed(false);
+    resetHearts();
     setRevealed(false);
     setIndex(0);
     if (index === 0) {
@@ -213,7 +201,7 @@ export function SentenceBuilder({
   function next() {
     const following = index + 1;
     if (following >= rounds.length) {
-      void addExperience(rounds.length * lessonExperience);
+      void addExperience(rounds.length * LESSON_EXPERIENCE);
       passRef.current();
       return;
     }
@@ -247,28 +235,18 @@ export function SentenceBuilder({
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-3">
-      <div className="w-full">
-        <ProgressMeter
-          label={t("quizProgress", { done: question, total: rounds.length })}
-          value={question}
-          max={rounds.length}
-          ratio={ratio}
-          sections={rounds.length}
-          className="h-2.5 rounded-full bg-emerald-950/10"
-        />
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <HeartRow hearts={halves / 2} />
-        <HintButton disabled={failed || revealed || halves < 1 || bank.length < 1} onHint={hint} />
-      </div>
-      <p className="text-center text-base text-emerald-900/80 sm:text-lg">
-        {failed ? t("outOfHearts") : revealed ? t("sentenceBuilt") : t("sentenceBuildPrompt")}
-      </p>
-      {failed ? (
-        <Button type="button" className="h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" onClick={retry}>
-          {t("tryAgain")}
-        </Button>
-      ) : null}
+      <PracticeQuizHeader
+        question={question}
+        total={rounds.length}
+        ratio={ratio}
+        halves={halves}
+        failed={failed}
+        prompt={revealed ? t("sentenceBuilt") : t("sentenceBuildPrompt")}
+        hintDisabled={failed || revealed || halves < 1 || bank.length < 1}
+        onHint={hint}
+        onRetry={retry}
+        showCount={false}
+      />
       {revealed ? (
         <div className="flex max-w-xl flex-col items-center gap-3 text-center">
           <p className={cn(printFont.className, "text-4xl leading-snug text-black")} dir="rtl" lang="he">
