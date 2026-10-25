@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 
-const START_HALVES = 10;
-
-export function usePracticeHearts() {
-  const [halves, setHalves] = useState(START_HALVES);
+export function usePracticeHearts(lives = 5) {
+  const startHalves = lives * 2;
+  const [halves, setHalves] = useState(startHalves);
   const [failed, setFailed] = useState(false);
 
   function loseHeart(cost: number) {
@@ -19,7 +18,7 @@ export function usePracticeHearts() {
   }
 
   function resetHearts() {
-    setHalves(START_HALVES);
+    setHalves(startHalves);
     setFailed(false);
   }
 

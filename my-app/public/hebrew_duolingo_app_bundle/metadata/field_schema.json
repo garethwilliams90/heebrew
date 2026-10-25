@@ -1,0 +1,29 @@
+{
+  "model_fields": {
+    "1315735129": [
+      "Hebrew",
+      "Niqqud",
+      "Transliteration",
+      "Translation",
+      "Gender",
+      "Number",
+      "Form",
+      "Type",
+      "Audio",
+      "Tags"
+    ]
+  },
+  "field_presence_counts": {
+    "Hebrew": 10664,
+    "Niqqud": 10664,
+    "Transliteration": 10664,
+    "Translation": 10664,
+    "Gender": 8588,
+    "Number": 9908,
+    "Form": 9876,
+    "Type": 10658,
+    "Audio": 10664,
+    "Tags": 10664
+  },
+  "schema_version": "1.0.0"
+}

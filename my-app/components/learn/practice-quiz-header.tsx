@@ -16,6 +16,8 @@ export function PracticeQuizHeader({
   onHint,
   onRetry,
   showCount = true,
+  lives = 5,
+  showHint = true,
 }: {
   question: number;
   total: number;
@@ -27,6 +29,8 @@ export function PracticeQuizHeader({
   onHint: () => void;
   onRetry: () => void;
   showCount?: boolean;
+  lives?: number;
+  showHint?: boolean;
 }) {
   const t = useTranslations("Learn");
 
@@ -43,8 +47,8 @@ export function PracticeQuizHeader({
         />
       </div>
       <div className="flex flex-wrap items-center justify-center gap-3">
-        <HeartRow hearts={halves / 2} />
-        <HintButton disabled={hintDisabled} onHint={onHint} />
+        <HeartRow hearts={halves / 2} max={lives} />
+        {showHint ? <HintButton disabled={hintDisabled} onHint={onHint} /> : null}
       </div>
       <div className="text-center">
         <p className="text-base text-emerald-900/80 sm:text-lg">{failed ? t("outOfHearts") : prompt}</p>

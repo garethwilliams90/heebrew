@@ -4,12 +4,12 @@ import { Heart, Lightbulb } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
-export function HeartRow({ hearts }: { hearts: number }) {
+export function HeartRow({ hearts, max = 5 }: { hearts: number; max?: number }) {
   const t = useTranslations("Learn");
 
   return (
     <div className="flex items-center gap-1" aria-label={t("hearts", { count: hearts })}>
-      {Array.from({ length: 5 }, (_, index) => {
+      {Array.from({ length: max }, (_, index) => {
         const fill = Math.min(1, Math.max(0, hearts - index));
         return <HeartPip key={index} fill={fill} />;
       })}

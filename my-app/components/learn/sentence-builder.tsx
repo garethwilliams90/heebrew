@@ -14,26 +14,42 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { addExperience } from "@/lib/flashcards/experience";
 import { LESSON_EXPERIENCE } from "@/lib/learn/lesson-experience";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { loadBundleClip } from "@/lib/learn/bundle-clip";
 import { mix, glossOf, type BuilderSentence, type SentenceWord } from "@/lib/learn/sentences";
 import { playAudio } from "@/lib/settings/master-volume";
 import { cn } from "cn";
 
 const cardSpring = { type: "spring" as const, bounce: 0.28, visualDuration: 0.22 };
 
+function piecesOf(round: BuilderSentence | undefined) {
+  return [...(round?.words ?? []), ...(round?.extras ?? [])];
+}
+
+function bankFor(round: BuilderSentence | undefined) {
+  return mix(piecesOf(round));
+}
+
+function pieceById(round: BuilderSentence, id: string) {
+  return piecesOf(round).find((item) => item.id === id);
+}
+
 export function SentenceBuilder({
   rounds,
   onPass,
+  exam = false,
 }: {
   rounds: readonly BuilderSentence[];
   onPass: () => void;
+  exam?: boolean;
 }) {
   const t = useTranslations("Learn");
   const locale = useLocale();
+  const lives = exam ? 3 : 5;
   const [index, setIndex] = useState(0);
   const [placed, setPlaced] = useState<(string | null)[]>(() => rounds[0]?.words.map(() => null) ?? []);
-  const [bank, setBank] = useState<SentenceWord[]>(() => mix(rounds[0]?.words ?? []));
+  const [bank, setBank] = useState<SentenceWord[]>(() => bankFor(rounds[0]));
   const [revealed, setRevealed] = useState(false);
-  const { halves, failed, loseHeart, resetHearts } = usePracticeHearts();
+  const { halves, failed, loseHeart, resetHearts } = usePracticeHearts(lives);
   const [shake, setShake] = useState(false);
   const playWrong = useCue("wrong");
   const playSuccess = useCue("success");
@@ -46,10 +62,10 @@ export function SentenceBuilder({
 
   passRef.current = onPass;
 
-  const hear = useCallback(async (text: string) => {
+  const hear = useCallback(async (text: string, audioPath?: string) => {
     const id = playId.current + 1;
     playId.current = id;
-    const audio = await loadSpeechClip(text);
+    const audio = audioPath ? await loadBundleClip(audioPath) : await loadSpeechClip(text);
     if (!audio || id !== playId.current) {
       return;
     }
@@ -71,12 +87,16 @@ export function SentenceBuilder({
       return;
     }
     setPlaced(round.words.map(() => null));
-    setBank(mix(round.words));
+    setBank(bankFor(round));
     setRevealed(false);
     setShake(false);
     void loadSpeechClip(round.hebrew);
-    for (const word of round.words) {
-      void loadSpeechClip(word.hebrew);
+    for (const word of piecesOf(round)) {
+      if (word.audio) {
+        void loadBundleClip(word.audio);
+      } else {
+        void loadSpeechClip(word.hebrew);
+      }
     }
     void hear(round.hebrew);
     return () => {
@@ -99,7 +119,7 @@ export function SentenceBuilder({
     const occupant = placed[slot];
     setBank((current) => {
       const without = current.filter((item) => item.id !== wordId);
-      const returning = occupant ? round.words.find((item) => item.id === occupant) : undefined;
+      const returning = occupant ? pieceById(round, occupant) : undefined;
       return returning ? [...without, returning] : without;
     });
     const nextPlaced = placed.map((id, index) => (index === slot ? wordId : id === wordId ? null : id));
@@ -113,7 +133,7 @@ export function SentenceBuilder({
     if (!round || revealed || failed) {
       return;
     }
-    const word = round.words.find((item) => item.id === wordId);
+    const word = pieceById(round, wordId);
     if (!word) {
       return;
     }
@@ -125,15 +145,28 @@ export function SentenceBuilder({
     if (!round || nextPlaced.some((id) => !id)) {
       return;
     }
-    const correct = round.words.every((word, index) => nextPlaced[index] === word.id);
+    const correct = round.words.every((word, index) => {
+      const placedId = nextPlaced[index];
+      return placedId ? pieceById(round, placedId)?.hebrew === word.hebrew : false;
+    });
     if (!correct) {
       playWrong();
       loseHeart(2);
       setShake(true);
+      const kept = exam
+        ? round.words.map(() => null)
+        : round.words.map((word, index) => {
+            const placedId = nextPlaced[index];
+            if (!placedId) {
+              return null;
+            }
+            return pieceById(round, placedId)?.hebrew === word.hebrew ? placedId : null;
+          });
       window.setTimeout(() => {
         setShake(false);
-        setPlaced(round.words.map(() => null));
-        setBank(mix(round.words));
+        const keptIds = new Set(kept.filter((id) => id));
+        setPlaced(kept);
+        setBank(mix(piecesOf(round).filter((item) => !keptIds.has(item.id))));
       }, 420);
       return;
     }
@@ -241,7 +274,9 @@ export function SentenceBuilder({
         ratio={ratio}
         halves={halves}
         failed={failed}
-        prompt={revealed ? t("sentenceBuilt") : t("sentenceBuildPrompt")}
+        lives={lives}
+        showHint={!exam}
+        prompt={revealed ? t("sentenceBuilt") : exam ? t("examBuildPrompt") : t("sentenceBuildPrompt")}
         hintDisabled={failed || revealed || halves < 1 || bank.length < 1}
         onHint={hint}
         onRetry={retry}
@@ -269,7 +304,7 @@ export function SentenceBuilder({
             dir="rtl"
           >
             {round.words.map((word, slot) => {
-              const occupying = placed[slot] ? round.words.find((item) => item.id === placed[slot]) : undefined;
+              const occupying = placed[slot] ? pieceById(round, placed[slot]) : undefined;
               return (
                 <div
                   key={`${round.id}-slot-${slot}`}
@@ -282,7 +317,7 @@ export function SentenceBuilder({
                     <WordChip
                       word={occupying}
                       locale={locale}
-                      onHear={() => void hear(occupying.hebrew)}
+                      onHear={exam ? undefined : () => void hear(occupying.hebrew, occupying.audio)}
                       onDrop={(point) => dropAt(point, occupying.id)}
                       onReturn={() => returnWord(occupying.id)}
                     />
@@ -301,7 +336,7 @@ export function SentenceBuilder({
                     key={word.id}
                     word={word}
                     locale={locale}
-                    onHear={() => void hear(word.hebrew)}
+                    onHear={exam ? undefined : () => void hear(word.hebrew, word.audio)}
                     onDrop={(point) => dropAt(point, word.id)}
                     onPlace={() => {
                       const empty = placed.findIndex((id) => !id);
@@ -328,7 +363,7 @@ function WordChip({
 }: {
   word: SentenceWord;
   locale: string;
-  onHear: () => void;
+  onHear?: () => void;
   onDrop: (point: { x: number; y: number }) => void;
   onPlace?: () => void;
   onReturn?: () => void;
@@ -365,7 +400,7 @@ function WordChip({
           }}
           onClick={() => {
             if (!dragged.current) {
-              onHear();
+              onHear?.();
               onPlace?.();
             }
           }}

@@ -1,0 +1,19 @@
+{
+  "source_file": "Hebrew_Duolingo_2024_.apkg",
+  "entry_count": 10664,
+  "unique_entry_ids": 10664,
+  "duplicate_hebrew_transliteration_pairs_preserved": true,
+  "audio_file_count_extracted": 5221,
+  "audio_references": 10664,
+  "missing_audio_references": [],
+  "invalid_audio_paths": [],
+  "json_parse_errors": [],
+  "checks": {
+    "vocabulary_json_parses": true,
+    "entry_count_matches": true,
+    "all_entry_ids_unique": true,
+    "all_audio_references_resolve": true,
+    "all_manifest_files_exist": true,
+    "all_metadata_json_parses": true
+  }
+}
