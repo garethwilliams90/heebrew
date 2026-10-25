@@ -10,6 +10,7 @@ import { printFont } from "@/components/alephbet/print-font";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { MicMeter } from "@/components/learn/mic-meter";
 import { BlueNikud } from "@/components/learn/pointed-letter";
+import { HearReplayButton } from "@/components/learn/hear-replay";
 import { Button } from "@/components/ui/button";
 import { addExperience } from "@/lib/flashcards/experience";
 import { LESSON_EXPERIENCE } from "@/lib/learn/lesson-experience";
@@ -364,9 +365,7 @@ export function SoundSpeak({ items, onPass }: { items: readonly SoundPrompt[]; o
           </motion.div>
         </AnimatePresence>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button type="button" variant="outline" className="h-11 px-5" sound={false} disabled={phase === "scoring"} onClick={replay}>
-            {t("speakHear")}
-          </Button>
+          <HearReplayButton disabled={phase === "scoring"} onHear={replay}>{t("speakHear")}</HearReplayButton>
           <Button type="button" className="h-11 px-5" sound={false} disabled={busy || phase === "correct"} onClick={speak}>
             <MicIcon className="size-4" />
             {phase === "listening" ? t("speakListening") : phase === "scoring" ? t("speakScoring") : t("speakSay")}

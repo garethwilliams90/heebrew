@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 export function usePracticeHearts(lives = 5) {
   const startHalves = lives * 2;
   const [halves, setHalves] = useState(startHalves);
   const [failed, setFailed] = useState(false);
 
-  function loseHeart(cost: number) {
+  const loseHeart = useCallback((cost: number) => {
     setHalves((current) => {
       const next = Math.max(0, current - cost);
       if (next <= 0) {
@@ -15,12 +15,12 @@ export function usePracticeHearts(lives = 5) {
       }
       return next;
     });
-  }
+  }, []);
 
-  function resetHearts() {
+  const resetHearts = useCallback(() => {
     setHalves(startHalves);
     setFailed(false);
-  }
+  }, [startHalves]);
 
   return { halves, failed, loseHeart, resetHearts };
 }

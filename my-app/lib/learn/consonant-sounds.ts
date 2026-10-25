@@ -1,6 +1,6 @@
 export type ConsonantForm = {
   glyph: string;
-  file: string;
+  file: string | null;
   sound: string;
 };
 
@@ -17,6 +17,10 @@ const forms: Record<string, readonly ConsonantForm[]> = {
   shin: [
     { glyph: "ש\u05C1", file: "23_shin_ש.mp3", sound: "sh" },
     { glyph: "ש\u05C2", file: "17_samekh_ס.mp3", sound: "s" },
+  ],
+  pe: [
+    { glyph: "פ", file: "19_pe_soft_פ.mp3", sound: "f" },
+    { glyph: "פ\u05BC", file: null, sound: "p" },
   ],
 };
 

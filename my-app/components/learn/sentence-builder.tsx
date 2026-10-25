@@ -15,6 +15,8 @@ import { addExperience } from "@/lib/flashcards/experience";
 import { LESSON_EXPERIENCE } from "@/lib/learn/lesson-experience";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { loadBundleClip } from "@/lib/learn/bundle-clip";
+import { GlossLabel } from "@/components/learn/gloss-label";
+import { stripGenderNote } from "@/lib/learn/gender-note";
 import { mix, glossOf, type BuilderSentence, type SentenceWord } from "@/lib/learn/sentences";
 import { playAudio } from "@/lib/settings/master-volume";
 import { cn } from "cn";
@@ -57,7 +59,6 @@ export function SentenceBuilder({
   const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
   const playing = useRef<HTMLAudioElement | null>(null);
   const playId = useRef(0);
-  const [replayDown, setReplayDown] = useState(false);
   const round = rounds[index];
 
   passRef.current = onPass;
@@ -199,38 +200,6 @@ export function SentenceBuilder({
     }
   }
 
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      const target = event.target;
-      if (target instanceof HTMLElement && target.closest("input, textarea")) {
-        return;
-      }
-      if (!round || revealed || failed) {
-        return;
-      }
-      if (event.key !== "r" && event.key !== "R") {
-        return;
-      }
-      event.preventDefault();
-      if (event.type === "keyup") {
-        setReplayDown(false);
-        return;
-      }
-      if (event.repeat) {
-        return;
-      }
-      setReplayDown(true);
-      void hear(round.hebrew);
-    }
-
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("keyup", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("keyup", onKey);
-    };
-  }, [round, revealed, failed, hear]);
-
   function next() {
     const following = index + 1;
     if (following >= rounds.length) {
@@ -267,7 +236,8 @@ export function SentenceBuilder({
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-3">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col items-center gap-3">
+      <div className="w-full shrink-0">
       <PracticeQuizHeader
         question={question}
         total={rounds.length}
@@ -282,6 +252,8 @@ export function SentenceBuilder({
         onRetry={retry}
         showCount={false}
       />
+      </div>
+      <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
       {revealed ? (
         <div className="flex max-w-xl flex-col items-center gap-3 text-center">
           <p className={cn(printFont.className, "text-4xl leading-snug text-black")} dir="rtl" lang="he">
@@ -294,7 +266,7 @@ export function SentenceBuilder({
         </div>
       ) : (
         <>
-          <HearReplayButton pressed={replayDown} onHear={() => void hear(round.hebrew)}>
+          <HearReplayButton onHear={() => void hear(round.hebrew)}>
             <Volume2 /> {t("quizHear")}
           </HearReplayButton>
           <motion.div
@@ -349,6 +321,7 @@ export function SentenceBuilder({
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }
@@ -369,7 +342,7 @@ function WordChip({
   onReturn?: () => void;
 }) {
   const t = useTranslations("Learn");
-  const meaning = glossOf(word.gloss, locale);
+  const meaning = stripGenderNote(glossOf(word.gloss, locale));
   const dragged = useRef(false);
 
   return (
@@ -414,7 +387,7 @@ function WordChip({
         className="bg-white px-3 py-1.5 text-emerald-950 shadow-sm"
         arrowClassName="bg-white fill-white"
       >
-        {meaning}
+        <GlossLabel gloss={word.gloss} />
       </TooltipContent>
     </Tooltip>
   );

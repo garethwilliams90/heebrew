@@ -9,6 +9,7 @@ import { laterKnownWords } from "@/lib/learn/later-levels";
 import { sixteenKnownWords } from "@/lib/learn/level-sixteen";
 import { readingKnownWords } from "@/lib/learn/reading-levels";
 import { soundKnownWords } from "@/lib/learn/sound-exercises";
+import { toBasicWord, wordById } from "@/lib/learn/words/catalog";
 
 // Every word the curriculum can teach. Ids are shared only when the Hebrew is the same.
 const learnableWords: readonly BasicWord[] = [
@@ -45,8 +46,12 @@ export function readKnownWords(): BasicWord[] {
       if (!item || typeof item !== "object" || !("id" in item) || typeof item.id !== "string") {
         return [];
       }
-      const word = learnableWords.find((entry) => entry.id === item.id);
-      return word ? [word] : [];
+      const listed = learnableWords.find((entry) => entry.id === item.id);
+      if (listed) {
+        return [listed];
+      }
+      const catalogWord = wordById(item.id);
+      return catalogWord ? [toBasicWord(catalogWord)] : [];
     });
   } catch {
     return [];

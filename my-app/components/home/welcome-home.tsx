@@ -1,45 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "motion/react";
 import { cn } from "cn";
-import { buttonVariants } from "@/components/ui/button";
 import { printFont } from "@/components/alephbet/print-font";
-import { Link } from "@/i18n/navigation";
 import { DevLevelControl } from "@/components/learn/dev-level";
 import { LevelPath } from "@/components/home/level-path";
-import { hasLearningStarted, markLearningStarted } from "@/lib/learn/started";
-
-const choiceSize = "h-auto w-full whitespace-normal px-6 py-4 text-base leading-snug";
 
 export function WelcomeHome() {
   const t = useTranslations("Home");
-  const [started, setStarted] = useState(false);
-
-  useEffect(() => {
-    setStarted(hasLearningStarted());
-  }, []);
 
   return (
     <main className="flex min-h-0 flex-1 flex-col items-center gap-12 overflow-y-auto py-6">
       <WelcomeTitle label={t("welcome")} hebrew={t("welcomeHebrew")} />
-      {started ? (
-        <LevelPath />
-      ) : (
-        <div className="flex w-full max-w-md flex-col gap-4">
-          <div className="webrew-float w-full rounded-full">
-            <Link href="/learn" className={cn(buttonVariants(), choiceSize)} onClick={() => markLearningStarted()}>
-              {t("startHere")}
-            </Link>
-          </div>
-          <div className="webrew-float w-full cursor-not-allowed rounded-full [animation-delay:450ms]">
-            <button type="button" disabled className={cn(buttonVariants({ variant: "outline" }), choiceSize)}>
-              {t("assessment")}
-            </button>
-          </div>
-        </div>
-      )}
+      <LevelPath />
       <DevLevelControl />
     </main>
   );

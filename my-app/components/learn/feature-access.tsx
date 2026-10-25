@@ -5,29 +5,29 @@ import { useTranslations } from "next-intl";
 import { cn } from "cn";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "@/i18n/navigation";
-import { curriculumLevel } from "@/lib/learn/curriculum";
-import { flashcardsUnlocked } from "@/lib/learn/flashcards-access";
+import { PATHWAY_EVENT, sectionIsOpen } from "@/lib/learn/pathway/progress";
 
 export type LockedFeature = "study" | "aleph" | "training";
 
-const featureLevel: Record<LockedFeature, number> = {
-  study: 5,
-  aleph: 3,
-  training: 15,
+const featureSection: Record<LockedFeature, number> = {
+  study: 2,
+  aleph: 2,
+  training: 5,
 };
 
-export function useFeatureOpen(level: number, honorLegacy = false) {
+export function useFeatureOpen(sectionIndex: number, honorLegacy = false) {
   const [open, setOpen] = useState<boolean | null>(null);
 
   useEffect(() => {
     function refresh() {
-      setOpen(curriculumLevel() >= level || (honorLegacy && flashcardsUnlocked()));
+      const legacy = window.localStorage.getItem("webrew.flashcards-unlocked") === "1";
+      setOpen(sectionIsOpen(sectionIndex) || (honorLegacy && legacy));
     }
 
     refresh();
-    window.addEventListener("webrew-curriculum", refresh);
-    return () => window.removeEventListener("webrew-curriculum", refresh);
-  }, [honorLegacy, level]);
+    window.addEventListener(PATHWAY_EVENT, refresh);
+    return () => window.removeEventListener(PATHWAY_EVENT, refresh);
+  }, [honorLegacy, sectionIndex]);
 
   return open;
 }
@@ -46,7 +46,7 @@ function useFeatureMessage(feature: LockedFeature) {
 }
 
 export function FeatureAccess({ feature, children }: { feature: LockedFeature; children: ReactNode }) {
-  const open = useFeatureOpen(featureLevel[feature], feature === "study");
+  const open = useFeatureOpen(featureSection[feature], feature === "study");
   const message = useFeatureMessage(feature);
 
   if (open === null) {
@@ -79,7 +79,7 @@ export function LockedNavLink({
   onClick?: () => void;
   children: ReactNode;
 }) {
-  const open = useFeatureOpen(featureLevel[feature], feature === "study");
+  const open = useFeatureOpen(featureSection[feature], feature === "study");
   const message = useFeatureMessage(feature);
 
   if (open) {

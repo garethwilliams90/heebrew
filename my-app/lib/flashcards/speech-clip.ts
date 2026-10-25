@@ -1,7 +1,10 @@
+import { speechText } from "@/lib/learn/hebrew-text";
+
 const pending = new Map<string, Promise<HTMLAudioElement | null>>();
 
 export function loadSpeechClip(text: string, phoneme?: string) {
-  const key = phoneme ? `${text}\u0000${phoneme}` : text;
+  const spoken = phoneme ? text : speechText(text);
+  const key = phoneme ? `${spoken}\u0000${phoneme}` : spoken;
   const existing = pending.get(key);
   if (existing) {
     return existing;
@@ -10,7 +13,7 @@ export function loadSpeechClip(text: string, phoneme?: string) {
   const request = fetch("/api/speech", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(phoneme ? { text, phoneme } : { text }),
+    body: JSON.stringify(phoneme ? { text: spoken, phoneme } : { text: spoken }),
   })
     .then(async (response) => {
       if (!response.ok) {

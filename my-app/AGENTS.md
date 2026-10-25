@@ -15,13 +15,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Refer to these two files, and only these, for how the project is defined:
 
 - **AGENTS.md** — tech stack, interface language and direction, how current features behave, and working agreements.
-- **LearningFlow.md** — the conceptual path of the app and it's flow through the levelling system
+- **LearningFlow.md** — the pathway content: sections, levels, exercises, exams, and the words those levels teach.
 
 Webrew is an interactive, modern, fully responsive web app for Hebrew learners at every level, from total beginners to advanced speakers. It should feel easy and intuitive: a sleek UI, clean smooth animations, and a subtle nature theme that shows up in logos, icons, and sound effects.
 
 The app lives in this Next.js project (`my-app`). The repo root README describes it as a Hebrew language learning platform for all levels.
 
-The curriculum in LearningFlow.md does not rewrite Alephbet, flashcards, training, streaks, or auth. Those stay available as they are. Curriculum levels are a content gate, and content is fed gradually. Aleph bet unlocks at level 3. Flashcards unlock at level 5. Training unlocks at level 15.
+The learning pathway is the home page. After login the learner sees the sections and levels from LearningFlow.md. Flashcards, the aleph-bet reference, training, streaks, and auth stay as they are. Flashcards and the aleph-bet reference unlock when Section 2 unlocks. Training stays locked until Section 5. Words a learner covers are saved to the Known words deck. Lesson words are read from `lib/learn/words/catalog.json`, filtered from the Duolingo bundle. Recordings stay in `public/hebrew_duolingo_app_bundle/audio`.
 
 ## Tech stack
 
@@ -106,6 +106,8 @@ Login, logout, and registration through Supabase. Email and password are at `/lo
 - Keep UI work consistent with the nature theme, smooth motion, and a clean modern look.
 - The shared `Button` plays the switch-on sound on click. Pass `sound` to choose another sample (`switchOff`, `popUp`, `popDown`, `success`, `wrong`), or `sound={false}` when the button plays its own audio, such as a Hear or Listen control. The global sound setting silences all of them. Sounds that depend on an outcome, like a right or wrong answer, use `useCue`.
 - Every curriculum level renders inside `LevelFrame`, which holds the panel, the level badge, and the exit button.
+- A pathway level is data in a section content file plus `LevelFrame`. Each exercise type is one component under `components/learn/exercises`. A new level is a new object, not a new screen.
+- Pathway sections render through the shared section component on the home path. Progress is stored in the browser under `webrew.pathway`.
 - When a feature touches the database or auth, use Supabase. Browser code uses `lib/supabase/client.ts`. Server Components, Server Actions, and Route Handlers use `lib/supabase/server.ts`. `proxy.ts` refreshes the auth session, then applies locale routing. Credentials live in `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Do not commit that file.
 
 ## Local development
