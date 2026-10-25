@@ -8,6 +8,7 @@ import { useAdvance } from "@/components/learn/exercises/use-advance";
 import { printFont } from "@/components/alephbet/print-font";
 import { HearReplayButton } from "@/components/learn/hear-replay";
 import { Button } from "@/components/ui/button";
+import { withoutNikud } from "@/lib/learn/hebrew-text";
 import { playStudyClip } from "@/lib/learn/pathway/play-study";
 import type { RecognizeItem } from "@/lib/learn/pathway/types";
 import { cn } from "cn";
@@ -52,6 +53,7 @@ export function RecognizeSound({
   const remainingWrong = item.choices.filter(
     (choice) => choice.id !== item.prompt.id && !wrongIds.includes(choice.id) && !hidden.includes(choice.id),
   );
+  const longChoices = item.choices.some((choice) => choice.hebrew.includes(" ") || [...withoutNikud(choice.hebrew)].length > 8);
 
   function hint() {
     const pick = remainingWrong[Math.floor(Math.random() * remainingWrong.length)];
@@ -62,22 +64,27 @@ export function RecognizeSound({
 
   return (
     <ExerciseChrome index={index} total={items.length} prompt={t("recognizePrompt")} canHint={remainingWrong.length > 0} onHint={hint}>
-      <div className="flex w-full max-w-xl flex-col items-center gap-6">
+      <div className={cn("flex w-full flex-col items-center gap-6", longChoices ? "max-w-2xl" : "max-w-xl")}>
         <HearReplayButton onHear={() => void playStudyClip(item.prompt)}>{t("quizHear")}</HearReplayButton>
-        <div className="grid w-full gap-3 sm:grid-cols-3">
+        <div className={cn("grid w-full gap-3", longChoices ? "grid-cols-1" : "sm:grid-cols-3")}>
           {item.choices.map((choice) => {
             if (hidden.includes(choice.id)) {
               return null;
             }
             const tone = rightId === choice.id ? "correct" : wrongIds.includes(choice.id) ? "wrong" : null;
             return (
-              <AnswerPop key={choice.id} tone={tone}>
+              <AnswerPop key={choice.id} tone={tone} className="min-w-0 w-full">
                 <Button
                   type="button"
                   sound={false}
                   variant="outline"
                   disabled={wrongIds.includes(choice.id)}
-                  className={cn("h-auto w-full px-4 py-5 text-3xl", printFont.className, answerTone(tone))}
+                  className={cn(
+                    "h-auto w-full min-w-0 whitespace-normal px-5 py-4 text-center leading-snug",
+                    longChoices ? "rounded-3xl! text-2xl" : "text-3xl",
+                    printFont.className,
+                    answerTone(tone),
+                  )}
                   lang="he"
                   dir="rtl"
                   onClick={() => {

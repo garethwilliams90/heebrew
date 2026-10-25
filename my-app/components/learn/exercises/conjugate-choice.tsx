@@ -64,13 +64,13 @@ export function ConjugateChoice({
             }
             const tone = rightId === choice.id ? "correct" : wrongIds.includes(choice.id) ? "wrong" : null;
             return (
-              <AnswerPop key={choice.id} tone={tone}>
+              <AnswerPop key={choice.id} tone={tone} className="min-w-0 w-full">
                 <Button
                   type="button"
                   sound={false}
                   variant="outline"
                   disabled={wrongIds.includes(choice.id)}
-                  className={cn("h-auto w-full py-4 text-2xl", printFont.className, answerTone(tone))}
+                  className={cn("h-auto w-full min-w-0 whitespace-normal rounded-3xl! px-4 py-4 text-center text-2xl leading-snug", printFont.className, answerTone(tone))}
                   lang="he"
                   dir="rtl"
                   onClick={() => {
