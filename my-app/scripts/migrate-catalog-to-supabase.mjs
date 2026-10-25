@@ -48,11 +48,11 @@ async function migrateCatalog() {
       const vocabWord = {
         word_key: word.id,
         hebrew: word.hebrew,
-        niqqud: word.hebrew, // catalog doesn't have separate niqqud
-        transliteration: word.reading || null,
-        en: word.english,
-        fr: word.fr || word.english,
-        es: word.es || word.english,
+        niqqud: word.niqqud || word.hebrew,
+        transliteration: word.transliteration || word.reading || null,
+        en: word.en,
+        fr: word.fr || word.en,
+        es: word.es || word.en,
         part_of_speech: word.partOfSpeech,
         gender: word.gender || null,
         difficulty_level: 1, // Section 2 fundamentals = basic
@@ -83,26 +83,33 @@ async function migrateCatalog() {
         
         // If there's audio, create word_media entry
         if (word.audio) {
-          const { error: mediaError } = await supabase
+          // Check if media already exists
+          const { data: existingMedia } = await supabase
             .from('word_media')
-            .upsert({
-              word_id: data.id,
-              media_type: 'audio',
-              media_url: word.audio,
-              audio_quality: 'native',
-              speaker: 'default',
-              is_default: true
-            }, {
-              onConflict: 'word_id,media_url',
-              ignoreDuplicates: true
-            });
+            .select('id')
+            .eq('word_id', data.id)
+            .eq('media_url', word.audio)
+            .single();
           
-          if (mediaError && !mediaError.message.includes('duplicate')) {
-            console.warn(`⚠️  Could not add audio for "${word.id}": ${mediaError.message}`);
+          if (!existingMedia) {
+            const { error: mediaError } = await supabase
+              .from('word_media')
+              .insert({
+                word_id: data.id,
+                media_type: 'audio',
+                media_url: word.audio,
+                audio_quality: 'native',
+                speaker: 'default',
+                is_default: true
+              });
+            
+            if (mediaError) {
+              console.warn(`⚠️  Could not add audio for "${word.id}": ${mediaError.message}`);
+            }
           }
         }
         
-        console.log(`✓ ${word.id} (${word.english})`);
+        console.log(`✓ ${word.id} (${word.en})`);
       }
     } catch (err) {
       console.error(`❌ Unexpected error with word "${word.id}":`, err);
