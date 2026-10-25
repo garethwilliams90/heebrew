@@ -11,6 +11,7 @@ import { LevelNav } from "@/components/learn/level-nav";
 import { LevelFrame } from "@/components/learn/level-frame";
 import { LockedLevel, useCurriculumGate } from "@/components/learn/use-curriculum-gate";
 import { SentenceBuilder } from "@/components/learn/sentence-builder";
+import { loadBundleClip } from "@/lib/learn/bundle-clip";
 import { playCue } from "@/lib/learn/play-cue";
 import { completeCurriculumLevel, curriculumLevel } from "@/lib/learn/curriculum";
 import { rememberKnownWord } from "@/lib/learn/known-words";
@@ -32,7 +33,10 @@ import {
   fourteenMixPractice,
   learnForms,
 } from "@/lib/learn/level-fourteen";
+import { fifteenKnownWords, fifteenReadPractice, readForms, readNouns } from "@/lib/learn/level-fifteen";
+import { loveForms, loveNouns, sixteenKnownWords, sixteenMixPractice, writeForms } from "@/lib/learn/level-sixteen";
 import { glossOf } from "@/lib/learn/sentences";
+import { playAudio } from "@/lib/settings/master-volume";
 import { useLocale } from "next-intl";
 
 type Step =
@@ -50,32 +54,50 @@ type Step =
   | "14.3"
   | "14.4"
   | "14.5"
+  | "15.1"
+  | "15.2"
+  | "15.3"
+  | "16.1"
+  | "16.2"
+  | "16.3"
+  | "16.4"
   | "done";
 
 const thirteenOrder: Step[] = ["intro", "13.1", "13.1p", "13.2", "13.2p", "13.3", "13.3p", "13.4", "13.4p", "done"];
 const fourteenOrder: Step[] = ["14.1", "14.2", "14.3", "14.4", "14.5", "done"];
+const fifteenOrder: Step[] = ["15.1", "15.2", "15.3", "done"];
+const sixteenOrder: Step[] = ["16.1", "16.2", "16.3", "16.4", "done"];
 
-function startStep(level: number, from?: string): Step {
-  if (level === 13) {
-    if (from && thirteenOrder.includes(from as Step)) {
-      return from as Step;
-    }
-    return "intro";
-  }
-  if (from && fourteenOrder.includes(from as Step)) {
+const orders: Record<13 | 14 | 15 | 16, Step[]> = {
+  13: thirteenOrder,
+  14: fourteenOrder,
+  15: fifteenOrder,
+  16: sixteenOrder,
+};
+
+const firstStep: Record<13 | 14 | 15 | 16, Step> = {
+  13: "intro",
+  14: "14.1",
+  15: "15.1",
+  16: "16.1",
+};
+
+function startStep(level: 13 | 14 | 15 | 16, from?: string): Step {
+  const order = orders[level];
+  if (from && order.includes(from as Step)) {
     return from as Step;
   }
-  return "14.1";
+  return firstStep[level];
 }
 
-function advance(level: number, step: Step): Step {
-  const order = level === 13 ? thirteenOrder : fourteenOrder;
+function advance(level: 13 | 14 | 15 | 16, step: Step): Step {
+  const order = orders[level];
   const index = order.indexOf(step);
   return order[Math.min(index + 1, order.length - 1)] ?? "done";
 }
 
-function previous(level: number, step: Step): Step | null {
-  const order = level === 13 ? thirteenOrder : fourteenOrder;
+function previous(level: 13 | 14 | 15 | 16, step: Step): Step | null {
+  const order = orders[level];
   const index = order.indexOf(step);
   if (index <= 0) {
     return null;
@@ -84,24 +106,40 @@ function previous(level: number, step: Step): Step | null {
   return prior && prior !== "done" ? prior : null;
 }
 
-export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }) {
+export function SentenceLevel({ level, from }: { level: 13 | 14 | 15 | 16; from?: string }) {
   const t = useTranslations("Learn");
   const locale = useLocale();
   const allowed = useCurriculumGate(level);
   const [step, setStep] = useState<Step>(() => startStep(level, from));
   const eatRounds = useMemo(() => fourteenEatPractice(), []);
   const mixRounds = useMemo(() => fourteenMixPractice(), []);
+  const readRounds = useMemo(() => fifteenReadPractice(), []);
+  const writeLoveRounds = useMemo(() => sixteenMixPractice(), []);
   const stage1 = useMemo(() => thirteenPractice(1), []);
   const stage2 = useMemo(() => thirteenPractice(2), []);
   const stage3 = useMemo(() => thirteenPractice(3), []);
   const stage4 = useMemo(() => thirteenPractice(4), []);
 
   useEffect(() => {
-    const words = level === 13 ? thirteenKnownWords : fourteenKnownWords;
+    const words =
+      level === 13 ? thirteenKnownWords : level === 14 ? fourteenKnownWords : level === 15 ? fifteenKnownWords : sixteenKnownWords;
     for (const word of words) {
       void rememberKnownWord(word);
     }
   }, [level]);
+
+  async function hear(text: string, audioPath?: string) {
+    if (!audioPath) {
+      await playCue({ text });
+      return;
+    }
+    const audio = await loadBundleClip(audioPath);
+    if (!audio) {
+      return;
+    }
+    audio.currentTime = 0;
+    await playAudio(audio);
+  }
 
   function goNext() {
     setStep((current) => advance(level, current));
@@ -123,7 +161,8 @@ export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }
   const passed = step === "done";
   const labelId = step === "intro" || step === "done" ? String(level) : step.replace("p", "");
   const prior = previous(level, step);
-  const concept = !passed && !step.endsWith("p");
+  const practice = step.endsWith("p") || step === "15.3" || step === "16.4";
+  const concept = !passed && !practice;
 
   return (
     <LevelFrame
@@ -143,7 +182,7 @@ export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }
       {passed ? (
         <LevelClear level={level} />
       ) : step === "intro" ? (
-        <ConceptSlide title={t.rich("shelTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} >
+        <ConceptSlide title={t.rich("shelTitle", { he: (chunks) => <HebrewMark tone="new">{chunks}</HebrewMark> })} >
           <p className="text-base text-emerald-900/80 sm:text-lg">
             {t.rich("shelMeaning", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })}
           </p>
@@ -185,12 +224,12 @@ export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }
       ) : step === "13.4p" ? (
         <SentenceBuilder rounds={stage4} onPass={finishLevel} />
       ) : step === "14.1" ? (
-        <ConceptSlide title={t.rich("eatTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} >
+        <ConceptSlide title={t.rich("eatTitle", { he: (chunks) => <HebrewMark tone="new">{chunks}</HebrewMark> })} >
           <p className="text-base text-emerald-900/80">{t("eatBody")}</p>
           <HearCards cards={eatForms} onHear={(text) => void playCue({ text })} />
         </ConceptSlide>
       ) : step === "14.2" ? (
-        <ConceptSlide title={t.rich("etHaTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} >
+        <ConceptSlide title={t.rich("etHaTitle", { he: (chunks) => <HebrewMark tone="new">{chunks}</HebrewMark> })} >
           <p className="text-base text-emerald-900/80">
             {t.rich("etHaBody", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })}
           </p>
@@ -202,7 +241,7 @@ export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }
       ) : step === "14.3" ? (
         <SentenceBuilder rounds={eatRounds} onPass={goNext} />
       ) : step === "14.4" ? (
-        <ConceptSlide title={t.rich("drinkLearnTitle", { he: (chunks) => <HebrewMark>{chunks}</HebrewMark> })} >
+        <ConceptSlide title={t.rich("drinkLearnTitle", { he: (chunks) => <HebrewMark tone="new">{chunks}</HebrewMark> })} >
           <p className="text-base text-emerald-900/80">{t("drinkLearnBody")}</p>
           <p className="text-sm font-medium text-emerald-900">{t("verbDrink")}</p>
           <HearCards cards={drinkForms} onHear={(text) => void playCue({ text })} />
@@ -211,6 +250,35 @@ export function SentenceLevel({ level, from }: { level: 13 | 14; from?: string }
         </ConceptSlide>
       ) : step === "14.5" ? (
         <SentenceBuilder rounds={mixRounds} onPass={finishLevel} />
+      ) : step === "15.1" ? (
+        <ConceptSlide title={t.rich("readTitle", { he: (chunks) => <HebrewMark tone="new">{chunks}</HebrewMark> })} >
+          <p className="text-base text-emerald-900/80">{t("readBody")}</p>
+          <HearCards cards={readForms} onHear={(text, audio) => void hear(text, audio)} />
+        </ConceptSlide>
+      ) : step === "15.2" ? (
+        <ConceptSlide title={t.rich("readNounsTitle", { he: (chunks) => <HebrewMark tone="new">{chunks}</HebrewMark> })} >
+          <p className="text-base text-emerald-900/80">{t("readNounsBody")}</p>
+          <HearCards cards={readNouns} onHear={(text, audio) => void hear(text, audio)} />
+        </ConceptSlide>
+      ) : step === "15.3" ? (
+        <SentenceBuilder rounds={readRounds} onPass={finishLevel} />
+      ) : step === "16.1" ? (
+        <ConceptSlide title={t.rich("writeTitle", { he: (chunks) => <HebrewMark tone="new">{chunks}</HebrewMark> })} >
+          <p className="text-base text-emerald-900/80">{t("writeBody")}</p>
+          <HearCards cards={writeForms} onHear={(text, audio) => void hear(text, audio)} />
+        </ConceptSlide>
+      ) : step === "16.2" ? (
+        <ConceptSlide title={t.rich("loveTitle", { he: (chunks) => <HebrewMark tone="new">{chunks}</HebrewMark> })} >
+          <p className="text-base text-emerald-900/80">{t("loveBody")}</p>
+          <HearCards cards={loveForms} onHear={(text, audio) => void hear(text, audio)} />
+        </ConceptSlide>
+      ) : step === "16.3" ? (
+        <ConceptSlide title={t.rich("loveNounsTitle", { he: (chunks) => <HebrewMark tone="new">{chunks}</HebrewMark> })} >
+          <p className="text-base text-emerald-900/80">{t("loveNounsBody")}</p>
+          <HearCards cards={loveNouns} onHear={(text, audio) => void hear(text, audio)} />
+        </ConceptSlide>
+      ) : step === "16.4" ? (
+        <SentenceBuilder rounds={writeLoveRounds} onPass={finishLevel} />
       ) : null}
     </LevelFrame>
   );

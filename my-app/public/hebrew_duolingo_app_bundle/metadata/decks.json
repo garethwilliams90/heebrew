@@ -1,0 +1,954 @@
+[
+  {
+    "deck_id": "1",
+    "name": "Default",
+    "path": [
+      "Default"
+    ],
+    "description": "",
+    "entry_count": 0
+  },
+  {
+    "deck_id": "1728227858236",
+    "name": "Hebrew Duolingo 2023 🇮🇱",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱"
+    ],
+    "description": "",
+    "entry_count": 10664
+  },
+  {
+    "deck_id": "1728227858237",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills"
+    ],
+    "description": "",
+    "entry_count": 0
+  },
+  {
+    "deck_id": "1728227858284",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::01. Letters 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "01. Letters 1"
+    ],
+    "description": "",
+    "entry_count": 60
+  },
+  {
+    "deck_id": "1728227858320",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::02. Letters 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "02. Letters 2"
+    ],
+    "description": "",
+    "entry_count": 56
+  },
+  {
+    "deck_id": "1728227858262",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::03. Letters 3",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "03. Letters 3"
+    ],
+    "description": "",
+    "entry_count": 48
+  },
+  {
+    "deck_id": "1728227858307",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::04. Common Phrases",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "04. Common Phrases"
+    ],
+    "description": "",
+    "entry_count": 62
+  },
+  {
+    "deck_id": "1728227858308",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::05. Basics",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "05. Basics"
+    ],
+    "description": "",
+    "entry_count": 20
+  },
+  {
+    "deck_id": "1728227858297",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::06. There is/To Have",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "06. There is/To Have"
+    ],
+    "description": "",
+    "entry_count": 32
+  },
+  {
+    "deck_id": "1728227858271",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::07. Introduction to adjectives",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "07. Introduction to adjectives"
+    ],
+    "description": "",
+    "entry_count": 36
+  },
+  {
+    "deck_id": "1728227858266",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::08. Food 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "08. Food 1"
+    ],
+    "description": "",
+    "entry_count": 92
+  },
+  {
+    "deck_id": "1728227858313",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::09. Animals",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "09. Animals"
+    ],
+    "description": "",
+    "entry_count": 72
+  },
+  {
+    "deck_id": "1728227858311",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::10. Plurals",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "10. Plurals"
+    ],
+    "description": "",
+    "entry_count": 56
+  },
+  {
+    "deck_id": "1728227858292",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::11. Possessives 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "11. Possessives 1"
+    ],
+    "description": "",
+    "entry_count": 32
+  },
+  {
+    "deck_id": "1728227858317",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::12. Adjectives 1 - Basics",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "12. Adjectives 1 - Basics"
+    ],
+    "description": "",
+    "entry_count": 144
+  },
+  {
+    "deck_id": "1728227858318",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::13. Direct Object",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "13. Direct Object"
+    ],
+    "description": "",
+    "entry_count": 32
+  },
+  {
+    "deck_id": "1728227858272",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::14. Food 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "14. Food 2"
+    ],
+    "description": "",
+    "entry_count": 140
+  },
+  {
+    "deck_id": "1728227858243",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::15. Clothing",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "15. Clothing"
+    ],
+    "description": "",
+    "entry_count": 122
+  },
+  {
+    "deck_id": "1728227858303",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::16. Verbs: Present - Pa'al",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "16. Verbs: Present - Pa'al"
+    ],
+    "description": "",
+    "entry_count": 294
+  },
+  {
+    "deck_id": "1728227858321",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::17. Colors",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "17. Colors"
+    ],
+    "description": "",
+    "entry_count": 62
+  },
+  {
+    "deck_id": "1728227858253",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::18. Prepositions 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "18. Prepositions 1"
+    ],
+    "description": "",
+    "entry_count": 156
+  },
+  {
+    "deck_id": "1728227858239",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::19. Numbers 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "19. Numbers 1"
+    ],
+    "description": "",
+    "entry_count": 98
+  },
+  {
+    "deck_id": "1728227858304",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::20. Questions",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "20. Questions"
+    ],
+    "description": "",
+    "entry_count": 56
+  },
+  {
+    "deck_id": "1728227858305",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::21. Determiners",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "21. Determiners"
+    ],
+    "description": "",
+    "entry_count": 64
+  },
+  {
+    "deck_id": "1728227858301",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::22. Occupations",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "22. Occupations"
+    ],
+    "description": "",
+    "entry_count": 122
+  },
+  {
+    "deck_id": "1728227858283",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::23. Conjunctions",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "23. Conjunctions"
+    ],
+    "description": "",
+    "entry_count": 38
+  },
+  {
+    "deck_id": "1728227858299",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::24. Prepositions 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "24. Prepositions 2"
+    ],
+    "description": "",
+    "entry_count": 144
+  },
+  {
+    "deck_id": "1728227858288",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::25. Possessives 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "25. Possessives 2"
+    ],
+    "description": "",
+    "entry_count": 114
+  },
+  {
+    "deck_id": "1728227858282",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::26. Verbs: Present - Pi'el",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "26. Verbs: Present - Pi'el"
+    ],
+    "description": "",
+    "entry_count": 362
+  },
+  {
+    "deck_id": "1728227858270",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::27. Dates and Time",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "27. Dates and Time"
+    ],
+    "description": "",
+    "entry_count": 170
+  },
+  {
+    "deck_id": "1728227858319",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::28. Adjectives 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "28. Adjectives 2"
+    ],
+    "description": "",
+    "entry_count": 398
+  },
+  {
+    "deck_id": "1728227858294",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::29. Adverbs",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "29. Adverbs"
+    ],
+    "description": "",
+    "entry_count": 126
+  },
+  {
+    "deck_id": "1728227858306",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::30. Family",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "30. Family"
+    ],
+    "description": "",
+    "entry_count": 102
+  },
+  {
+    "deck_id": "1728227858300",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::31. Home Sweet Home",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "31. Home Sweet Home"
+    ],
+    "description": "",
+    "entry_count": 132
+  },
+  {
+    "deck_id": "1728227858265",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::32. Construct State 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "32. Construct State 1"
+    ],
+    "description": "",
+    "entry_count": 70
+  },
+  {
+    "deck_id": "1728227858312",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::33. Infinitives 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "33. Infinitives 1"
+    ],
+    "description": "",
+    "entry_count": 78
+  },
+  {
+    "deck_id": "1728227858258",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::34. Weather",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "34. Weather"
+    ],
+    "description": "",
+    "entry_count": 72
+  },
+  {
+    "deck_id": "1728227858248",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::35. Places",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "35. Places"
+    ],
+    "description": "",
+    "entry_count": 166
+  },
+  {
+    "deck_id": "1728227858267",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::36. Verbs: Present - Hiph'il",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "36. Verbs: Present - Hiph'il"
+    ],
+    "description": "",
+    "entry_count": 290
+  },
+  {
+    "deck_id": "1728227858240",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::37. People",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "37. People"
+    ],
+    "description": "",
+    "entry_count": 108
+  },
+  {
+    "deck_id": "1728227858276",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::38. Numbers 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "38. Numbers 2"
+    ],
+    "description": "",
+    "entry_count": 154
+  },
+  {
+    "deck_id": "1728227858296",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::39. Modals",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "39. Modals"
+    ],
+    "description": "",
+    "entry_count": 58
+  },
+  {
+    "deck_id": "1728227858290",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::40. Education",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "40. Education"
+    ],
+    "description": "",
+    "entry_count": 138
+  },
+  {
+    "deck_id": "1728227858302",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::41. Travel",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "41. Travel"
+    ],
+    "description": "",
+    "entry_count": 144
+  },
+  {
+    "deck_id": "1728227858273",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::42. Verbs: Past Active 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "42. Verbs: Past Active 1"
+    ],
+    "description": "",
+    "entry_count": 396
+  },
+  {
+    "deck_id": "1728227858314",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::43. Comparison",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "43. Comparison"
+    ],
+    "description": "",
+    "entry_count": 14
+  },
+  {
+    "deck_id": "1728227858246",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::44. Objects",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "44. Objects"
+    ],
+    "description": "",
+    "entry_count": 96
+  },
+  {
+    "deck_id": "1728227858285",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::45. Verbs: Present Reflexive - Hitpa'el",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "45. Verbs: Present Reflexive - Hitpa'el"
+    ],
+    "description": "",
+    "entry_count": 280
+  },
+  {
+    "deck_id": "1728227858298",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::46. Adjectives 3",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "46. Adjectives 3"
+    ],
+    "description": "",
+    "entry_count": 350
+  },
+  {
+    "deck_id": "1728227858245",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::47. Abstract Objects 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "47. Abstract Objects 1"
+    ],
+    "description": "",
+    "entry_count": 172
+  },
+  {
+    "deck_id": "1728227858310",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::48. Imperative 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "48. Imperative 1"
+    ],
+    "description": "",
+    "entry_count": 330
+  },
+  {
+    "deck_id": "1728227858287",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::49. Languages",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "49. Languages"
+    ],
+    "description": "",
+    "entry_count": 84
+  },
+  {
+    "deck_id": "1728227858280",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::50. Emergency!",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "50. Emergency!"
+    ],
+    "description": "",
+    "entry_count": 78
+  },
+  {
+    "deck_id": "1728227858256",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::51. Verbs: Future Active 1",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "51. Verbs: Future Active 1"
+    ],
+    "description": "",
+    "entry_count": 774
+  },
+  {
+    "deck_id": "1728227858252",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::52. Passive: Pa'ul, Pu'al and Huf'al",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "52. Passive: Pa'ul, Pu'al and Huf'al"
+    ],
+    "description": "",
+    "entry_count": 294
+  },
+  {
+    "deck_id": "1728227858250",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::53. Pronouns: Reflexive",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "53. Pronouns: Reflexive"
+    ],
+    "description": "",
+    "entry_count": 20
+  },
+  {
+    "deck_id": "1728227858269",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::54. Nif'al Construction",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "54. Nif'al Construction"
+    ],
+    "description": "",
+    "entry_count": 248
+  },
+  {
+    "deck_id": "1728227858247",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::55. Nature",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "55. Nature"
+    ],
+    "description": "",
+    "entry_count": 94
+  },
+  {
+    "deck_id": "1728227858315",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::56. Discussions and decisions",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "56. Discussions and decisions"
+    ],
+    "description": "",
+    "entry_count": 86
+  },
+  {
+    "deck_id": "1728227858249",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::57. Imperative 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "57. Imperative 2"
+    ],
+    "description": "",
+    "entry_count": 118
+  },
+  {
+    "deck_id": "1728227858281",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::58. Verbs: Past Active 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "58. Verbs: Past Active 2"
+    ],
+    "description": "",
+    "entry_count": 104
+  },
+  {
+    "deck_id": "1728227858244",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::59. Past Nif'al",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "59. Past Nif'al"
+    ],
+    "description": "",
+    "entry_count": 130
+  },
+  {
+    "deck_id": "1728227858316",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::60. Feelings",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "60. Feelings"
+    ],
+    "description": "",
+    "entry_count": 174
+  },
+  {
+    "deck_id": "1728227858291",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::61. Geometry",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "61. Geometry"
+    ],
+    "description": "",
+    "entry_count": 104
+  },
+  {
+    "deck_id": "1728227858289",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::62. Abstract Objects 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "62. Abstract Objects 2"
+    ],
+    "description": "",
+    "entry_count": 120
+  },
+  {
+    "deck_id": "1728227858238",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::63. Infinitives 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "63. Infinitives 2"
+    ],
+    "description": "",
+    "entry_count": 76
+  },
+  {
+    "deck_id": "1728227858293",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::64. Construct State 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "64. Construct State 2"
+    ],
+    "description": "",
+    "entry_count": 62
+  },
+  {
+    "deck_id": "1728227858241",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::65. The Conditional",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "65. The Conditional"
+    ],
+    "description": "",
+    "entry_count": 38
+  },
+  {
+    "deck_id": "1728227858275",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::66. Medical",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "66. Medical"
+    ],
+    "description": "",
+    "entry_count": 162
+  },
+  {
+    "deck_id": "1728227858268",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::67. Future 2",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "67. Future 2"
+    ],
+    "description": "",
+    "entry_count": 198
+  },
+  {
+    "deck_id": "1728227858286",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::68. Religion",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "68. Religion"
+    ],
+    "description": "",
+    "entry_count": 90
+  },
+  {
+    "deck_id": "1728227858242",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::69. Arts",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "69. Arts"
+    ],
+    "description": "",
+    "entry_count": 40
+  },
+  {
+    "deck_id": "1728227858295",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::70. Negative Imperatives",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "70. Negative Imperatives"
+    ],
+    "description": "",
+    "entry_count": 176
+  },
+  {
+    "deck_id": "1728227858259",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::71. Technology and Communication",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "71. Technology and Communication"
+    ],
+    "description": "",
+    "entry_count": 98
+  },
+  {
+    "deck_id": "1728227858264",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::72. Verbal Nouns",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "72. Verbal Nouns"
+    ],
+    "description": "",
+    "entry_count": 44
+  },
+  {
+    "deck_id": "1728227858260",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::73. Science",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "73. Science"
+    ],
+    "description": "",
+    "entry_count": 104
+  },
+  {
+    "deck_id": "1728227858261",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::74. Music",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "74. Music"
+    ],
+    "description": "",
+    "entry_count": 84
+  },
+  {
+    "deck_id": "1728227858278",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::75. Sports",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "75. Sports"
+    ],
+    "description": "",
+    "entry_count": 114
+  },
+  {
+    "deck_id": "1728227858251",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::76. Politics",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "76. Politics"
+    ],
+    "description": "",
+    "entry_count": 104
+  },
+  {
+    "deck_id": "1728227858274",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::77. Diminutives",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "77. Diminutives"
+    ],
+    "description": "",
+    "entry_count": 52
+  },
+  {
+    "deck_id": "1728227858257",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::78. Legends",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "78. Legends"
+    ],
+    "description": "",
+    "entry_count": 80
+  },
+  {
+    "deck_id": "1728227858309",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::79. Future Nif'al",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "79. Future Nif'al"
+    ],
+    "description": "",
+    "entry_count": 54
+  },
+  {
+    "deck_id": "1728227858279",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::80. Formal",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "80. Formal"
+    ],
+    "description": "",
+    "entry_count": 52
+  },
+  {
+    "deck_id": "1728227858277",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::81. Business",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "81. Business"
+    ],
+    "description": "",
+    "entry_count": 100
+  },
+  {
+    "deck_id": "1728227858263",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::82. Outer Space",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "82. Outer Space"
+    ],
+    "description": "",
+    "entry_count": 40
+  },
+  {
+    "deck_id": "1728227858254",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::83. Jewish Festivals",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "83. Jewish Festivals"
+    ],
+    "description": "",
+    "entry_count": 60
+  },
+  {
+    "deck_id": "1728227858255",
+    "name": "Hebrew Duolingo 2023 🇮🇱::Skills::84. Welcome To Israel",
+    "path": [
+      "Hebrew Duolingo 2023 🇮🇱",
+      "Skills",
+      "84. Welcome To Israel"
+    ],
+    "description": "",
+    "entry_count": 50
+  }
+]

@@ -10,7 +10,15 @@ import type { GrammaticalGender } from "@/lib/flashcards/types";
 const rise = { type: "spring" as const, bounce: 0.18, visualDuration: 0.42 };
 const fall = { type: "spring" as const, bounce: 0.12, visualDuration: 0.32 };
 
-export function GenderMark({ gender }: { gender: GrammaticalGender }) {
+export function GenderMark({
+  gender,
+  number = "singular",
+  labeled = true,
+}: {
+  gender: GrammaticalGender;
+  number?: "singular" | "plural";
+  labeled?: boolean;
+}) {
   const t = useTranslations("Flashcards");
   const activeIcon = useRef<HTMLSpanElement>(null);
   const turns = useRef(0);
@@ -37,25 +45,40 @@ export function GenderMark({ gender }: { gender: GrammaticalGender }) {
     }
   }
 
+  const male = gender === "masculine";
+  const activeColor = male ? "text-blue-600" : "text-pink-500";
+  const ActiveIcon = male ? Mars : Venus;
+
   return (
     <motion.span className="inline-flex items-center gap-2" onHoverStart={() => void liftAndSpin()}>
       <span className="inline-flex items-center gap-1">
-        <IconSlot
-          active={gender === "masculine"}
-          color={gender === "masculine" ? "text-blue-600" : "text-grey-500"}
-          iconRef={gender === "masculine" ? activeIcon : undefined}
-        >
-          <Mars aria-hidden />
-        </IconSlot>
-        <IconSlot
-          active={gender === "feminine"}
-          color={gender === "feminine" ? "text-pink-500" : "text-grey-500"}
-          iconRef={gender === "feminine" ? activeIcon : undefined}
-        >
-          <Venus aria-hidden />
-        </IconSlot>
+        {number === "plural" ? (
+          <>
+            <IconSlot active color={activeColor} iconRef={activeIcon}>
+              <ActiveIcon aria-hidden />
+            </IconSlot>
+            <IconSlot active color={activeColor}>
+              <ActiveIcon aria-hidden />
+            </IconSlot>
+          </>
+        ) : (
+          <>
+            <IconSlot active={male} color={male ? "text-blue-600" : "text-grey-500"} iconRef={male ? activeIcon : undefined}>
+              <Mars aria-hidden />
+            </IconSlot>
+            <IconSlot
+              active={!male}
+              color={!male ? "text-pink-500" : "text-grey-500"}
+              iconRef={!male ? activeIcon : undefined}
+            >
+              <Venus aria-hidden />
+            </IconSlot>
+          </>
+        )}
       </span>
-      <span className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">{t(gender)}</span>
+      {labeled ? (
+        <span className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">{t(gender)}</span>
+      ) : null}
     </motion.span>
   );
 }

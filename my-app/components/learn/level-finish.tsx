@@ -8,7 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "cn";
 
-const lastLevel = 14;
+const lastLevel = 40;
 
 export function LevelClose({ finished, className }: { finished: boolean; className?: string }) {
   const t = useTranslations("Learn");

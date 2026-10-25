@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
@@ -12,6 +12,8 @@ import { StonePath } from "@/components/learn/nature-scene";
 import { letterCatalog } from "@/lib/alephbet/letter-info";
 import { letterById } from "@/lib/alephbet/letter-lookup";
 import { letterPairLevels } from "@/lib/learn/letter-pairs";
+import { curriculumLevelDef, stagesFor } from "@/lib/learn/later-levels";
+import { glossOf } from "@/lib/learn/sentences";
 import { hasLearningStarted } from "@/lib/learn/started";
 
 const alphabetOrder = letterCatalog.filter((item) => item.kind === "letter");
@@ -46,6 +48,17 @@ const levelStages: Record<number, { id: string; href: LearnHref; practice?: bool
     { id: "14.4", href: "/learn?level=14&from=14.4" },
     { id: "14.5", href: "/learn?level=14&from=14.5", practice: true },
   ],
+  15: [
+    { id: "15.1", href: "/learn?level=15&from=15.1" },
+    { id: "15.2", href: "/learn?level=15&from=15.2" },
+    { id: "15.3", href: "/learn?level=15&from=15.3", practice: true },
+  ],
+  16: [
+    { id: "16.1", href: "/learn?level=16&from=16.1" },
+    { id: "16.2", href: "/learn?level=16&from=16.2" },
+    { id: "16.3", href: "/learn?level=16&from=16.3" },
+    { id: "16.4", href: "/learn?level=16&from=16.4", practice: true },
+  ],
 };
 
 function pathSection(level: number) {
@@ -61,11 +74,23 @@ function pathSection(level: number) {
   if (level === 14) {
     return "pathPresentVerbs" as const;
   }
+  if (level === 22) {
+    return "pathComplexSentences" as const;
+  }
+  if (level === 30) {
+    return "pathPastVerbs" as const;
+  }
+  if (level === 40) {
+    return "pathFutureVerbs" as const;
+  }
   return null;
 }
 
+const laterHrefs = Array.from({ length: 24 }, (_, index) => `/learn?level=${index + 17}` as const);
+
 export function LevelPath() {
   const t = useTranslations("Home");
+  const locale = useLocale();
   const [ready, setReady] = useState(false);
   const [started, setStarted] = useState(false);
   const [pathLevel, setPathLevel] = useState(1);
@@ -93,14 +118,21 @@ export function LevelPath() {
     "/learn?level=12" as const,
     "/learn?level=13" as const,
     "/learn?level=14" as const,
+    "/learn?level=15" as const,
+    "/learn?level=16" as const,
+    ...laterHrefs,
   ];
   const nodes = hrefs.map((href, index) => ({
     level: index + 1,
-    mark: alphabetOrder[index]?.letter ?? "",
+    mark: index < 16 ? (alphabetOrder[index]?.letter ?? "") : "",
     href,
   }));
 
   function lessonText(level: number) {
+    const later = curriculumLevelDef(level);
+    if (later) {
+      return { title: glossOf(later.title, locale), about: glossOf(later.about, locale) };
+    }
     const pair = letterPairLevels.find((item) => item.level === level);
     if (pair) {
       const letters = pair.letterIds
@@ -111,7 +143,7 @@ export function LevelPath() {
         about: t("lessonLettersAbout", { letters, count: pair.letterIds.length }),
       };
     }
-    const key = `lesson${level}` as "lesson1" | "lesson2" | "lesson12" | "lesson13" | "lesson14";
+    const key = `lesson${level}` as "lesson1" | "lesson2" | "lesson12" | "lesson13" | "lesson14" | "lesson15" | "lesson16";
     return { title: t(`${key}Title`), about: t(`${key}About`) };
   }
 
@@ -122,7 +154,7 @@ export function LevelPath() {
         {nodes.map((node, index) => {
           const level = node.level;
           const open = pathLevel >= level;
-          const stages = open ? levelStages[level] : undefined;
+          const stages = open ? (levelStages[level] ?? stagesFor(level)) : undefined;
           const lesson = lessonText(level);
           const shifts = [4, 36, 12, 42, 18, 30];
           const shift = `${shifts[index % shifts.length]}%`;
@@ -210,7 +242,7 @@ function LevelNode({
   about: string;
 }) {
   const className = cn(
-    printFont.className,
+    letter ? printFont.className : "font-sans text-3xl font-semibold",
     "flex size-24 flex-col items-center justify-center rounded-2xl border text-4xl sm:size-28",
     open
       ? "border-emerald-950/30 bg-emerald-50 text-black shadow-[0_16px_40px_-28px_rgba(6,78,59,0.8)]"
@@ -220,13 +252,13 @@ function LevelNode({
   const card =
     !open || !href ? (
       <span className={className} aria-disabled={!open} lang="he" tabIndex={0}>
-        {letter}
-        <span className="font-sans text-sm tracking-wide text-emerald-800">{level}</span>
+        {letter || level}
+        {letter ? <span className="font-sans text-sm tracking-wide text-emerald-800">{level}</span> : null}
       </span>
     ) : (
-      <Link href={href} className={className} lang="he" aria-label={label}>
-        {letter}
-        <span className="font-sans text-sm tracking-wide text-emerald-800">{level}</span>
+      <Link href={href} className={className} lang={letter ? "he" : undefined} aria-label={label}>
+        {letter || level}
+        {letter ? <span className="font-sans text-sm tracking-wide text-emerald-800">{level}</span> : null}
       </Link>
     );
 

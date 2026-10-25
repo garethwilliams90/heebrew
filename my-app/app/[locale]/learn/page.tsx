@@ -13,6 +13,9 @@ const ReadingLevel = dynamic(() =>
 const SentenceLevel = dynamic(() =>
   import("@/components/learn/sentence-level").then((mod) => mod.SentenceLevel),
 );
+const CurriculumLevel = dynamic(() =>
+  import("@/components/learn/curriculum-level").then((mod) => mod.CurriculumLevel),
+);
 
 export default async function Learn({
   searchParams,
@@ -21,8 +24,11 @@ export default async function Learn({
 }) {
   const { from, level } = await searchParams;
   const major = Number(level);
-  if (major === 13 || major === 14) {
+  if (major === 13 || major === 14 || major === 15 || major === 16) {
     return <SentenceLevel key={major} level={major} from={from} />;
+  }
+  if (Number.isFinite(major) && major >= 17 && major <= 40) {
+    return <CurriculumLevel key={major} level={major} from={from} />;
   }
   if (Number.isFinite(major) && major >= 12) {
     return <ReadingLevel key={major} level={Math.floor(major)} />;
