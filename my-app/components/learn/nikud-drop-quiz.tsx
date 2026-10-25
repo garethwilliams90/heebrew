@@ -8,6 +8,7 @@ import { useCue } from "@/components/settings/use-cue";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
 import { HearReplayButton } from "@/components/learn/hear-replay";
+import { HintButton } from "@/components/learn/practice-hearts";
 import { PracticeQuizHeader } from "@/components/learn/practice-quiz-header";
 import { usePracticeHearts } from "@/components/learn/use-practice-hearts";
 import { PointedLetter } from "@/components/learn/pointed-letter";
@@ -15,7 +16,7 @@ import { addExperience } from "@/lib/flashcards/experience";
 import { armAfterSpeech } from "@/lib/learn/arm-after-speech";
 import { LESSON_EXPERIENCE } from "@/lib/learn/lesson-experience";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
-import { nikudDropRounds, nikudSlot, type NikudDropOption, type NikudSlot } from "@/lib/learn/nikud-drop";
+import { nikudDropRounds, nikudSlot, type NikudDropOption, type NikudDropRound, type NikudSlot } from "@/lib/learn/nikud-drop";
 import { rasterNikud, type NikudImage } from "@/lib/learn/nikud-raster";
 import { nikudCue, type SpeechCue } from "@/lib/alephbet/intro-alphabet";
 
@@ -37,23 +38,41 @@ const attractDistance = 118;
 const lockDistance = 36;
 
 export function NikudDropQuiz({
-  letterIds,
+  letterIds = [],
+  rounds: givenRounds,
   onPlay,
   onPass,
+  hearts,
+  showHeader = true,
+  awardExperience = true,
 }: {
-  letterIds: readonly string[];
+  letterIds?: readonly string[];
+  rounds?: readonly NikudDropRound[];
   onPlay: (cue: SpeechCue) => void | Promise<void>;
   onPass: () => void;
+  hearts?: {
+    halves: number;
+    failed: boolean;
+    loseHeart: (cost: number) => void;
+    resetHearts: () => void;
+  };
+  showHeader?: boolean;
+  awardExperience?: boolean;
 }) {
   const t = useTranslations("Learn");
-  const [rounds] = useState(() => nikudDropRounds(letterIds));
+  const [rounds] = useState(() => (givenRounds ? [...givenRounds] : nikudDropRounds(letterIds)));
+  const awardRef = useRef(awardExperience);
+  awardRef.current = awardExperience;
   const [index, setIndex] = useState(0);
   const [placed, setPlaced] = useState<string | null>(null);
-  const [rejected, setRejected] = useState<string | null>(null);
+  const [rejected, setRejected] = useState<string[]>([]);
   const [aim, setAim] = useState<NikudSlot | null>(null);
   const [ready, setReady] = useState(false);
-  const [replayDown, setReplayDown] = useState(false);
-  const { halves, failed, loseHeart, resetHearts } = usePracticeHearts();
+  const ownHearts = usePracticeHearts();
+  const halves = hearts?.halves ?? ownHearts.halves;
+  const failed = hearts?.failed ?? ownHearts.failed;
+  const loseHeart = hearts?.loseHeart ?? ownHearts.loseHeart;
+  const resetHearts = hearts?.resetHearts ?? ownHearts.resetHearts;
   const [hidden, setHidden] = useState<string[]>([]);
   const answering = useRef(false);
   const playWrong = useCue("wrong");
@@ -82,6 +101,7 @@ export function NikudDropQuiz({
       return;
     }
 
+    setRejected([]);
     beginPrompt(round.prompt, playRef, setReady, generation, armTimer);
     return () => {
       generation.current += 1;
@@ -102,7 +122,9 @@ export function NikudDropQuiz({
       setIndex((current) => {
         const next = current + 1;
         if (next >= rounds.length) {
-          void addExperience(rounds.length * LESSON_EXPERIENCE);
+          if (awardRef.current) {
+            void addExperience(rounds.length * LESSON_EXPERIENCE);
+          }
           passRef.current();
         }
         return next;
@@ -112,91 +134,57 @@ export function NikudDropQuiz({
     return () => window.clearTimeout(timer);
   }, [placed, rounds.length]);
 
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      const target = event.target;
-      if (target instanceof HTMLElement && target.closest("input, textarea")) {
-        return;
-      }
-
-      if (!round || placed || failed) {
-        return;
-      }
-
-      if (event.key === "r" || event.key === "R") {
-        event.preventDefault();
-        if (event.type === "keyup") {
-          setReplayDown(false);
-          return;
-        }
-        if (event.repeat) {
-          return;
-        }
-        setReplayDown(true);
-        beginPrompt(round.prompt, playRef, setReady, generation, armTimer);
-      }
-    }
-
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("keyup", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("keyup", onKey);
-    };
-  }, [round, placed, failed]);
-
   function playThen(id: string, after: () => void) {
     const option = round?.options.find((item) => item.id === id);
     const cue = round && option ? nikudCue(round.letter, option.id) : null;
     void Promise.resolve(cue ? playRef.current(cue) : undefined).finally(after);
   }
 
+  function reject(id: string) {
+    if (!round) {
+      return;
+    }
+    playWrong();
+    setRejected((current) => (current.includes(id) ? current : [...current, id]));
+    loseHeart(2);
+    window.setTimeout(() => {
+      answering.current = false;
+      beginPrompt(round.prompt, playRef, setReady, generation, armTimer);
+    }, 480);
+    void zoneMotion.start({
+      x: [0, -12, 12, -8, 8, 0],
+      transition: { duration: 0.4, ease: "easeInOut" },
+    });
+  }
+
   function choose(id: string) {
-    if (!round || placed || !ready || failed || answering.current) {
+    if (!round || placed || !ready || failed || answering.current || rejected.includes(id)) {
       return false;
     }
 
     const correct = id === round.answerId;
     answering.current = true;
-    playThen(id, () => {
-      if (!correct) {
-        playWrong();
-        setRejected(id);
-        loseHeart(2);
-        window.setTimeout(() => {
-          setRejected((value) => (value === id ? null : value));
-          answering.current = false;
-        }, 450);
-        void zoneMotion.start({
-          x: [0, -12, 12, -8, 8, 0],
-          transition: { duration: 0.4, ease: "easeInOut" },
-        });
-        return;
-      }
+    if (!correct) {
+      reject(id);
+      return false;
+    }
 
+    playThen(id, () => {
       playSuccess();
-      setRejected(null);
+      setRejected([]);
       setHidden([]);
       setPlaced(id);
       answering.current = false;
     });
-    return correct;
+    return true;
   }
 
   function miss(id: string) {
-    if (placed || failed || answering.current) {
+    if (placed || failed || answering.current || rejected.includes(id)) {
       return;
     }
     answering.current = true;
-    playThen(id, () => {
-      playWrong();
-      loseHeart(2);
-      answering.current = false;
-      void zoneMotion.start({
-        x: [0, -12, 12, -8, 8, 0],
-        transition: { duration: 0.4, ease: "easeInOut" },
-      });
-    });
+    reject(id);
   }
 
   function hint() {
@@ -217,7 +205,7 @@ export function NikudDropQuiz({
     resetHearts();
     setHidden([]);
     setPlaced(null);
-    setRejected(null);
+    setRejected([]);
     setAim(null);
     setIndex(0);
   }
@@ -238,22 +226,32 @@ export function NikudDropQuiz({
   const answer = round.options.find((option) => option.id === placed);
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-3">
-      <div className="flex w-full flex-col items-center gap-3">
-        <PracticeQuizHeader
-          question={question}
-          total={rounds.length}
-          ratio={ratio}
-          halves={halves}
-          failed={failed}
-          prompt={t("dropSlots")}
-          hintDisabled={failed || halves < 1 || round.options.filter((item) => item.id !== round.answerId && !hidden.includes(item.id)).length < 1}
-          onHint={hint}
-          onRetry={retry}
-        />
-        <HearReplayButton pressed={replayDown} onHear={replay}>
-          {t("quizHear")}
-        </HearReplayButton>
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col items-center gap-3">
+      {showHeader ? (
+        <div className="w-full shrink-0">
+          <PracticeQuizHeader
+            question={question}
+            total={rounds.length}
+            ratio={ratio}
+            halves={halves}
+            failed={failed}
+            prompt={t("dropSlots")}
+            hintDisabled={failed || halves < 1 || round.options.filter((item) => item.id !== round.answerId && !hidden.includes(item.id)).length < 1}
+            onHint={hint}
+            onRetry={retry}
+          />
+        </div>
+      ) : null}
+      <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <HearReplayButton onHear={replay}>{t("quizHear")}</HearReplayButton>
+          {showHeader ? null : (
+            <HintButton
+              disabled={failed || halves < 1 || round.options.filter((item) => item.id !== round.answerId && !hidden.includes(item.id)).length < 1}
+              onHint={hint}
+            />
+          )}
+        </div>
         <motion.div
           animate={zoneMotion}
           className={cn(
@@ -300,10 +298,10 @@ export function NikudDropQuiz({
               key={`${round.id}-${option.id}`}
               option={option}
               index={choice}
-              locked={!ready || Boolean(placed) || failed}
+              locked={!ready || Boolean(placed) || failed || rejected.includes(option.id)}
               dimmed={Boolean(placed) && placed !== option.id}
               accepted={placed === option.id}
-              rejected={rejected === option.id}
+              rejected={rejected.includes(option.id)}
               topSlot={topSlot}
               bottomSlot={bottomSlot}
               onAim={setAim}
@@ -495,12 +493,15 @@ function VowelChip({
 
   return (
     <div className={cn("flex flex-col items-center gap-2", dimmed && "opacity-45")}>
-      <button
+      <motion.button
         ref={cardRef}
         type="button"
+        animate={accepted ? { scale: [1, 1.08, 1] } : rejected ? { x: [0, -6, 6, -3, 0] } : { scale: 1, x: 0 }}
+        transition={{ duration: 0.4 }}
         className={cn(
           "flex h-24 w-24 cursor-grab touch-none items-center justify-center rounded-3xl border border-emerald-950/10 bg-white shadow-[0_18px_40px_-28px_rgba(6,78,59,0.8)] outline-none select-none focus-visible:ring-3 focus-visible:ring-emerald-700/30 active:cursor-grabbing",
-          rejected && "border-red-300 bg-red-50",
+          rejected && "border-red-600! bg-red-200!",
+          accepted && "border-green-600! bg-green-200!",
           (accepted || locked) && "pointer-events-none",
         )}
         aria-label={ariaLabel}
@@ -520,7 +521,7 @@ function VowelChip({
             style={{ width: size.width, height: size.height }}
           />
         ) : null}
-      </button>
+      </motion.button>
       <span className="flex size-6 items-center justify-center rounded-full bg-emerald-800 text-xs font-semibold text-white">{index + 1}</span>
       {dragging && image
         ? createPortal(

@@ -36,17 +36,17 @@ export function PracticeQuizHeader({
 
   return (
     <>
-      <div className="w-full">
+      <div className="w-full self-stretch">
         <ProgressMeter
           label={t("quizProgress", { done: question, total })}
           value={question}
           max={total}
           ratio={ratio}
           sections={total}
-          className="h-2.5 rounded-full bg-emerald-950/10"
+          className="h-2.5 w-full rounded-full bg-emerald-950/10"
         />
       </div>
-      <div className="flex flex-wrap items-center justify-center gap-3">
+      <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
         <HeartRow hearts={halves / 2} max={lives} />
         {showHint ? <HintButton disabled={hintDisabled} onHint={onHint} /> : null}
       </div>
@@ -55,7 +55,7 @@ export function PracticeQuizHeader({
         {showCount ? <p className="mt-2 text-sm text-emerald-800">{t("quizProgress", { done: question, total })}</p> : null}
       </div>
       {failed ? (
-        <Button type="button" className="h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" onClick={onRetry}>
+        <Button variant="default" className="mt-4 w-1/4 self-center h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" onClick={onRetry}>
           {t("tryAgain")}
         </Button>
       ) : null}

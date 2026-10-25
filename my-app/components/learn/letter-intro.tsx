@@ -23,7 +23,8 @@ export function LetterIntro({
 }) {
   const t = useTranslations("Learn");
   const focus = new Set(letters.map((item) => item.id));
-  const places = letters.map((item) => item.alphabet ?? 0);
+  const places = letters.map((item) => item.alphabet);
+  const numbered = places.every((place) => place != null);
   const clips = useRef(new Map<string, HTMLAudioElement>());
   const current = useRef<HTMLAudioElement | null>(null);
 
@@ -48,29 +49,33 @@ export function LetterIntro({
     hearSrc(src, letter);
   }
 
+  const five = letters.length === 5;
+
   return (
-    <div className="flex h-full min-h-0 w-full max-w-4xl flex-col items-center gap-5 overflow-y-auto px-2 py-2 text-center">
+    <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col items-center gap-5 self-center overflow-y-auto px-2 py-2 text-center">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight text-emerald-950 sm:text-4xl">
           {t("letterIntroTitle", { count: letters.length })}
         </h1>
         <p className="mt-2 text-base text-emerald-900/75">
-          {t("letterIntroPlace", {
-            count: letters.length,
-            first: places[0] ?? 0,
-            last: places[places.length - 1] ?? 0,
-            total: alphabet.length,
-          })}
+          {numbered
+            ? t("letterIntroPlace", {
+                count: letters.length,
+                first: places[0] ?? 0,
+                last: places[places.length - 1] ?? 0,
+                total: alphabet.length,
+              })
+            : t("letterIntroFinal")}
         </p>
       </div>
 
-      <div className={cn("grid w-full gap-4", letters.length > 1 ? "sm:grid-cols-2" : "max-w-md")}>
-        {letters.map((letter) => {
+      <div className={cn("grid w-full justify-center gap-4", five ? "sm:grid-cols-6" : letters.length > 1 ? "max-w-3xl sm:grid-cols-2" : "max-w-md")}>
+        {letters.map((letter, index) => {
           const forms = consonantForms(letter.id);
           return (
             <HearTile
               key={letter.id}
-              className="px-5 py-4"
+              className={cn("h-full w-full px-5 py-4", five && "sm:col-span-2", five && index === 3 && "sm:col-start-2")}
               hearLabel={forms ? undefined : t("letterIntroHear")}
               hearAriaLabel={forms ? undefined : t("hearLetter", { name: letter.name })}
               onHear={forms ? undefined : () => hearConsonant(letter)}
@@ -78,7 +83,18 @@ export function LetterIntro({
               {forms ? (
                 <div className="flex flex-wrap items-start justify-center gap-6">
                   {forms.map((form) => (
-                    <LetterForm key={form.file} form={form} letter={letter} onHear={() => hearSrc(consonantSrc(form.file), letter)} />
+                    <LetterForm
+                      key={form.glyph}
+                      form={form}
+                      letter={letter}
+                      onHear={() => {
+                        if (form.file) {
+                          hearSrc(consonantSrc(form.file), letter);
+                          return;
+                        }
+                        onPlay({ text: form.glyph, phoneme: form.sound });
+                      }}
+                    />
                   ))}
                 </div>
               ) : (

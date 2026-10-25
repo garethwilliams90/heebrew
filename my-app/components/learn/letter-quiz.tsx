@@ -74,7 +74,6 @@ export function SoundQuiz({
   const [wrongId, setWrongId] = useState<string | null>(null);
   const [flyingId, setFlyingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [replayDown, setReplayDown] = useState(false);
   const { halves, failed, loseHeart, resetHearts } = usePracticeHearts();
   const [hidden, setHidden] = useState<string[]>([]);
   const playWrong = useCue("wrong");
@@ -113,20 +112,6 @@ export function SoundQuiz({
       }
 
       if (!round) {
-        return;
-      }
-
-      if (event.key === "r" || event.key === "R") {
-        event.preventDefault();
-        if (event.type === "keyup") {
-          setReplayDown(false);
-          return;
-        }
-        if (event.repeat || flyingId) {
-          return;
-        }
-        setReplayDown(true);
-        holdOptions(round.prompt, playRef, armed, armTimer);
         return;
       }
 
@@ -252,8 +237,8 @@ export function SoundQuiz({
   const ratio = rounds.length === 0 ? 0 : ((index + 0.5) / rounds.length) * 100;
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-3">
-      <div className="flex w-full flex-col items-center gap-3">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col items-center gap-3">
+      <div className="w-full shrink-0">
       <PracticeQuizHeader
         question={question}
         total={rounds.length}
@@ -265,6 +250,8 @@ export function SoundQuiz({
         onHint={hint}
         onRetry={retry}
       />
+      </div>
+      <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
       {toast
         ? createPortal(
             <p className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-emerald-800 px-4 py-2 text-sm font-medium text-white shadow-lg">
@@ -274,7 +261,12 @@ export function SoundQuiz({
           )
         : null}
       <div className="flex flex-col items-center gap-1">
-        <HearReplayButton pressed={replayDown} onHear={() => holdOptions(round.prompt, playRef, armed, armTimer)}>
+        <HearReplayButton onHear={() => {
+          if (flyingId) {
+            return;
+          }
+          holdOptions(round.prompt, playRef, armed, armTimer);
+        }}>
           {t("quizHear")}
         </HearReplayButton>
       </div>

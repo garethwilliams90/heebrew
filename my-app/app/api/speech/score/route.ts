@@ -1,4 +1,5 @@
 import { recognizeHebrew } from "@/lib/azure/speech";
+import { gradeUtterance } from "@/lib/learn/hebrew-text";
 import { closestSoundPrompt, soundPromptById, transcriptMatchesPrompt } from "@/lib/learn/sound-exercises";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,14 +19,19 @@ export async function POST(request: Request) {
   await supabase.auth.getUser();
 
   let promptId = "";
+  let expected = "";
   let audio: ArrayBuffer | null = null;
 
   try {
     const form = await request.formData();
     const id = form.get("promptId");
+    const target = form.get("expected");
     const file = form.get("audio");
     if (typeof id === "string") {
       promptId = id.trim();
+    }
+    if (typeof target === "string") {
+      expected = target.trim();
     }
     if (file instanceof File) {
       if (file.size > MAX_BYTES) {
@@ -37,13 +43,31 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const prompt = soundPromptById(promptId);
-  if (!prompt || !audio || !isWav(audio)) {
+  if (!audio || !isWav(audio) || (!expected && !soundPromptById(promptId))) {
     return Response.json({ error: "Invalid speech" }, { status: 400 });
   }
 
   try {
     const result = await recognizeHebrew(audio);
+    if (expected) {
+      let grade: "pass" | "close" | "miss" = "miss";
+      for (const transcript of result.transcripts) {
+        const next = gradeUtterance(expected, transcript);
+        if (next === "pass") {
+          grade = "pass";
+          break;
+        }
+        if (next === "close") {
+          grade = "close";
+        }
+      }
+      return Response.json({ pass: grade !== "miss", close: grade === "close" });
+    }
+
+    const prompt = soundPromptById(promptId);
+    if (!prompt) {
+      return Response.json({ error: "Invalid speech" }, { status: 400 });
+    }
     const match = result.transcripts.some((transcript) => transcriptMatchesPrompt(prompt, transcript));
     if (match) {
       return Response.json({ pass: true });

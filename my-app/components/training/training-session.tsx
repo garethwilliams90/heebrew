@@ -8,6 +8,7 @@ import { useCue } from "@/components/settings/use-cue";
 import { AccountNotice } from "@/components/flashcards/account-notice";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { readSoundPrefs } from "@/components/flashcards/sound-toggle";
+import { HearReplayButton } from "@/components/learn/hear-replay";
 import { HeartRow, HintButton } from "@/components/learn/practice-hearts";
 import { Button } from "@/components/ui/button";
 import { BlankSentence } from "@/components/training/blank-sentence";
@@ -46,7 +47,6 @@ export function TrainingSession() {
   const [halves, setHalves] = useState(10); // 5 hearts = 10 halves
   const [failed, setFailed] = useState(false);
   const [shake, setShake] = useState(false);
-  const [replayDown, setReplayDown] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [roundSize, setRoundSize] = useState(5);
   const [userLevel, setUserLevel] = useState<1 | 2 | 3>(1);
@@ -118,38 +118,6 @@ export function TrainingSession() {
       }
     };
   }, [question, selected, hear]);
-
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      const target = event.target;
-      if (target instanceof HTMLElement && target.closest("input, textarea")) {
-        return;
-      }
-      if (!question || selected !== null || failed) {
-        return;
-      }
-      if (event.key !== "r" && event.key !== "R") {
-        return;
-      }
-      event.preventDefault();
-      if (event.type === "keyup") {
-        setReplayDown(false);
-        return;
-      }
-      if (event.repeat) {
-        return;
-      }
-      setReplayDown(true);
-      void hear(question.sentence.replace("{}", ""));
-    }
-
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("keyup", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("keyup", onKey);
-    };
-  }, [question, selected, failed, hear]);
 
   function start(questionCount: number, level: 1 | 2 | 3) {
     setGenerating(true);
@@ -316,8 +284,8 @@ export function TrainingSession() {
       {phase === "setup" ? <TrainingSetup onStart={start} /> : null}
 
       {phase === "question" && question ? (
-        <div className="flex w-full max-w-3xl flex-1 flex-col justify-center gap-3">
-          <div className="w-full">
+        <div className="flex h-full min-h-0 w-full max-w-3xl flex-1 flex-col gap-3">
+          <div className="w-full shrink-0">
             <ProgressMeter
               label={t("progress", { done: index + 1, total: roundSize })}
               value={index + (selected !== null ? 1 : 0.45)}
@@ -326,13 +294,13 @@ export function TrainingSession() {
               sections={roundSize}
               className="h-2.5 rounded-full bg-emerald-950/10"
             />
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+              <HeartRow hearts={halves / 2} />
+              <HintButton disabled={failed || selected !== null || halves < 1} onHint={hint} />
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <HeartRow hearts={halves / 2} />
-            <HintButton disabled={failed || selected !== null || halves < 1} onHint={hint} />
-          </div>
-
+          <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           {failed ? (
             <p className="text-center text-emerald-900/80">{t("outOfHearts")}</p>
           ) : selected !== null ? (
@@ -341,28 +309,9 @@ export function TrainingSession() {
             </p>
           ) : (
             <div className="flex justify-center">
-              <motion.span
-                className="relative inline-flex"
-                animate={{ scale: replayDown ? 0.96 : 1 }}
-                transition={{ type: "spring", bounce: 0.05, visualDuration: 0.12 }}
-              >
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 px-5"
-                  aria-keyshortcuts="R"
-                  onPointerDown={() => setReplayDown(true)}
-                  onPointerUp={() => setReplayDown(false)}
-                  onPointerLeave={() => setReplayDown(false)}
-                  sound={false}
-                  onClick={() => void hear(question.sentence.replace("{}", ""))}
-                >
-                  <Volume2 className="size-4" /> {t("hear")}
-                </Button>
-                <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-emerald-800 text-[10px] font-semibold text-white">
-                  R
-                </span>
-              </motion.span>
+              <HearReplayButton onHear={() => void hear(question.sentence.replace("{}", ""))}>
+                <Volume2 className="size-4" /> {t("hear")}
+              </HearReplayButton>
             </div>
           )}
 
@@ -434,6 +383,7 @@ export function TrainingSession() {
               ) : null}
             </>
           )}
+          </div>
         </div>
       ) : null}
 

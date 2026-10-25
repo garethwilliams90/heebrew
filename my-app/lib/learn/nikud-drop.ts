@@ -1,5 +1,5 @@
-import { alphabetLetters, nikudCue, nikudCycle, type SpeechCue } from "@/lib/alephbet/intro-alphabet";
-import type { LetterFact } from "@/lib/alephbet/letter-info";
+import { nikudCue, nikudCycle, type SpeechCue } from "@/lib/alephbet/intro-alphabet";
+import { letterCatalog, type LetterFact } from "@/lib/alephbet/letter-info";
 
 type NikudId = (typeof nikudCycle)[number]["id"];
 
@@ -119,7 +119,7 @@ function nikudById(id: NikudId) {
 }
 
 export function nikudDropRounds(letterIds: readonly string[]): NikudDropRound[] {
-  const letters = new Map(alphabetLetters().map((letter) => [letter.id, letter]));
+  const letters = new Map(letterCatalog.map((letter) => [letter.id, letter]));
 
   return answerOrder.map((answer, index) => {
     const letterId = letterIds[index % letterIds.length];

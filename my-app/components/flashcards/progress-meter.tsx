@@ -21,7 +21,7 @@ export function ProgressMeter({
 
   return (
     <div
-      className={`relative ${className ?? "h-1.5 rounded-full bg-emerald-950/10"}`}
+      className={`relative w-full ${className ?? "h-1.5 rounded-full bg-emerald-950/10"}`}
       role="meter"
       aria-label={label}
       aria-valuemin={0}

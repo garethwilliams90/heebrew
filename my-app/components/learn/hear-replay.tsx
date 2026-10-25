@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 
@@ -8,13 +8,51 @@ export function HearReplayButton({
   children,
   onHear,
   pressed,
+  disabled = false,
 }: {
   children: ReactNode;
   onHear: () => void;
   pressed?: boolean;
+  disabled?: boolean;
 }) {
   const [down, setDown] = useState(false);
-  const active = pressed ?? down;
+  const hearRef = useRef(onHear);
+  const disabledRef = useRef(disabled);
+  hearRef.current = onHear;
+  disabledRef.current = disabled;
+  const active = down || pressed;
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (disabledRef.current || event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable='true']")) {
+        return;
+      }
+      if (event.key !== "r" && event.key !== "R") {
+        return;
+      }
+      event.preventDefault();
+      if (event.type === "keyup") {
+        setDown(false);
+        return;
+      }
+      if (event.repeat) {
+        return;
+      }
+      setDown(true);
+      hearRef.current();
+    }
+
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKey);
+    };
+  }, []);
 
   return (
     <motion.span
@@ -31,6 +69,7 @@ export function HearReplayButton({
         onPointerUp={() => setDown(false)}
         onPointerLeave={() => setDown(false)}
         sound={false}
+        disabled={disabled}
         onClick={onHear}
       >
         {children}

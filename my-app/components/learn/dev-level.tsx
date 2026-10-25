@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { curriculumLevel, setCurriculumLevel } from "@/lib/learn/curriculum";
+import { useRouter } from "@/i18n/navigation";
+import { levelById, sectionById } from "@/lib/learn/pathway/catalog";
+import { completeLevel, devSetPlace, devSkipAll, openSectionIndex, PATHWAY_EVENT } from "@/lib/learn/pathway/progress";
 import { isLocalHost } from "@/lib/learn/local-host";
 
 export function useLocalhost() {
@@ -17,50 +19,100 @@ export function useLocalhost() {
 
 export function DevLevelControl() {
   const t = useTranslations("Learn");
+  const router = useRouter();
   const local = useLocalhost();
-  const [level, setLevel] = useState("1");
+  const [section, setSection] = useState("1");
+  const [level, setLevel] = useState("0");
   const [current, setCurrent] = useState<number | null>(null);
+  const [here, setHere] = useState<{ section: string; level: string } | null>(null);
 
   useEffect(() => {
-    setCurrent(curriculumLevel());
     function refresh() {
-      setCurrent(curriculumLevel());
+      setCurrent(openSectionIndex());
+      const params = new URLSearchParams(window.location.search);
+      setHere({ section: params.get("section") ?? "", level: params.get("level") ?? "" });
     }
-    window.addEventListener("webrew-curriculum", refresh);
-    return () => window.removeEventListener("webrew-curriculum", refresh);
+    refresh();
+    window.addEventListener(PATHWAY_EVENT, refresh);
+    window.addEventListener("popstate", refresh);
+    return () => {
+      window.removeEventListener(PATHWAY_EVENT, refresh);
+      window.removeEventListener("popstate", refresh);
+    };
   }, []);
 
   if (!local) {
     return null;
   }
 
+  function openPlace(event: FormEvent) {
+    event.preventDefault();
+    const nextSection = Number(section);
+    const nextLevel = Number(level);
+    if (!Number.isFinite(nextSection) || nextSection < 1 || !Number.isFinite(nextLevel) || nextLevel < 0) {
+      return;
+    }
+    const place = devSetPlace(nextSection, nextLevel);
+    router.push(`/learn?section=${place.sectionId}&level=${place.levelId}`);
+  }
+
+  function skipAll() {
+    devSkipAll();
+    router.push("/");
+  }
+
+  function skipLevel() {
+    if (!here?.level || !here.section) {
+      return;
+    }
+    completeLevel(here.level);
+    const active = sectionById(here.section);
+    const currentLevel = levelById(here.level);
+    const next = active?.levels.find((item) => currentLevel && item.index === currentLevel.index + 1);
+    if (next) {
+      router.push(`/learn?section=${here.section}&level=${next.id}`);
+      return;
+    }
+    router.push(`/learn?section=${here.section}&exam=1`);
+  }
+
   return (
     <form
-      className="fixed bottom-4 left-4 z-30 flex items-center gap-2 rounded-2xl border border-emerald-950/10 bg-white/95 px-3 py-2 text-sm text-emerald-950 shadow-lg"
-      onSubmit={(event) => {
-        event.preventDefault();
-        const next = Number(level);
-        if (!Number.isFinite(next) || next < 1) {
-          return;
-        }
-        setCurriculumLevel(next);
-        setCurrent(Math.floor(next));
-      }}
+      className="fixed bottom-20 left-4 z-30 flex max-w-[calc(100%-2rem)] flex-wrap items-center gap-2 rounded-2xl border border-emerald-950/10 bg-white/95 px-3 py-2 text-sm text-emerald-950 shadow-lg"
+      onSubmit={openPlace}
     >
-      <label className="font-medium" htmlFor="dev-level">
-        {t("devLevel", { level: current ?? "…" })}
+      <span className="font-medium">{t("devSection", { section: current ?? "…" })}</span>
+      <label className="sr-only" htmlFor="dev-section">
+        {t("devSection", { section: current ?? "…" })}
       </label>
+      <input
+        id="dev-section"
+        type="number"
+        min={1}
+        max={5}
+        value={section}
+        onChange={(event) => setSection(event.target.value)}
+        className="w-16 rounded-lg border border-emerald-950/15 px-2 py-1"
+      />
+      <label htmlFor="dev-level">{t("devLevelNumber")}</label>
       <input
         id="dev-level"
         type="number"
-        min={1}
-        max={41}
+        min={0}
         value={level}
         onChange={(event) => setLevel(event.target.value)}
         className="w-16 rounded-lg border border-emerald-950/15 px-2 py-1"
       />
       <button type="submit" className="rounded-full bg-emerald-800 px-3 py-1 font-medium text-white">
         {t("devSet")}
+      </button>
+      {here?.level ? (
+        <button type="button" className="rounded-full border border-emerald-800 px-3 py-1 font-medium" onClick={skipLevel}>
+          {t("devSkipLevel")}
+        </button>
+      ) : null}
+      <button type="button" className="rounded-full border border-emerald-800 px-3 py-1 font-medium" onClick={skipAll}>
+        {t("devSkipAll")}
       </button>
     </form>
   );

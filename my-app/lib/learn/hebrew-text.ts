@@ -4,6 +4,20 @@
 
 const hebrewLetter = /[\u05D0-\u05EA]/u;
 
+export function withoutNikud(text: string) {
+  return text.normalize("NFC").replace(/[\u0591-\u05BD\u05BF-\u05C7]/gu, "");
+}
+
+// A sentence is clearer to the voice when each word is unpointed.
+// A single word keeps its vowels.
+export function speechText(text: string) {
+  const parts = text.trim().split(/\s+/u);
+  if (parts.length < 2) {
+    return text;
+  }
+  return parts.map((part) => withoutNikud(part)).join(" ");
+}
+
 export function normalizeHebrew(text: string) {
   let letters = "";
   for (const char of text.normalize("NFC")) {
@@ -47,4 +61,55 @@ export function letterDistance(left: string, right: string) {
   }
 
   return grid[a.length * cols + b.length];
+}
+
+export type UtteranceGrade = "pass" | "close" | "miss";
+
+// A full match passes. One wrong word, or one word a letter or two off, is close.
+export function gradeUtterance(expected: string, transcript: string): UtteranceGrade {
+  const want = hebrewTokens(expected);
+  const heard = hebrewTokens(transcript);
+  if (want.length === 0 || heard.length === 0) {
+    return "miss";
+  }
+  if (want.length === heard.length && want.every((token, index) => token === heard[index])) {
+    return "pass";
+  }
+
+  if (want.length === heard.length) {
+    let misses = 0;
+    for (let index = 0; index < want.length; index += 1) {
+      const left = want[index];
+      const right = heard[index];
+      if (!left || !right || left === right) {
+        continue;
+      }
+      if (letterDistance(left, right) > 2) {
+        return "miss";
+      }
+      misses += 1;
+    }
+    if (misses === 1) {
+      return "close";
+    }
+  }
+
+  if (Math.abs(want.length - heard.length) === 1) {
+    const shorter = want.length < heard.length ? want : heard;
+    const longer = want.length < heard.length ? heard : want;
+    let matched = 0;
+    let skipped = 0;
+    for (const token of longer) {
+      if (shorter[matched] === token) {
+        matched += 1;
+      } else {
+        skipped += 1;
+      }
+    }
+    if (matched === shorter.length && skipped === 1) {
+      return "close";
+    }
+  }
+
+  return "miss";
 }

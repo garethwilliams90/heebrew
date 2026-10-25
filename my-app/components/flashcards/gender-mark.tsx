@@ -52,29 +52,19 @@ export function GenderMark({
   return (
     <motion.span className="inline-flex items-center gap-2" onHoverStart={() => void liftAndSpin()}>
       <span className="inline-flex items-center gap-1">
+        <IconSlot active color={activeColor} iconRef={activeIcon}>
+          <ActiveIcon aria-hidden />
+        </IconSlot>
         {number === "plural" ? (
           <>
-            <IconSlot active color={activeColor} iconRef={activeIcon}>
-              <ActiveIcon aria-hidden />
-            </IconSlot>
             <IconSlot active color={activeColor}>
               <ActiveIcon aria-hidden />
             </IconSlot>
+            <span className={cn("text-base font-semibold leading-none", activeColor)} aria-hidden>
+              +
+            </span>
           </>
-        ) : (
-          <>
-            <IconSlot active={male} color={male ? "text-blue-600" : "text-grey-500"} iconRef={male ? activeIcon : undefined}>
-              <Mars aria-hidden />
-            </IconSlot>
-            <IconSlot
-              active={!male}
-              color={!male ? "text-pink-500" : "text-grey-500"}
-              iconRef={!male ? activeIcon : undefined}
-            >
-              <Venus aria-hidden />
-            </IconSlot>
-          </>
-        )}
+        ) : null}
       </span>
       {labeled ? (
         <span className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">{t(gender)}</span>

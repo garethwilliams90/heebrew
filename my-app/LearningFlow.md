@@ -1,279 +1,143 @@
 # Learning flow
 
-This file is the source of truth for the conceptual path a learner takes through Webrew: the first visit, the gated curriculum, and ideas for later levels. It records intent, not implementation.
+This file is the source of truth for what Webrew teaches. It records the pathway a learner sees on the home page: the sections, the levels inside them, the exercises each level runs, and the words those levels use.
 
-[AGENTS.md](AGENTS.md) stays the source of truth for the tech stack, interface language and direction, how current features behave, and working agreements.
+[AGENTS.md](AGENTS.md) stays the source of truth for the tech stack, interface language and direction, how flashcards, training, streaks, and auth behave, and the working agreements.
 
-The curriculum does not rewrite Alephbet, flashcards, training, streaks, or auth. Those stay available as they are. A curriculum level opens when the learner completes the previous one. Experience still records practice, and it does not open levels or features. Aleph bet unlocks at level 3. Flashcards unlock at level 5, once level 4 is complete. Training unlocks at level 15, after level 14.
+The pathway is the home page. After login the learner sees sections and levels, not a separate start menu. A level stays locked until the previous level in that section is complete. The first level of a section stays locked until the previous section's exam is passed. Section 1 is open from the start.
 
-## Scope
+Flashcards and the aleph-bet reference unlock when Section 2 unlocks. Training stays locked until Section 5. Experience still records practice. It does not open levels. Words a learner covers in a level are saved to the Known words deck.
 
-Hebrew from scratch. A learner sees only content for their current curriculum level until they pass it. Content above that level stays locked.
+## How a level is built
 
-Passing a level means completing that level's required set at the accuracy named below. A failed attempt can be retaken. A fail does not trap the learner on Level 0.3, Level 1, or Level 2.
+Every level introduces one concept. It opens with one intro slide, or two when the concept needs a second idea. The slides show the Hebrew, play it, and give the translation in the interface language.
 
-The "already know some Hebrew" assessment comes later and is not specified here. Levels 3 through 14 are specified below. Level 1 covers א, ב, ג and four spoken Hebrew sound exercises. Level 2 covers א, ב, ג, ד, ה and four more spoken sound exercises.
+The level then runs an ordered list of exercises. A section can use the same list for every level. A level can override that list. An exercise marked optional can be skipped.
 
-## Start
+Hebrew in a level is `dir="rtl"` and `lang="he"`. Interface copy stays in `messages/en.json`, `messages/fr.json`, and `messages/es.json`. The Hebrew and its English, French, and Spanish glosses live in the section content files.
 
-On a first visit, the home entry offers two actions:
+Adding a level means appending one object to that section's content file. The runner already knows every exercise id below.
 
-- **Absolute beginner? Start here** — opens Level 0L.
-- **Already know some Hebrew? Take an assessment to skip levels** — a placeholder until that assessment exists.
+## Exercises
 
-**Title of this section: Introduction to letters**
+1. **nikud-drop.** A letter sound is played. The letter is shown without its nikud. Three nikud choices, each a different vowel sound, can be dragged onto the letter.
+2. **recognize-sound.** A letter or word is played and not shown. Three written choices appear. One matches the sound.
+3. **compose-gap.** The full sentence is played and not shown as a finished line. The learner sees a partly filled sentence and drags words from a bank into the gaps. This is variant 3a.
+4. **conjugate.** A sensible sentence is missing one verb. Four conjugations of that verb are shown. Only one fits. This is variant 3b. No current level schedules it.
+5. **listen-repeat.** A word or sentence is played. The learner says it back. Speech recognition passes an exact match. One wrong word, or a word off by a letter or two, still passes, and the learner is told the pronunciation was slightly off. In Sections 1 and 2 this exercise is optional.
+6. **read.** A Hebrew sentence is shown. The learner types the translation in the interface language.
+7. **write.** A sentence is shown in the interface language. The learner types the Hebrew. No current level schedules it.
+8. **comprehend.** A sentence is shown with a question about it. No current level schedules it.
+9. **spell.** The word is played. The learner taps letters from a bank in order.
 
-## Level 0L 
+## Exams, skips, and the daily review
 
-Start here opens Level 1. The screens are labelled like a game level:
+The section exam is also the skip. Passing it opens the first level of the next section, even when earlier levels in the previous section were not finished. A locked section offers that exam from its header.
 
-- **1.0** — hear א, ב, and ג. Each card has the letter, its name, its sound, and a control to hear the consonant. ב is shown as both ב and בּ. The full aleph-bet is shown with these three in bold blue.
-- **1.1** — nikud practice for those letters.
-- **1.2** — four spoken sound exercises that use only those letters. The learner hears generated Hebrew, records, and passes when Hebrew speech-to-text matches the expected word. Next stays off until that item is accepted. Skip exercise moves on when recording is unavailable.
+Section 1's exam is 20 questions and 3 lives. The questions mix nikud-drop, recognize-sound, and listen-repeat across every letter, including the final forms. A wrong answer costs one life. At zero lives the attempt fails and can be retaken.
 
-### 0.3 / 1.2 Say the word
+Later section exams use the same shape: 20 questions, 3 lives, drawn from the exercises that section teaches.
 
-Speaking is scored in Hebrew, not English. The app plays a generated Hebrew sample, the learner records, and the server transcribes with Hebrew speech-to-text (`he-IL`). A pass is a match to the expected Hebrew (after stripping niqqud and punctuation). English romanization such as gah or geh is not the pass gate. Wrong answers replay the sample and retry. The microphone works in any browser that can record audio.
+If the last study was more than 24 hours ago, the home page prompts an 8-question review of the most recently studied section. The review uses that section's exercise types and has no lives. Finishing it counts as study. Dismissing it leaves the clock unchanged, so the prompt returns on the next visit.
 
-Levels 1, 2, and 3 include a nikud practice. The learner hears one letter from that level with a vowel, then drags one of three nikud onto the letter. The three choices are different sounds. A nikud guide sits at the top left of those levels and plays each sound on ב. The vowel set below is that guide.
+## Word catalog
 
-## Vowel set
+Lesson words, their audio, and their metadata come from [lib/learn/words/catalog.json](lib/learn/words/catalog.json). That file is the list the app reads. It was filtered out of `public/hebrew_duolingo_app_bundle/vocabulary.json`, and the recordings stay in `public/hebrew_duolingo_app_bundle/audio`.
 
-Later practice uses this set. It is the curriculum vowel set. It does not change the existing nikud deck.
+Each entry has `id`, `hebrew`, `niqqud`, `transliteration`, `en`, `fr`, `es`, `gender`, `partOfSpeech`, and `audio`. `audio` is a path under the bundle, or `null` when the bundle has no clip. A missing clip is spoken with Azure.
 
-| Nikud | Sound |
-| --- | --- |
-| kamatz, patach | ah |
-| tsere, segol | eh |
-| shva | no vowel, consonant only |
-| hiriq | ee |
-| kubutz, shuruk | oo |
-| holam, with and without ו | oh |
+To add a word that already exists in the bundle, run this from `my-app`:
 
-## Level 1
+```bash
+node scripts/pull-words.mjs אבא שלום
+```
 
-Letters in this level: only **א, ב, ג**.
+The script copies Hebrew, niqqud, the English gloss, gender, part of speech, and the audio path. French and Spanish already on an entry are left as they are. A new entry copies the English gloss into French and Spanish until those lines are edited. Words that are not in the bundle can be typed into the catalog by hand with `"audio": null`.
 
-- **1.0** — a short intro to hear those three letters. ב is shown as both ב and בּ, each with its recorded consonant.
-- **1.1** — nikud practice. One of א, ב, ג is shown, a vowel sound for that letter plays, and the learner drags the matching nikud from three choices that all sound different.
-- **1.2** — four sound exercises, each a 2–3 letter pointed Hebrew string made only from א, ב, ג. Mix real-ish syllables and mini-words (בַּב, אַבָּא, בַּג, גַּג). Play the generated Hebrew sample, record, pass on a Hebrew match, then Next. Skip exercise moves to the next sound when the microphone cannot be used.
+## Section 1 — Welcome to Hebrew, the Aleph-Bet
 
-Passing those four speaking items unlocks Level 2.
+Every level in this section uses nikud-drop, recognize-sound, and optional listen-repeat.
 
-## Level 2
+ו through ת is 17 letters, so two letters a level cannot fill a run numbered 2 through 11. ת has the last letter level on its own. There is no level between ת and the final forms.
 
-Letters in this level: **א, ב, ג, ד, ה**.
+- **Level 0.** א ב ג. Aleph, bet, and gimel.
+- **Level 1.** ד ה. Dalet and he.
+- **Level 2.** ו ז. Vav and zayin.
+- **Level 3.** ח ט. Chet and tet.
+- **Level 4.** י כ. Yod and kaf.
+- **Level 5.** ל מ. Lamed and mem.
+- **Level 6.** נ ס. Nun and samekh.
+- **Level 7.** ע פ. Ayin and pe.
+- **Level 8.** צ ק. Tsadi and kuf.
+- **Level 9.** ר ש. Reish and shin.
+- **Level 10.** ת. Tav.
+- **Level 11.** Final forms ך ץ ן ם ף. Kaf, tsadi, nun, mem, and pe at the end of a word.
 
-- **2.0** — hear those five letters (review א ב ג, introduce ד and ה). ב is shown as both ב and בּ.
-- **2.1** — nikud practice with א, ב, ג, ד, and ה. Same drag flow as level 1.
-- **2.2** — four more sound exercises from letters available here (גַּד, הַא, בַּד, דָג). Same hear → record → Hebrew match → Next flow, with Skip exercise when the microphone cannot be used.
+The exam then opens Section 2.
 
-Passing those four speaking items unlocks Level 3. Real words from these exercises are saved to the Known words flashcard deck.
+## Section 2 — Hebrew 101, fundamentals
 
-**Horizontal divider noting a change in section, section title: learning the aleph-bet**
+More levels will be added here when they are specified. Level 0 uses words from the catalog that can be spelled with א through ה.
 
-## Levels 3 through 11
+### Level 0 — Forming two-letter words
 
+Words: אַב father, בָּא comes, גַּג roof, דָּג fish, בַּד cloth.
 
-After level 2, each level introduces the next two letters, in aleph-bet order, starting at vav. Level 1 covers א, ב, ג. Level 2 covers the first five letters (א through ה). Level 11 is tav on its own.
+Exercises: nikud-drop, recognize-sound, listen-repeat (optional).
 
-All words covered in these levels should be added to the flashcard deck if they are not yet seen by the user.
+### Level 1 — Pronouns
 
-| Level | Letters |
-| --- | --- |
-| 3 | ו ז |
-| 4 | ח ט |
-| 5 | י כ |
-| 6 | ל מ |
-| 7 | נ ס |
-| 8 | ע פ |
-| 9 | צ ק |
-| 10 | ר ש |
-| 11 | ת |
+Words: אֲנִי I, אַתָּה you (masculine), אֲנַחְנוּ we, אַתֶּם you (masculine plural), אַתֶּן you (feminine plural), הוּא he, הִיא she.
 
-Each level opens on an intro page for its letters. Each letter shows its name, its sound, a short description, and a control to hear its consonant - use the consanant sounds recorded in hebrew_letter_sounds_24_mp3 for best audio. ב, כ, and ש each show both sounds: ב/בּ with clips 02 and 03, כ/כּ with clips 12 and 13, and שׁ/שׂ with the shin clip and the samekh clip. Below them is the whole aleph-bet, with this level's letters in bold blue, and a line giving their place in it, such as letters 6 and 7 of 22. Level 3 then runs the nikud drag practice with the letters learned so far, א through ז. Each letter then has an intro slide and one simple pointed word. Kaf, mem, nun, pe, and tsadi also show one final-form word. A practice quiz then uses only that level's letters. Passing the level opens the next one.
+Exercises: recognize-sound, listen-repeat (optional), spell.
 
-Hovering in the region of the level card in the level-pathway should reveal a brief description of the content covered in the lesson and give a lesson name. Example: Lesson 3: Learning ז & ו 
+### Level 2 — Introduce yourself
 
-**horizontal divider noting a change in section: section title: words, sentences and basic grammar**
+Phrases, with דָּן standing in for the learner's name:
 
+- שָׁלוֹם hello
+- אֲנִי דָּן I am Dan
+- אֲנִי מֵאַנְגְּלִיָּה I am from England
+- קוֹרְאִים לִי דָּן my name is Dan
+- אֵיפֹה אַתָּה גָּר where do you live (masculine)
+- אֵיפֹה אַתְּ גָּרָה where do you live (feminine)
+- מֵאֵיפֹה אַתָּה where are you from (masculine)
+- מֵאֵיפֹה אַתְּ where are you from (feminine)
 
-## Level 12
+Exercises: recognize-sound, listen-repeat (optional), spell, compose-gap.
 
-Nikud are not need in this level unless necessary it will overcomplicate things - let the user know that in modern Hebrew nikud are only sometimes used and words will start to become familiar and recognisable without nikud.
+### Level 3 — How are you
 
-Begin with an intoduction to this level: now we are going to start reading real hebrew words and forming sentences - your vocabulary will really start to grow with useful words now which is essential to becoming fluent and confident. You can practice any words you learn in the flashcard "Decks" tab.
+Phrases:
 
-Fifty three-letter words. Do not use דּ instead use ד regular. The learner hears the word, then chooses among three spellings that use the same letters and different nikud. Shva is not a choice and no two options should be the same sound (patach and kamatz for example should not appear in the same question). Hovering a choice does not play it.
+- מַה שְּׁלוֹמְךָ how are you (masculine)
+- מַה שְּׁלוֹמֵךְ how are you (feminine)
+- אֵיךְ אַתָּה how are you (masculine)
+- אֵיךְ אַתְּ how are you (feminine)
 
-**For the following levels below we are building the sentences in the practice exercises. The learner hears the full sentence (the Hebrew target is not shown while they build) and can replay it. Word cards appear below; hovering a card shows its translation, clicking a card plays that word, and they drag or click to place the words in the right order. After they complete a sentence, the full Hebrew and a translation are shown.**
+Exercises: recognize-sound, listen-repeat (optional), spell, compose-gap.
 
-## Level 13
+### Level 4 — I like
 
-Introduce the level with an explanation of the concept of של what the word means literally, and how it is used in Hebrew.
+Two intro slides.
 
+The first teaches that לֶאֱהֹב is the infinitive, "to love" or "to like", and lists the present tense:
 
-Once complete the user is shown the sentence written in full, with a translation of the sentence.
+- אֲנִי אוֹהֵב / אֲנִי אוֹהֶבֶת
+- אַתָּה אוֹהֵב
+- אַתְּ אוֹהֶבֶת
+- הוּא אוֹהֵב
+- הִיא אוֹהֶבֶת
+- אֲנַחְנוּ אוֹהֲבִים / אֲנַחְנוּ אוֹהֲבוֹת
+- אַתֶּם אוֹהֲבִים
+- אַתֶּן אוֹהֲבוֹת
+- הֵם אוֹהֲבִים
+- הֵן אוֹהֲבוֹת
 
-Forty basic sentences built on את ה and של. של varies across שלי, שלך, שלו, שלה, שלנו, שלכם, and שלכן. An example of the shape is הוא אוכל את הדג שלי, or זה הכלב שלנו.
+The second teaches את ה. An indefinite object takes no את: אֲנִי אוֹהֵב גְּלִידָה, "I like ice cream". A definite object takes את plus ה: הִיא אוֹהֶבֶת אֵת הַדָּג, "she likes the fish".
 
+Exercises: recognize-sound, listen-repeat (optional), spell, compose-gap, read.
 
-13.1 should focus on שלי and שלו and שלה - explain them each and let the user hear the sound they make.
-13.1 Practice is 6 sentence questions using either שלי שלו or שלה
+## Later sections
 
-13.2 introduces שלנו and explains that זה becomes אלה when talking about plural and also addresses ״ים״ and ״ות״ suffixes for plurals. 
-    Give the user 6 more sentence questions using שלנו , אלה  and plurals if relevant to the sentence.
-        Example: אלה הכלבים שלנו - these are our dogs
-
-13.3 Covers שלכם שלכן with 6 more sentence questions using these expressions, 
-we can start using plurals in practice questions from now on.
-
-13.4 Covers שלהם שלהן with another 6 practice questions using these expressions.
-
-
-**horizontal divider noting a new section: section title: verbs: present tense**
-
-
-## Level 14
-
-This level should be using the sentence builder format for the practices
-
-This level introduces the את verbs in **present tense**
-Present-tense verbs that take את, such as אוהב, אוהבת, שותה, and אוכל, in the same sentence frame as level 13. Verbs with ל, על, and מ come later.
-
-14.1 Inroduce the verb לאכול to eat and give the present tense forms, show the masculine, feminine and plurals with a basic example of הוא אוכל שוקולד, היא אוכלת שוקולד etc for all forms.
-Play each verb form out loud.
-
-14.2 Highlight the differences between הוא אוכל שוקולד and הוא אוכל את השוקולד again. the את ה pattern is very important.
-
-14.3 sentence builder practice with אוכל 4 questions, one for each form of the present tense verb.
-
-14.4 introduce 2 more verbs: לשתות וללמוד
-14.5 practice quiz with 10 questions with a mix of the 3 verbs learned so far, with a mix of present tense forms.
-
-## Level 15
-
-One new present-tense verb and three new nouns, still in the את frame from level 14. Hear cards play the Duolingo bundle recording for each form and noun. The sentence builder still speaks the full sentence with Azure, because the bundle has no recording of these sentences.
-
-15.1 Introduce לקרוא and play the four present-tense forms: קורא, קוראת, קוראים, קוראות.
-
-15.2 Introduce עיתון, מכתב, and סיפור. Hear each noun.
-
-15.3 Six sentence-builder questions that use לקרוא with those nouns, such as הוא קורא את העיתון and היא קוראת את המכתב.
-
-## Level 16
-
-Two new present-tense verbs and two new nouns. Writing reuses מכתב and סיפור from level 15.
-
-16.1 Introduce לכתוב and play כותב, כותבת, כותבים, and כותבות.
-
-16.2 Introduce לאהוב and play אוהב, אוהבת, אוהבים, and אוהבות.
-
-16.3 Introduce שיר and מוזיקה. A definite song takes את. Music, like water, does not.
-
-16.4 Eight mixed sentence-builder questions, such as הוא כותב את המכתב, היא אוהבת את השיר, and הם אוהבים מוזיקה.
-
-## Producing levels from 14 onward
-
-Level 14 opens the verb section. Later levels stay on the sentence-builder path. A teaching level introduces 1 or 2 new verbs and 2 or 3 new non-verb words and uses them in sentences, except where a block below says to reuse words the learner already knows. New words, including each new verb and its present-tense forms, are saved to the Known words deck. Hear cards play the bundle recording when that word has one.
-
-Levels 17 through 40 are built. Every teaching level introduces new words. The connector bank below is taught across levels 22–40. Exams still review words the learner already has.
-
-### A new concept every 4 levels
-
-Count from level 14. Each block is four levels. The first level of a block opens the concept. The other teaching levels in the block keep using it. An exam replaces the last level of its eight-level run. Levels 14, 15, and 16 are already the first three levels of the את block, so level 17 finishes that block before ל begins.
-
-| Levels | Concept |
-| --- | --- |
-| 14–17 | Present-tense verbs that take את. |
-| 18–20 | Present-tense verbs that take ל. Present tense only. ל joins the next word: לפארק, לילד. |
-| 21 | Exam of levels 14–20. |
-| 22–28 | Complex sentences. New connectors from the bank, two or three a level, plus a new noun or adjective. |
-| 29 | Exam of the connectors learned so far. |
-| 30 | Past tense of verbs the learner already knows, with אתמול. Practice from here uses past and present. New connectors continue. |
-| 31–36 | More connectors from the bank, and a new noun on each level. Sentences use past and present. |
-| 37 | Exam of the past and the connectors learned so far. |
-| 38–39 | The remaining connectors and new nouns. Past and present. |
-| 40 | Future tense, with מחר, plus כדי ש. Practice on this level uses past, present, and future. |
-
-The connector bank, in teaching order, is: ו, אבל, או, כי, אז, גם, רק, אלא, לכן, בעצם, כש, לפני ש, אחרי ש, בזמן ש, עד ש, מאז ש, ואז, קודם כול, בסוף, בינתיים, למשל, כלומר, זאת אומרת, במיוחד, בנוסף, חוץ מ, גם... וגם..., לא רק... אלא גם..., למרות ש, למרות זאת, מצד אחד... מצד שני..., אם, אם... אז..., אחרת, אפילו אם, בגלל ש, בגלל זה, כתוצאה מכך, במקום ש, כדי ש.
-
-A prefix such as ו or כש is saved as its own word and appears in a sentence joined to the next word: והיא, כשהוא. מ, על, and further tenses after 40 are not in this stretch.
-
----
-
-## Planned: Section 3 - Existential Concepts (yesh/ein)
-
-**Status:** Planning phase. This section comes after sections 1 and 2 (Hebrew fundamentals) and two planned exams. Content is slightly more complicated than previous sections.
-
-### Level 1: Introducing יש (there is) and אין (there isn't)
-
-This level introduces the Hebrew concepts of **יש** (yesh - there is) and **אין** (ein - there isn't).
-
-**Exercises included:**
-- Exercise 2
-- Exercise 3A
-- Exercise 3B
-- Exercise 5
-- Exercise 6
-- Exercise 7
-- Exercise 8
-
-_(Note: Exercise 4 is intentionally skipped)_
-
-**Sentence content:** Exercises will use basic sentences provided by the user.
-
-**Open item:** A dedicated file or location in the repository is needed where specific sentences for these exercises can be added. This sentence bank will be separate from LearningFlow.md.
-
-**Sentence bank location:** Following the existing curriculum pattern, create a new TypeScript file at `my-app/lib/learn/level-yesh-ein.ts` (or similar naming). Use the `sentence()` helper from `my-app/lib/learn/sentences.ts` to define exercise sentences, following the same pattern used in `level-thirteen.ts`, `level-fourteen.ts`, and other curriculum level files.
-
-### Level 2: Age and Numbers
-
-This level teaches how to state and ask about age in Hebrew.
-
-**Statement forms:**
-- אני בן (ani ben - I am [age], masculine) + numbers
-- אני בת (ani bat - I am [age], feminine) + numbers
-
-**Question forms:**
-- בן כמה אתה (ben kama ata - how old are you, to a male)
-- בת כמה את (bat kama at - how old are you, to a female)
-
-**Sentence content:** Like Level 1, these sentences will be stored in the dedicated sentence bank file (same location as Level 1 sentences), not inside LearningFlow.md.
-
-### Level 3: Basic Interactions - Ordering Coffee in a Coffee Shop
-
-This level covers a full interaction scenario between a customer and waiter/waitress at a coffee shop.
-
-**Customer side sentences:**
-- שלום (shalom - hello)
-- מה נשמע (ma nishma - how are you) or מה קורה (ma koreh - what's up)
-- אפשר להזמין (efshar lehazmin - can I order)
-- אפשר בבקשה הפוך (efshar bevakasha hafuch - can I have a hafuch please)
-- אפשר בבקשה קפה קל (efshar bevakasha kafe kal - can I have a light coffee please)
-- אספרסו (espresso)
-- וקרואסון (ve kuason - and a croissant)
-
-**Waiter/waitress side sentences:**
-- מה אתה רוצה (ma ata rotzeh - what do you want, masculine)
-- מה את רוצה (ma at rotza - what do you want, feminine)
-- זה לשבת או לקחת (ze leshevet o liktoach - is this to sit in or take away)
-- אתם רוצים (atem rotzim - you want, plural)
-- איך אתם משלמים (eich atem meshalmim - how are you paying, plural)
-- איך אתה משלם (eich ata meshalem - how are you paying, masculine)
-- עם אשראי או מזומן (im ashray o mezuman - with card or cash)
-
-**Sentence content:** Like Level 1, these sentences will be stored in the dedicated sentence bank file (same location as Level 1 sentences), not inside LearningFlow.md.
-
----
-
-### An exam every 8 levels
-
-Count from level 14. Every 8th level is an exam: **21, 29, 37**. The built path stops at level 40, so the next exam, 45, is not part of this stretch. The exam is the last level of that run of eight. It does not introduce a new concept or new words. It reviews what those levels taught.
-
-The exam uses the sentence builder, with these differences:
-
-- The learner has 3 lives. A wrong sentence costs one life. At zero lives the attempt fails and can be retaken.
-- There is no hint.
-- Clicking a word card places it and does not play that word. Hearing the full sentence stays available.
-- The word bank includes extra words the learner knows that are not part of the sentence. Only one order is correct. The extra words are left unused.
+Sections after Section 2 are not specified yet. They will be added to this file first, then as another content module in the same shape.
