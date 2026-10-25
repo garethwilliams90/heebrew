@@ -3,7 +3,8 @@
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Volume2 } from "lucide-react";
-import { printFont } from "@/components/alephbet/print-font";
+import { HebrewGlyph } from "@/components/learn/hebrew-glyph";
+import { HearTile } from "@/components/learn/hear-tile";
 import { Button } from "@/components/ui/button";
 import { consonantCue, type SpeechCue } from "@/lib/alephbet/intro-alphabet";
 import { letterCatalog, type LetterFact } from "@/lib/alephbet/letter-info";
@@ -23,26 +24,28 @@ export function LetterIntro({
   const t = useTranslations("Learn");
   const focus = new Set(letters.map((item) => item.id));
   const places = letters.map((item) => item.alphabet ?? 0);
-  const clipRef = useRef<HTMLAudioElement | null>(null);
+  const clips = useRef(new Map<string, HTMLAudioElement>());
+  const current = useRef<HTMLAudioElement | null>(null);
 
   // The recorded clips sound cleaner than synthesized speech, which is only a fallback.
+  function hearSrc(src: string, letter: LetterFact) {
+    current.current?.pause();
+    let audio = clips.current.get(src);
+    if (!audio) {
+      audio = new Audio(src);
+      clips.current.set(src, audio);
+    }
+    current.current = audio;
+    void playAudio(audio).catch(() => onPlay(consonantCue(letter)));
+  }
+
   function hearConsonant(letter: LetterFact) {
     const src = letterConsonantSrc(letter.id);
     if (!src) {
       onPlay(consonantCue(letter));
       return;
     }
-    clipRef.current?.pause();
-    const audio = new Audio(src);
-    clipRef.current = audio;
-    void playAudio(audio).catch(() => onPlay(consonantCue(letter)));
-  }
-
-  function hearFile(file: string, letter: LetterFact) {
-    clipRef.current?.pause();
-    const audio = new Audio(consonantSrc(file));
-    clipRef.current = audio;
-    void playAudio(audio).catch(() => onPlay(consonantCue(letter)));
+    hearSrc(src, letter);
   }
 
   return (
@@ -65,53 +68,39 @@ export function LetterIntro({
         {letters.map((letter) => {
           const forms = consonantForms(letter.id);
           return (
-            <section key={letter.id} className="flex flex-col items-center gap-2 rounded-3xl bg-white/80 px-5 py-4 shadow-sm">
+            <HearTile
+              key={letter.id}
+              className="px-5 py-4"
+              hearLabel={forms ? undefined : t("letterIntroHear")}
+              hearAriaLabel={forms ? undefined : t("hearLetter", { name: letter.name })}
+              onHear={forms ? undefined : () => hearConsonant(letter)}
+            >
               {forms ? (
                 <div className="flex flex-wrap items-start justify-center gap-6">
                   {forms.map((form) => (
-                    <LetterForm key={form.file} form={form} letter={letter} onHear={() => hearFile(form.file, letter)} />
+                    <LetterForm key={form.file} form={form} letter={letter} onHear={() => hearSrc(consonantSrc(form.file), letter)} />
                   ))}
                 </div>
               ) : (
-                <p className={cn(printFont.className, "text-7xl leading-none text-black sm:text-8xl")} dir="rtl" lang="he">
-                  {letter.letter}
-                </p>
+                <HebrewGlyph className="text-7xl leading-none sm:text-8xl">{letter.letter}</HebrewGlyph>
               )}
               <h2 className="text-2xl font-semibold text-emerald-950">{letter.name}</h2>
               {forms ? null : (
                 <p className="text-base font-medium text-emerald-900">{t("letterIntroSound", { sound: letter.sound })}</p>
               )}
               <p className="max-w-xs text-sm text-emerald-900/75">{t(`letterNotes.${letter.id}`)}</p>
-              {forms ? null : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="mt-1 h-10 px-4"
-                  aria-label={t("hearLetter", { name: letter.name })}
-                  sound={false}
-                  onClick={() => hearConsonant(letter)}
-                >
-                  <Volume2 /> {t("letterIntroHear")}
-                </Button>
-              )}
-            </section>
+            </HearTile>
           );
         })}
       </div>
 
-      <p
-        className={cn(printFont.className, "flex flex-wrap justify-center gap-x-2 gap-y-1 text-3xl leading-tight sm:text-4xl")}
-        dir="rtl"
-        lang="he"
-        aria-label={t("letterIntroAlphabet")}
-      >
+      <HebrewGlyph className="flex flex-wrap justify-center gap-x-2 gap-y-1 text-3xl leading-tight sm:text-4xl" aria-label={t("letterIntroAlphabet")}>
         {alphabet.map((item) => (
           <span key={item.id} className={focus.has(item.id) ? "font-bold text-blue-600" : "font-normal text-emerald-950/45"}>
             {item.letter}
           </span>
         ))}
-      </p>
-
+      </HebrewGlyph>
     </div>
   );
 }
@@ -129,9 +118,7 @@ function LetterForm({
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <p className={cn(printFont.className, "text-6xl leading-none text-black sm:text-7xl")} dir="rtl" lang="he">
-        {form.glyph}
-      </p>
+      <HebrewGlyph className="text-6xl leading-none sm:text-7xl">{form.glyph}</HebrewGlyph>
       <p className="text-base font-medium text-emerald-900">{t("letterIntroSound", { sound: form.sound })}</p>
       <Button
         type="button"

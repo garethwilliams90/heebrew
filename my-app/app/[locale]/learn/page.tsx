@@ -1,8 +1,18 @@
-import { AlphabetIntro } from "@/components/learn/alphabet-intro";
-import { LetterPairLevel } from "@/components/learn/letter-pair-level";
-import { ReadingLevel } from "@/components/learn/reading-level";
-import { SentenceLevel } from "@/components/learn/sentence-level";
+import dynamic from "next/dynamic";
 import { stepForStage } from "@/lib/learn/stages";
+
+const AlphabetIntro = dynamic(() =>
+  import("@/components/learn/alphabet-intro").then((mod) => mod.AlphabetIntro),
+);
+const LetterPairLevel = dynamic(() =>
+  import("@/components/learn/letter-pair-level").then((mod) => mod.LetterPairLevel),
+);
+const ReadingLevel = dynamic(() =>
+  import("@/components/learn/reading-level").then((mod) => mod.ReadingLevel),
+);
+const SentenceLevel = dynamic(() =>
+  import("@/components/learn/sentence-level").then((mod) => mod.SentenceLevel),
+);
 
 export default async function Learn({
   searchParams,

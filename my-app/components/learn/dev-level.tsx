@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { curriculumLevel, setCurriculumLevel } from "@/lib/learn/curriculum";
+import { isLocalHost } from "@/lib/learn/local-host";
 
 export function useLocalhost() {
   const [local, setLocal] = useState(false);
 
   useEffect(() => {
-    const host = window.location.hostname;
-    setLocal(host === "localhost" || host === "127.0.0.1");
+    setLocal(isLocalHost());
   }, []);
 
   return local;

@@ -7,11 +7,13 @@ import { motion } from "motion/react";
 import { useCue } from "@/components/settings/use-cue";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
-import { HeartRow, HintButton } from "@/components/learn/practice-hearts";
+import { HearReplayButton } from "@/components/learn/hear-replay";
+import { PracticeQuizHeader } from "@/components/learn/practice-quiz-header";
+import { usePracticeHearts } from "@/components/learn/use-practice-hearts";
 import { BlueNikud, PointedLetter } from "@/components/learn/pointed-letter";
-import { ProgressMeter } from "@/components/flashcards/progress-meter";
-import { Button } from "@/components/ui/button";
 import { addExperience } from "@/lib/flashcards/experience";
+import { armAfterSpeech } from "@/lib/learn/arm-after-speech";
+import { LESSON_EXPERIENCE } from "@/lib/learn/lesson-experience";
 import { nikudCue, nikudCycle, type SpeechCue } from "@/lib/alephbet/intro-alphabet";
 import type { LetterFact } from "@/lib/alephbet/letter-info";
 import { shuffleLetters } from "@/lib/alephbet/letters";
@@ -19,7 +21,6 @@ import { shuffleLetters } from "@/lib/alephbet/letters";
 const cardSpring = { type: "spring" as const, bounce: 0.35, visualDuration: 0.22 };
 const correctMove = { duration: 0.9, times: [0, 0.28, 0.48, 1], ease: "easeInOut" as const };
 const correctTint = "#16a34a";
-const lessonExperience = 6;
 const variedVowels = ["tsere", "segol", "hiriq", "kubutz", "holam", "holamVav"] as const;
 
 export type QuizCard = {
@@ -74,9 +75,8 @@ export function SoundQuiz({
   const [flyingId, setFlyingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [replayDown, setReplayDown] = useState(false);
-  const [halves, setHalves] = useState(10);
+  const { halves, failed, loseHeart, resetHearts } = usePracticeHearts();
   const [hidden, setHidden] = useState<string[]>([]);
-  const [failed, setFailed] = useState(false);
   const playWrong = useCue("wrong");
   const playSuccess = useCue("success");
   const playRef = useRef(onPlay);
@@ -153,16 +153,6 @@ export function SoundQuiz({
     };
   }, [round, flyingId, failed, hidden]);
 
-  function loseHeart(cost: number) {
-    setHalves((current) => {
-      const next = Math.max(0, current - cost);
-      if (next <= 0) {
-        setFailed(true);
-      }
-      return next;
-    });
-  }
-
   async function choose(card: QuizCard) {
     if (!round || done || flyingId || failed || answering.current) {
       return;
@@ -218,9 +208,8 @@ export function SoundQuiz({
   function retry() {
     answering.current = false;
     settled.current = false;
-    setHalves(10);
+    resetHearts();
     setHidden([]);
-    setFailed(false);
     setWrongId(null);
     setFlyingId(null);
     setIndex(0);
@@ -235,7 +224,7 @@ export function SoundQuiz({
     const next = index + 1;
     setFlyingId(null);
     if (next >= rounds.length) {
-      void addExperience(rounds.length * lessonExperience);
+      void addExperience(rounds.length * LESSON_EXPERIENCE);
       onPass();
     }
     setIndex(next);
@@ -265,29 +254,17 @@ export function SoundQuiz({
   return (
     <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-3">
       <div className="flex w-full flex-col items-center gap-3">
-      <div className="w-full">
-        <ProgressMeter
-          label={t("quizProgress", { done: question, total: rounds.length })}
-          value={question}
-          max={rounds.length}
-          ratio={ratio}
-          sections={rounds.length}
-          className="h-2.5 rounded-full bg-emerald-950/10"
-        />
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <HeartRow hearts={halves / 2} />
-        <HintButton disabled={failed || halves < 1 || wrongLeft < 1} onHint={hint} />
-      </div>
-      <div className="text-center">
-        <p className="text-base text-emerald-900/80 sm:text-lg">{failed ? t("outOfHearts") : (prompt ?? t("quizPrompt"))}</p>
-        <p className="mt-2 text-sm text-emerald-800">{t("quizProgress", { done: question, total: rounds.length })}</p>
-      </div>
-      {failed ? (
-        <Button type="button" className="h-11 bg-emerald-800 px-5 text-white hover:bg-emerald-900" onClick={retry}>
-          {t("tryAgain")}
-        </Button>
-      ) : null}
+      <PracticeQuizHeader
+        question={question}
+        total={rounds.length}
+        ratio={ratio}
+        halves={halves}
+        failed={failed}
+        prompt={prompt ?? t("quizPrompt")}
+        hintDisabled={failed || halves < 1 || wrongLeft < 1}
+        onHint={hint}
+        onRetry={retry}
+      />
       {toast
         ? createPortal(
             <p className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-emerald-800 px-4 py-2 text-sm font-medium text-white shadow-lg">
@@ -297,28 +274,9 @@ export function SoundQuiz({
           )
         : null}
       <div className="flex flex-col items-center gap-1">
-        <motion.span
-          className="relative inline-flex"
-          animate={{ scale: replayDown ? 0.96 : 1 }}
-          transition={{ type: "spring", bounce: 0.05, visualDuration: 0.12 }}
-        >
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 px-5"
-            aria-keyshortcuts="R"
-            onPointerDown={() => setReplayDown(true)}
-            onPointerUp={() => setReplayDown(false)}
-            onPointerLeave={() => setReplayDown(false)}
-            sound={false}
-            onClick={() => holdOptions(round.prompt, playRef, armed, armTimer)}
-          >
-            {t("quizHear")}
-          </Button>
-          <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-emerald-800 text-[10px] font-semibold text-white">
-            R
-          </span>
-        </motion.span>
+        <HearReplayButton pressed={replayDown} onHear={() => holdOptions(round.prompt, playRef, armed, armTimer)}>
+          {t("quizHear")}
+        </HearReplayButton>
       </div>
       <div className="flex flex-wrap items-start justify-center gap-4">
         {failed
@@ -393,21 +351,15 @@ function holdOptions(
   armTimer: RefObject<number | null>,
 ) {
   armed.current = false;
-  if (armTimer.current !== null) {
-    window.clearTimeout(armTimer.current);
-  }
-
   let cancelled = false;
-  const started = Date.now();
-  void Promise.resolve(playRef.current(prompt)).finally(() => {
-    if (cancelled) {
-      return;
-    }
-    const wait = Math.max(0, 500 - (Date.now() - started));
-    armTimer.current = window.setTimeout(() => {
+  armAfterSpeech(
+    () => playRef.current(prompt),
+    armTimer,
+    () => {
       armed.current = true;
-    }, wait);
-  });
+    },
+    () => !cancelled,
+  );
 
   return () => {
     cancelled = true;

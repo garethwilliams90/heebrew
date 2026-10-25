@@ -1,9 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { StudyAmountField } from "@/components/study/study-amount-field";
+import { StudyOptionCard } from "@/components/study/study-option-card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import { LETTER_STUDY_MAX } from "@/lib/alephbet/letters";
 
 export type PracticeKind = "letters" | "nikud";
@@ -46,53 +46,18 @@ export function LetterStudySetup({
       <h1 className="text-3xl font-semibold tracking-tight">{t("studyTitle")}</h1>
       <p className="mt-2 text-sm text-emerald-900/70">{t("studySetup")}</p>
 
-      <section className="mt-8">
-        <h2 id="letter-amount" className="text-lg font-semibold">
-          {flashcards("cardAmount")}
-        </h2>
-        <div className="mt-4 flex items-center gap-4">
-          <Slider
-            min={1}
-            max={limit}
-            step={1}
-            value={[Math.min(count, limit)]}
-            aria-labelledby="letter-amount"
-            onValueChange={(value) => {
-              const next = value[0];
-              if (typeof next === "number") {
-                onCount(next);
-              }
-            }}
-          />
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={limit}
-            value={Math.min(count, limit)}
-            aria-labelledby="letter-amount"
-            className="h-11 w-20 border-emerald-900/10 bg-white text-center"
-            onChange={(event) => {
-              const next = Number(event.target.value);
-              if (Number.isInteger(next)) {
-                onCount(Math.min(limit, Math.max(1, next)));
-              }
-            }}
-          />
-        </div>
-      </section>
+      <StudyAmountField labelId="letter-amount" title={flashcards("cardAmount")} count={count} limit={limit} onCount={onCount} />
 
       <fieldset className="mt-8">
         <legend className="text-lg font-semibold">{t("practiceKind")}</legend>
         <div className="mt-3 grid gap-3">
           {kinds.map((option) => {
             const optionCount = option === "nikud" ? nikudTotal : letterTotal;
-            const selected = kind === option;
             return (
-              <Choice
+              <StudyOptionCard
                 key={option}
                 name="practice-kind"
-                selected={selected}
+                selected={kind === option}
                 title={t(option === "letters" ? "practiceLetters" : "practiceNikud")}
                 hint={t(option === "letters" ? "practiceLettersHint" : "practiceNikudHint")}
                 countLabel={flashcards("availableCount", { count: optionCount })}
@@ -108,7 +73,7 @@ export function LetterStudySetup({
           <legend className="text-lg font-semibold">{t("scriptChoice")}</legend>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {scripts.map((option) => (
-              <Choice
+              <StudyOptionCard
                 key={option}
                 name="script-choice"
                 selected={script === option}
@@ -145,33 +110,3 @@ const scriptHint = {
   both: "scriptBothHint",
 } as const;
 
-function Choice({
-  name,
-  selected,
-  title,
-  hint,
-  countLabel,
-  onSelect,
-}: {
-  name: string;
-  selected: boolean;
-  title: string;
-  hint: string;
-  countLabel?: string;
-  onSelect: () => void;
-}) {
-  return (
-    <label
-      className={`rounded-3xl border px-4 py-4 ${
-        selected
-          ? "cursor-pointer border-emerald-700 bg-white shadow-[0_16px_40px_-28px_rgba(6,78,59,0.6)]"
-          : "cursor-pointer border-emerald-950/10 bg-white/80"
-      }`}
-    >
-      <input type="radio" name={name} className="sr-only" checked={selected} onChange={onSelect} />
-      <span className="block font-medium">{title}</span>
-      <span className="mt-1 block text-sm text-emerald-900/70">{hint}</span>
-      {countLabel ? <span className="mt-2 block text-sm text-emerald-800">{countLabel}</span> : null}
-    </label>
-  );
-}

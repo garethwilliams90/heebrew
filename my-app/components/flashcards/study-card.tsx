@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Volume2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +10,10 @@ import { MasteryRing } from "@/components/flashcards/mastery-ring";
 import { ProgressMeter } from "@/components/flashcards/progress-meter";
 import { type SoundChannel, type SoundPrefs } from "@/components/flashcards/sound-toggle";
 import { StudyTools, type CardDisplay } from "@/components/flashcards/study-tools";
-import { Button } from "@/components/ui/button";
+import { StudyGradeBar } from "@/components/study/study-grade-bar";
+import { StudyReplayButton } from "@/components/study/study-replay-button";
+import { useReplayPulse } from "@/components/study/use-replay-pulse";
+import { useStudyCardKeyboard } from "@/components/study/use-study-card-keyboard";
 import { withoutNiqqud } from "@/lib/flashcards/bold";
 import type { CardMemory, FlashcardGrade } from "@/lib/flashcards/schedule";
 import { TRIAL_SECONDS } from "@/lib/flashcards/study-plan";
@@ -61,13 +63,7 @@ export function StudyCardView({
   const [direction, setDirection] = useState<SwipeDirection>(1);
   const flippedRef = useRef(flipped);
   const busyRef = useRef(false);
-  const flipRef = useRef(onFlip);
-  const requestRef = useRef<(grade: FlashcardGrade) => void>(() => {});
-  const replayRef = useRef<() => void>(() => {});
-  const [replayTick, setReplayTick] = useState(0);
-  const [replayTarget, setReplayTarget] = useState<"word" | "sentence" | null>(null);
-  const [replayOn, setReplayOn] = useState(false);
-  const replayTimer = useRef<number | null>(null);
+  const { replayOn, replayTick, replayTarget, pulse } = useReplayPulse<"word" | "sentence">();
   const appearance = `${card.id}:${card.repeats}:${card.memory.dueAt ?? "new"}`;
   const clockSeconds = trial ? Math.max(0, Math.ceil(trial.secondsLeft)) : 0;
   const ratio = trial
@@ -81,54 +77,10 @@ export function StudyCardView({
   const sentencePlaying = speakingClip === sentenceKey;
 
   flippedRef.current = flipped;
-  flipRef.current = onFlip;
 
   useEffect(() => {
     busyRef.current = false;
   }, [appearance]);
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      const target = event.target;
-      if (target instanceof HTMLElement && target.closest("input, textarea, select")) {
-        return;
-      }
-
-      if (event.repeat || busyRef.current) {
-        return;
-      }
-
-      if (event.key === " " || event.code === "Space") {
-        if (target instanceof HTMLElement && target.closest("button, a")) {
-          return;
-        }
-
-        event.preventDefault();
-        flipRef.current();
-        return;
-      }
-
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        requestRef.current("dontKnow");
-        return;
-      }
-
-      if (event.key === "ArrowRight") {
-        event.preventDefault();
-        requestRef.current("know");
-        return;
-      }
-
-      if (event.key === "r" || event.key === "R") {
-        event.preventDefault();
-        replayRef.current();
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   function grade(next: FlashcardGrade) {
     if (!flippedRef.current || busyRef.current) {
@@ -140,24 +92,22 @@ export function StudyCardView({
     onGrade(next);
   }
 
-  requestRef.current = grade;
-
   function replay() {
     const played = onReplay();
     if (!played) {
       return;
     }
 
-    setReplayTarget(played);
-    setReplayTick((tick) => tick + 1);
-    setReplayOn(true);
-    if (replayTimer.current !== null) {
-      window.clearTimeout(replayTimer.current);
-    }
-    replayTimer.current = window.setTimeout(() => setReplayOn(false), 450);
+    pulse(played);
   }
 
-  replayRef.current = replay;
+  useStudyCardKeyboard({
+    busy: busyRef,
+    onFlip,
+    onLeft: () => grade("dontKnow"),
+    onRight: () => grade("know"),
+    onReplay: replay,
+  });
 
   const hebrewWord = display.nikud ? { text: card.hebrew } : withoutNiqqud(card.hebrew);
   const hebrewSentence = display.nikud
@@ -183,70 +133,31 @@ export function StudyCardView({
     <>
       <div className="flex items-center gap-3">
         {card.gender ? <GenderMark gender={card.gender} /> : null}
-        <span className="relative">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-lg"
-            className={`border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50 ${
-              replayOn && replayTarget === "word" ? "ring-2 ring-emerald-500" : ""
-            }`}
-            aria-keyshortcuts="R"
-            aria-label={wordPlaying ? t("listening") : t("listen")}
-            disabled={!soundPrefs.general || !soundPrefs.word || wordPlaying}
-            sound={false}
-            onClick={onSpeak}
-          >
-            <Volume2 />
-          </Button>
-          <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-emerald-800 text-[9px] font-semibold text-white">
-            R
-          </span>
-          {replayTarget === "word" ? (
-            <motion.span
-              key={replayTick}
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-full border-2 border-emerald-600"
-              initial={{ opacity: 0.75, scale: 1 }}
-              animate={{ opacity: 0, scale: 1.5 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-              style={{ willChange: "transform, opacity" }}
-            />
-          ) : null}
-        </span>
+        <StudyReplayButton
+          label={wordPlaying ? t("listening") : t("listen")}
+          disabled={!soundPrefs.general || !soundPrefs.word || wordPlaying}
+          pulsing={replayOn && replayTarget === "word"}
+          showPulse={replayTarget === "word"}
+          pulseKey={replayTick}
+          showShortcut
+          onClick={onSpeak}
+        />
       </div>
       <h2 dir="rtl" lang="he" className="mt-4 text-6xl font-semibold text-emerald-950 sm:text-7xl lg:text-8xl">
         <NikudSwap show={display.nikud} pointed={card.hebrew} plain={hebrewWord.text} />
       </h2>
       <Reveal show={Boolean(display.example && card.hebrewExample)}>
         <div dir="rtl" lang="he" className="mt-8 flex max-w-xl items-start justify-center gap-3">
-          <span className="relative mt-0.5 shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className={`border-emerald-900/10 bg-white text-emerald-900 hover:bg-emerald-50 ${
-                replayOn && replayTarget === "sentence" ? "ring-2 ring-emerald-500" : ""
-              }`}
-              aria-label={sentencePlaying ? t("listening") : t("listenSentence")}
-              disabled={!soundPrefs.general || !soundPrefs.sentence || sentencePlaying}
-              sound={false}
-              onClick={onSpeakExample}
-            >
-              <Volume2 />
-            </Button>
-            {replayTarget === "sentence" ? (
-              <motion.span
-                key={replayTick}
-                aria-hidden
-                className="pointer-events-none absolute inset-0 rounded-full border-2 border-emerald-600"
-                initial={{ opacity: 0.75, scale: 1 }}
-                animate={{ opacity: 0, scale: 1.5 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                style={{ willChange: "transform, opacity" }}
-              />
-            ) : null}
-          </span>
+          <StudyReplayButton
+            className="relative mt-0.5 shrink-0"
+            label={sentencePlaying ? t("listening") : t("listenSentence")}
+            disabled={!soundPrefs.general || !soundPrefs.sentence || sentencePlaying}
+            pulsing={replayOn && replayTarget === "sentence"}
+            showPulse={replayTarget === "sentence"}
+            pulseKey={replayTick}
+            size="icon"
+            onClick={onSpeakExample}
+          />
           <p className="text-xl text-emerald-950/70 sm:text-2xl">
             <NikudSwap
               show={display.nikud}
@@ -319,42 +230,15 @@ export function StudyCardView({
         </p>
       ) : null}
 
-      <div
-        className={`mt-4 transition-opacity duration-200 ${flipped ? "opacity-100" : "pointer-events-none opacity-0"}`}
-      >
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-14 border-red-200 bg-white text-red-800 hover:bg-red-50"
-            disabled={!flipped}
-            onClick={() => grade("dontKnow")}
-          >
-            {t("dontKnow")}
-            <ArrowLeft className="size-5" strokeWidth={3} />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-14 border-emerald-300 bg-white text-emerald-900 hover:bg-emerald-50"
-            disabled={!flipped}
-            onClick={() => grade("know")}
-          >
-            {t("know")}
-            <ArrowRight className="size-5" strokeWidth={3} />
-          </Button>
-        </div>
-        <div className="flex justify-center">
-          <Button
-            type="button"
-            className="mt-3 h-12 w-2/3 bg-emerald-800 text-white hover:bg-emerald-900"
-            disabled={!flipped}
-            onClick={() => grade("mastered")}
-            >
-            {t("mastered")}
-          </Button>
-          </div>
-      </div>
+      <StudyGradeBar
+        flipped={flipped}
+        dontKnowLabel={t("dontKnow")}
+        knowLabel={t("know")}
+        masteredLabel={t("mastered")}
+        onDontKnow={() => grade("dontKnow")}
+        onKnow={() => grade("know")}
+        onMastered={() => grade("mastered")}
+      />
     </div>
   );
 }

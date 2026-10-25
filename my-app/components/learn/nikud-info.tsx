@@ -8,12 +8,11 @@ import { printFont } from "@/components/alephbet/print-font";
 import { PointedLetter } from "@/components/learn/pointed-letter";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { nikudCue, nikudCycle } from "@/lib/alephbet/intro-alphabet";
-import { letterCatalog } from "@/lib/alephbet/letter-info";
-import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
-import { playAudio } from "@/lib/settings/master-volume";
+import { letterById } from "@/lib/alephbet/letter-lookup";
+import { playCue } from "@/lib/learn/play-cue";
 
 const betLetter = "\u05D1";
-const bet = letterCatalog.find((item) => item.id === "bet");
+const bet = letterById.get("bet");
 
 const groups = [
   [
@@ -48,13 +47,7 @@ export function NikudInfo() {
       return;
     }
     setSelected(id);
-    const cue = nikudCue(bet, id);
-    const audio = await loadSpeechClip(cue.text, cue.phoneme);
-    if (!audio) {
-      return;
-    }
-    audio.currentTime = 0;
-    await playAudio(audio);
+    await playCue(nikudCue(bet, id));
   }
 
   return (

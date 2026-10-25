@@ -9,10 +9,10 @@ import { DeckHeading } from "@/components/flashcards/deck-heading";
 import { DeckSettings } from "@/components/flashcards/deck-settings";
 import { FormDialog } from "@/components/flashcards/form-dialog";
 import { useSoundPrefs, type SoundChannel } from "@/components/flashcards/sound-toggle";
+import { useSpeechClipCache } from "@/components/study/use-speech-clip-cache";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useRouter } from "@/i18n/navigation";
-import { prepareSpeechClip, requestDeckSpeech } from "@/lib/flashcards/deck-speech";
 import { removeCard } from "@/lib/flashcards/library";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { playAudio } from "@/lib/settings/master-volume";
@@ -50,7 +50,7 @@ export function DeckBrowser({
   const [editor, setEditor] = useState<Flashcard | "new" | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [libraryMessage, setLibraryMessage] = useState<"signed-out" | "error" | null>(null);
-  const clips = useRef(new Map<string, HTMLAudioElement>());
+  const { clips, stopClips: stopCachedClips, disposeClips, loadSpeechTexts } = useSpeechClipCache();
   const pendingPlay = useRef<{ id: string; key: string } | null>(null);
 
   const usesRecordedAudio = cards.some((card) => card.audioUrl);
@@ -83,56 +83,44 @@ export function DeckBrowser({
       return;
     }
 
-    const created: string[] = [];
     let cancelled = false;
     const texts = [...new Set(cards.map((card) => card.hebrew).filter(Boolean))].slice(0, 40);
 
-    async function loadDeck() {
-      const clipsForDeck = await requestDeckSpeech(texts);
+    void loadSpeechTexts(texts, () => cancelled)
+      .then(() => {
+        if (cancelled) {
+          return;
+        }
 
-      await Promise.all(
-        clipsForDeck.map(async (clip) => {
-          const { url, audio } = await prepareSpeechClip(clip.audio);
-          created.push(url);
+        const pending = pendingPlay.current;
+        if (!pending || !sound.allows("word")) {
+          return;
+        }
 
-          if (cancelled) {
-            return;
-          }
+        const audio = clips.current.get(pending.key);
+        if (!audio) {
+          return;
+        }
 
-          clips.current.set(clip.text, audio);
-
-          if (pendingPlay.current?.key === clip.text && sound.allows("word")) {
-            const pending = pendingPlay.current;
-            pendingPlay.current = null;
-            startClip(pending.id, audio, "word");
-          }
-        }),
-      );
-    }
-
-    void loadDeck().catch(() => {
-      if (!cancelled) {
-        setPlayingId(null);
-        setFailedId(pendingPlay.current?.id ?? "deck");
         pendingPlay.current = null;
-      }
-    });
+        startClip(pending.id, audio, "word");
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPlayingId(null);
+          setFailedId(pendingPlay.current?.id ?? "deck");
+          pendingPlay.current = null;
+        }
+      });
 
     return () => {
       cancelled = true;
-      for (const url of created) {
-        URL.revokeObjectURL(url);
-      }
     };
   }, [cards, usesRecordedAudio]);
 
   useEffect(() => {
-    const current = clips.current;
-
     return () => {
-      for (const clip of current.values()) {
-        clip.pause();
-      }
+      disposeClips();
     };
   }, []);
 
@@ -149,12 +137,7 @@ export function DeckBrowser({
   function stopClips() {
     pendingPlay.current = null;
     playingKindRef.current = null;
-
-    for (const clip of clips.current.values()) {
-      clip.pause();
-      clip.currentTime = 0;
-    }
-
+    stopCachedClips();
     setPlayingId(null);
   }
 
@@ -172,10 +155,7 @@ export function DeckBrowser({
       return;
     }
 
-    for (const clip of clips.current.values()) {
-      clip.pause();
-      clip.currentTime = 0;
-    }
+    stopCachedClips();
 
     playingKindRef.current = kind;
     audio.onended = () => {
@@ -338,12 +318,7 @@ export function DeckBrowser({
         end={Math.min(start + PAGE_SIZE, filtered.length)}
         total={filtered.length}
         onPage={(next) => {
-          pendingPlay.current = null;
-          for (const clip of clips.current.values()) {
-            clip.pause();
-            clip.currentTime = 0;
-          }
-          setPlayingId(null);
+          stopClips();
           setPage(next);
         }}
       />

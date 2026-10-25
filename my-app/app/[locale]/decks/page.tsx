@@ -1,16 +1,26 @@
+import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
-import { DeckBrowser } from "@/components/flashcards/deck-browser";
 import { DeckPicker } from "@/components/flashcards/deck-picker";
-import { FlashcardSession } from "@/components/flashcards/flashcard-session";
-import { StudySetup } from "@/components/flashcards/study-setup";
+import { FlashcardsAccess } from "@/components/flashcards/flashcards-access";
 import { isBuiltinDeck } from "@/lib/flashcards/builtin";
 import { loadLibrary } from "@/lib/flashcards/catalog";
 import { mergeDeck } from "@/lib/flashcards/merge";
 import type { Flashcard } from "@/lib/flashcards/types";
 import { starterDeck } from "@/lib/flashcards/starter-deck";
 import { parseStudyCount, parseStudyMode } from "@/lib/flashcards/study-plan";
-import { KnownWordsStudy } from "@/components/learn/known-words-study";
-import { FlashcardsAccess } from "@/components/flashcards/flashcards-access";
+
+const DeckBrowser = dynamic(() =>
+  import("@/components/flashcards/deck-browser").then((mod) => mod.DeckBrowser),
+);
+const FlashcardSession = dynamic(() =>
+  import("@/components/flashcards/flashcard-session").then((mod) => mod.FlashcardSession),
+);
+const StudySetup = dynamic(() =>
+  import("@/components/flashcards/study-setup").then((mod) => mod.StudySetup),
+);
+const KnownWordsStudy = dynamic(() =>
+  import("@/components/learn/known-words-study").then((mod) => mod.KnownWordsStudy),
+);
 
 export default async function DecksPage({
   searchParams,

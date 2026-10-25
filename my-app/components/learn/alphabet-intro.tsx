@@ -4,17 +4,16 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "motion/react";
 import { LetterIntro } from "@/components/learn/letter-intro";
+import { LevelClear } from "@/components/learn/level-clear";
 import { LevelNav } from "@/components/learn/level-nav";
 import { NikudDropQuiz } from "@/components/learn/nikud-drop-quiz";
 import { SoundSpeak } from "@/components/learn/sound-speak";
 import { ExperienceTube } from "@/components/learn/experience-tube";
-import { NextLevelLink } from "@/components/learn/level-finish";
 import { Button } from "@/components/ui/button";
-import type { SpeechCue } from "@/lib/alephbet/intro-alphabet";
-import { letterCatalog } from "@/lib/alephbet/letter-info";
-import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
-import { playAudio } from "@/lib/settings/master-volume";
+import { lettersByIds } from "@/lib/alephbet/letter-lookup";
+import { playCue } from "@/lib/learn/play-cue";
 import { completeCurriculumLevel, curriculumLevel, stageLevel } from "@/lib/learn/curriculum";
+import { isLocalHost } from "@/lib/learn/local-host";
 import { nikudPracticeLetters } from "@/lib/learn/nikud-drop";
 import { soundPromptsForLevel } from "@/lib/learn/sound-exercises";
 import { learnStages } from "@/lib/learn/stages";
@@ -24,23 +23,39 @@ import { LevelFrame } from "@/components/learn/level-frame";
 import { useRouter } from "@/i18n/navigation";
 
 const levels = learnStages;
-const levelOneLetters = ["aleph", "bet", "gimel"] as const;
-const levelTwoLetters = ["dalet", "he"] as const;
-const levelOnePrompts = soundPromptsForLevel(1);
-const levelTwoPrompts = soundPromptsForLevel(2);
+
+const alphabetTracks = [
+  {
+    intro: "1.0",
+    nikud: "1.1",
+    speak: "1.2",
+    done: "1",
+    complete: 1,
+    letters: ["aleph", "bet", "gimel"] as const,
+    nikudLetters: nikudPracticeLetters[1],
+    prompts: soundPromptsForLevel(1),
+    doneTitle: "levelOneDoneTitle" as const,
+    doneBody: "levelOneDoneBody" as const,
+  },
+  {
+    intro: "2.0",
+    nikud: "2.1",
+    speak: "2.2",
+    done: "2",
+    complete: 2,
+    letters: ["dalet", "he"] as const,
+    nikudLetters: nikudPracticeLetters[2],
+    prompts: soundPromptsForLevel(2),
+    doneTitle: undefined,
+    doneBody: "levelTwoDoneBody" as const,
+  },
+] as const;
 
 const slide = {
   enter: (direction: number) => ({ y: direction > 0 ? 72 : -72, opacity: 0 }),
   center: { y: 0, opacity: 1 },
   exit: (direction: number) => ({ y: direction > 0 ? -72 : 72, opacity: 0 }),
 };
-
-function lettersByIds(ids: readonly string[]) {
-  return ids.flatMap((id) => {
-    const letter = letterCatalog.find((item) => item.id === id);
-    return letter ? [letter] : [];
-  });
-}
 
 export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   const t = useTranslations("Learn");
@@ -55,8 +70,7 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
   }, []);
 
   useEffect(() => {
-    const host = window.location.hostname;
-    if (host === "localhost" || host === "127.0.0.1") {
+    if (isLocalHost()) {
       return;
     }
     const stage = levels[step];
@@ -65,20 +79,9 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
     }
   }, [router, step]);
 
-  async function playCue(cue: SpeechCue) {
-    const audio = await loadSpeechClip(cue.text, cue.phoneme);
-    if (!audio) {
-      return;
-    }
-    audio.currentTime = 0;
-    await playAudio(audio);
-  }
-
   function go(next: number) {
     const stage = levels[next];
-    const host = typeof window === "undefined" ? "" : window.location.hostname;
-    const localHost = host === "localhost" || host === "127.0.0.1";
-    if (!localHost && stage && stageLevel(stage) > curriculumLevel()) {
+    if (!isLocalHost() && stage && stageLevel(stage) > curriculumLevel()) {
       return;
     }
     if (busy || next === step || next < 0 || next >= levels.length) {
@@ -149,50 +152,34 @@ export function AlphabetIntro({ initialStep = 0 }: { initialStep?: number }) {
             }
           }}
         >
-          {stage === "1.0" ? (
-            <LetterIntro letters={lettersByIds(levelOneLetters)} onPlay={(cue) => void playCue(cue)} />
-          ) : null}
-          {stage === "1.1" ? (
-            <NikudDropQuiz letterIds={nikudPracticeLetters[1]} onPlay={(cue) => void playCue(cue)} onPass={() => goStage("1.2")} />
-          ) : null}
-          {stage === "1.2" ? (
-            <SoundSpeak
-              items={levelOnePrompts}
-              onPass={() => {
-                completeCurriculumLevel(1);
-                goStage("1");
-              }}
-            />
-          ) : null}
-          {stage === "1" ? (
-            <div className="max-w-xl text-center">
-              <h1 className="text-3xl font-semibold tracking-tight text-emerald-950 sm:text-4xl">{t("levelOneDoneTitle")}</h1>
-              <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("levelOneDoneBody")}</p>
-              <NextLevelLink level={1} />
-            </div>
-          ) : null}
-          {stage === "2.0" ? (
-            <LetterIntro letters={lettersByIds(levelTwoLetters)} onPlay={(cue) => void playCue(cue)} />
-          ) : null}
-          {stage === "2.1" ? (
-            <NikudDropQuiz letterIds={nikudPracticeLetters[2]} onPlay={(cue) => void playCue(cue)} onPass={() => goStage("2.2")} />
-          ) : null}
-          {stage === "2.2" ? (
-            <SoundSpeak
-              items={levelTwoPrompts}
-              onPass={() => {
-                completeCurriculumLevel(2);
-                goStage("2");
-              }}
-            />
-          ) : null}
-          {stage === "2" ? (
-            <div className="flex max-w-xl flex-col items-center text-center">
-              <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("levelClear", { level: 2 })}</h1>
-              <p className="mt-3 text-base text-emerald-900/80 sm:text-lg">{t("levelTwoDoneBody")}</p>
-              <NextLevelLink level={2} />
-            </div>
-          ) : null}
+          {alphabetTracks.map((track) =>
+            stage === track.intro ? (
+              <LetterIntro key={track.intro} letters={lettersByIds(track.letters)} onPlay={(cue) => void playCue(cue)} />
+            ) : stage === track.nikud ? (
+              <NikudDropQuiz
+                key={track.nikud}
+                letterIds={track.nikudLetters}
+                onPlay={(cue) => void playCue(cue)}
+                onPass={() => goStage(track.speak)}
+              />
+            ) : stage === track.speak ? (
+              <SoundSpeak
+                key={track.speak}
+                items={track.prompts}
+                onPass={() => {
+                  completeCurriculumLevel(track.complete);
+                  goStage(track.done);
+                }}
+              />
+            ) : stage === track.done ? (
+              <LevelClear
+                key={track.done}
+                level={track.complete}
+                title={track.doneTitle ? t(track.doneTitle) : undefined}
+                body={t(track.doneBody)}
+              />
+            ) : null,
+          )}
         </motion.div>
       </AnimatePresence>
     </LevelFrame>

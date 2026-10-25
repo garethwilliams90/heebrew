@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Info } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -193,7 +194,7 @@ function keepOnCard(event: { stopPropagation: () => void }) {
   event.stopPropagation();
 }
 
-export function LetterCard({
+export const LetterCard = memo(function LetterCard({
   cell,
   flipped,
   mastery,
@@ -264,7 +265,7 @@ export function LetterCard({
       </motion.div>
     </div>
   );
-}
+});
 
 function LetterSide({
   className,

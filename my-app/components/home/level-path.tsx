@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { curriculumLevel } from "@/lib/learn/curriculum";
 import { StonePath } from "@/components/learn/nature-scene";
 import { letterCatalog } from "@/lib/alephbet/letter-info";
+import { letterById } from "@/lib/alephbet/letter-lookup";
 import { letterPairLevels } from "@/lib/learn/letter-pairs";
 import { hasLearningStarted } from "@/lib/learn/started";
 
@@ -103,7 +104,7 @@ export function LevelPath() {
     const pair = letterPairLevels.find((item) => item.level === level);
     if (pair) {
       const letters = pair.letterIds
-        .map((id) => letterCatalog.find((item) => item.id === id)?.letter ?? "")
+        .map((id) => letterById.get(id)?.letter ?? "")
         .join(" & ");
       return {
         title: t("lessonLettersTitle", { letters }),
