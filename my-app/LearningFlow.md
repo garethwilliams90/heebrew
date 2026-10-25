@@ -150,3 +150,63 @@ Play each verb form out loud.
 
 14.4 introduce 2 more verbs: לשתות וללמוד
 14.5 practice quiz with 10 questions with a mix of the 3 verbs learned so far, with a mix of present tense forms.
+
+## Level 15
+
+One new present-tense verb and three new nouns, still in the את frame from level 14. Hear cards play the Duolingo bundle recording for each form and noun. The sentence builder still speaks the full sentence with Azure, because the bundle has no recording of these sentences.
+
+15.1 Introduce לקרוא and play the four present-tense forms: קורא, קוראת, קוראים, קוראות.
+
+15.2 Introduce עיתון, מכתב, and סיפור. Hear each noun.
+
+15.3 Six sentence-builder questions that use לקרוא with those nouns, such as הוא קורא את העיתון and היא קוראת את המכתב.
+
+## Level 16
+
+Two new present-tense verbs and two new nouns. Writing reuses מכתב and סיפור from level 15.
+
+16.1 Introduce לכתוב and play כותב, כותבת, כותבים, and כותבות.
+
+16.2 Introduce לאהוב and play אוהב, אוהבת, אוהבים, and אוהבות.
+
+16.3 Introduce שיר and מוזיקה. A definite song takes את. Music, like water, does not.
+
+16.4 Eight mixed sentence-builder questions, such as הוא כותב את המכתב, היא אוהבת את השיר, and הם אוהבים מוזיקה.
+
+## Producing levels from 14 onward
+
+Level 14 opens the verb section. Later levels stay on the sentence-builder path. A teaching level introduces 1 or 2 new verbs and 2 or 3 new non-verb words and uses them in sentences, except where a block below says to reuse words the learner already knows. New words, including each new verb and its present-tense forms, are saved to the Known words deck. Hear cards play the bundle recording when that word has one.
+
+Levels 17 through 40 are built. Every teaching level introduces new words. The connector bank below is taught across levels 22–40. Exams still review words the learner already has.
+
+### A new concept every 4 levels
+
+Count from level 14. Each block is four levels. The first level of a block opens the concept. The other teaching levels in the block keep using it. An exam replaces the last level of its eight-level run. Levels 14, 15, and 16 are already the first three levels of the את block, so level 17 finishes that block before ל begins.
+
+| Levels | Concept |
+| --- | --- |
+| 14–17 | Present-tense verbs that take את. |
+| 18–20 | Present-tense verbs that take ל. Present tense only. ל joins the next word: לפארק, לילד. |
+| 21 | Exam of levels 14–20. |
+| 22–28 | Complex sentences. New connectors from the bank, two or three a level, plus a new noun or adjective. |
+| 29 | Exam of the connectors learned so far. |
+| 30 | Past tense of verbs the learner already knows, with אתמול. Practice from here uses past and present. New connectors continue. |
+| 31–36 | More connectors from the bank, and a new noun on each level. Sentences use past and present. |
+| 37 | Exam of the past and the connectors learned so far. |
+| 38–39 | The remaining connectors and new nouns. Past and present. |
+| 40 | Future tense, with מחר, plus כדי ש. Practice on this level uses past, present, and future. |
+
+The connector bank, in teaching order, is: ו, אבל, או, כי, אז, גם, רק, אלא, לכן, בעצם, כש, לפני ש, אחרי ש, בזמן ש, עד ש, מאז ש, ואז, קודם כול, בסוף, בינתיים, למשל, כלומר, זאת אומרת, במיוחד, בנוסף, חוץ מ, גם... וגם..., לא רק... אלא גם..., למרות ש, למרות זאת, מצד אחד... מצד שני..., אם, אם... אז..., אחרת, אפילו אם, בגלל ש, בגלל זה, כתוצאה מכך, במקום ש, כדי ש.
+
+A prefix such as ו or כש is saved as its own word and appears in a sentence joined to the next word: והיא, כשהוא. מ, על, and further tenses after 40 are not in this stretch.
+
+### An exam every 8 levels
+
+Count from level 14. Every 8th level is an exam: **21, 29, 37**. The built path stops at level 40, so the next exam, 45, is not part of this stretch. The exam is the last level of that run of eight. It does not introduce a new concept or new words. It reviews what those levels taught.
+
+The exam uses the sentence builder, with these differences:
+
+- The learner has 3 lives. A wrong sentence costs one life. At zero lives the attempt fails and can be retaken.
+- There is no hint.
+- Clicking a word card places it and does not play that word. Hearing the full sentence stays available.
+- The word bank includes extra words the learner knows that are not part of the sentence. Only one order is correct. The extra words are left unused.

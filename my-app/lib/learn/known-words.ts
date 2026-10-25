@@ -4,6 +4,9 @@ import { basicWords, type BasicWord } from "@/lib/learn/basic-words";
 import { letterPairLevels, pairKnownWord } from "@/lib/learn/letter-pairs";
 import { thirteenKnownWords } from "@/lib/learn/level-thirteen";
 import { fourteenKnownWords } from "@/lib/learn/level-fourteen";
+import { fifteenKnownWords } from "@/lib/learn/level-fifteen";
+import { laterKnownWords } from "@/lib/learn/later-levels";
+import { sixteenKnownWords } from "@/lib/learn/level-sixteen";
 import { readingKnownWords } from "@/lib/learn/reading-levels";
 import { soundKnownWords } from "@/lib/learn/sound-exercises";
 
@@ -15,6 +18,9 @@ const learnableWords: readonly BasicWord[] = [
   ...readingKnownWords,
   ...thirteenKnownWords,
   ...fourteenKnownWords,
+  ...fifteenKnownWords,
+  ...sixteenKnownWords,
+  ...laterKnownWords,
 ];
 
 const STORAGE_KEY = "webrew.known-words";
