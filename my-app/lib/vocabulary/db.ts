@@ -445,7 +445,7 @@ export function buildSentenceFromLesson(
       fr: sentence.fr || sentence.en,
       es: sentence.es || sentence.en,
     },
-    words: sentence.word_ids.map((wordId, index) => {
+    words: sentence.word_ids.map((wordId: string, index: number) => {
       const word = words.get(wordId);
       return {
         id: `${sentence.id}-${index}`,
