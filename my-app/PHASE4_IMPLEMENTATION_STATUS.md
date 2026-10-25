@@ -25,24 +25,36 @@ Created **`scripts/seed-lessons.mjs`** (196 lines) that:
 
 ### Lessons Created
 
-**22 lessons** across 3 sections:
+**43 lessons** across 5 sections:
 
-#### Section 1: Introduction to Letters (3 lessons)
-- Level 0: Introduction - First Letters (א, ב, ג)
-- Level 1: First Three Letters with nikud
+#### Section 1: Introduction to Letters (2 lessons)
+- Level 1: First Three Letters (א, ב, ג)
 - Level 2: First Five Letters (א through ה)
 
-#### Section 2: Learning the Aleph-Bet (10 lessons)
+#### Section 2: Learning the Aleph-Bet (9 lessons)
 - Levels 3-11: Two letters per level (ו & ז through letter ת)
-- Level 12: First Words Without Nikud (50 three-letter words)
 
-#### Section 3: Words, Sentences & Basic Grammar (9 lessons)
+#### Section 3: Words, Sentences & Basic Grammar (2 lessons)
+- Level 12: First Words Without Nikud (50 three-letter words)
 - Level 13: Possession (של)
-- Level 14: Present Tense Verbs (את) - אוכל, שותה, לומד
-- Level 15: Reading Verb (לקרוא)
-- Level 16: Writing & Loving (לכתוב, לאהוב)
-- Levels 17-20: More את verbs and ל verbs
-- Level 21: Exam covering levels 14-20
+
+#### Section 4: Verbs - Present Tense & Beyond (27 lessons, 3 exams)
+- Levels 14-17: Present tense verbs with את
+- Levels 18-20: Present tense verbs with ל
+- Level 21: **Exam** (levels 14-20)
+- Levels 22-28: Complex sentences with connectors
+- Level 29: **Exam** (connectors)
+- Levels 30-36: Past tense + more connectors
+- Level 37: **Exam** (past tense)
+- Levels 38-39: Conditionals and cause/effect
+- Level 40: Future tense with מחר
+
+#### Section 5: Existential Concepts (3 lessons)
+- Level 101: יש & אין (there is/isn't)
+- Level 102: Age & Numbers (בן/בת + numbers)
+- Level 103: Coffee Shop Interaction
+
+**Note**: Section 5 opens after completing Level 40 (Hebrew 101 curriculum)
 
 ---
 
@@ -51,13 +63,16 @@ Created **`scripts/seed-lessons.mjs`** (196 lines) that:
 ### Lesson Statistics
 
 ```
-Total lessons: 22
-├─ Section 1: 3 lessons (Levels 0-2)
-├─ Section 2: 10 lessons (Levels 3-12)
-└─ Section 3: 9 lessons (Levels 13-21)
+Total lessons: 43
+├─ Section 1 (Introduction to Letters): 2 lessons
+├─ Section 2 (Learning the Aleph-Bet): 9 lessons
+├─ Section 3 (Words, Sentences & Grammar): 2 lessons
+├─ Section 4 (Verbs: Present & Beyond): 27 lessons (3 exams)
+└─ Section 5 (Existential Concepts): 3 lessons
 
-Exams: 1 (Level 21)
-Teaching lessons: 21
+Exams: 3 (Levels 21, 29, 37)
+Teaching lessons: 40
+Total curriculum span: Levels 1-40 + 101-103
 ```
 
 ### Schema Alignment
@@ -83,9 +98,15 @@ $ node scripts/seed-lessons.mjs
 ✅ Lessons seeded successfully!
 
 📚 Lessons by Section:
-   Section 1: 3 lessons
-   Section 2: 10 lessons
-   Section 3: 9 lessons
+   Section 1 (Introduction to Letters): 2 lessons (2 teaching, 0 exams)
+   Section 2 (Learning the Aleph-Bet): 9 lessons (9 teaching, 0 exams)
+   Section 3 (Words, Sentences & Basic Grammar): 2 lessons (2 teaching, 0 exams)
+   Section 4 (Verbs: Present Tense & Beyond): 27 lessons (24 teaching, 3 exams)
+   Section 5 (Existential Concepts): 3 lessons (3 teaching, 0 exams)
+
+🎯 Exam Levels: 21, 29, 37 (every 8th level from level 14)
+
+📖 Total curriculum: Levels 1-40 (Hebrew 101) + Levels 101-103 (Section 3)
 ```
 
 Sample query:
