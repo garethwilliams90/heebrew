@@ -200,6 +200,73 @@ The connector bank, in teaching order, is: ו, אבל, או, כי, אז, גם, �
 
 A prefix such as ו or כש is saved as its own word and appears in a sentence joined to the next word: והיא, כשהוא. מ, על, and further tenses after 40 are not in this stretch.
 
+---
+
+## Planned: Section 3 - Existential Concepts (yesh/ein)
+
+**Status:** Planning phase. This section comes after sections 1 and 2 (Hebrew fundamentals) and two planned exams. Content is slightly more complicated than previous sections.
+
+### Level 1: Introducing יש (there is) and אין (there isn't)
+
+This level introduces the Hebrew concepts of **יש** (yesh - there is) and **אין** (ein - there isn't).
+
+**Exercises included:**
+- Exercise 2
+- Exercise 3A
+- Exercise 3B
+- Exercise 5
+- Exercise 6
+- Exercise 7
+- Exercise 8
+
+_(Note: Exercise 4 is intentionally skipped)_
+
+**Sentence content:** Exercises will use basic sentences provided by the user.
+
+**Open item:** A dedicated file or location in the repository is needed where specific sentences for these exercises can be added. This sentence bank will be separate from LearningFlow.md.
+
+**Sentence bank location:** Following the existing curriculum pattern, create a new TypeScript file at `my-app/lib/learn/level-yesh-ein.ts` (or similar naming). Use the `sentence()` helper from `my-app/lib/learn/sentences.ts` to define exercise sentences, following the same pattern used in `level-thirteen.ts`, `level-fourteen.ts`, and other curriculum level files.
+
+### Level 2: Age and Numbers
+
+This level teaches how to state and ask about age in Hebrew.
+
+**Statement forms:**
+- אני בן (ani ben - I am [age], masculine) + numbers
+- אני בת (ani bat - I am [age], feminine) + numbers
+
+**Question forms:**
+- בן כמה אתה (ben kama ata - how old are you, to a male)
+- בת כמה את (bat kama at - how old are you, to a female)
+
+**Sentence content:** Like Level 1, these sentences will be stored in the dedicated sentence bank file (same location as Level 1 sentences), not inside LearningFlow.md.
+
+### Level 3: Basic Interactions - Ordering Coffee in a Coffee Shop
+
+This level covers a full interaction scenario between a customer and waiter/waitress at a coffee shop.
+
+**Customer side sentences:**
+- שלום (shalom - hello)
+- מה נשמע (ma nishma - how are you) or מה קורה (ma koreh - what's up)
+- אפשר להזמין (efshar lehazmin - can I order)
+- אפשר בבקשה הפוך (efshar bevakasha hafuch - can I have a hafuch please)
+- אפשר בבקשה קפה קל (efshar bevakasha kafe kal - can I have a light coffee please)
+- אספרסו (espresso)
+- וקרואסון (ve kuason - and a croissant)
+
+**Waiter/waitress side sentences:**
+- מה אתה רוצה (ma ata rotzeh - what do you want, masculine)
+- מה את רוצה (ma at rotza - what do you want, feminine)
+- זה לשבת או לקחת (ze leshevet o liktoach - is this to sit in or take away)
+- אתם רוצים (atem rotzim - you want, plural)
+- איך אתם משלמים (eich atem meshalmim - how are you paying, plural)
+- איך אתה משלם (eich ata meshalem - how are you paying, masculine)
+- עם אשראי או מזומן (im ashray o mezuman - with card or cash)
+
+**Sentence content:** Like Level 1, these sentences will be stored in the dedicated sentence bank file (same location as Level 1 sentences), not inside LearningFlow.md.
+
+---
+
 ### An exam every 8 levels
 
 Count from level 14. Every 8th level is an exam: **21, 29, 37**. The built path stops at level 40, so the next exam, 45, is not part of this stretch. The exam is the last level of that run of eight. It does not introduce a new concept or new words. It reviews what those levels taught.
