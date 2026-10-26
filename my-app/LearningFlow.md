@@ -202,13 +202,15 @@ A prefix such as ו or כש is saved as its own word and appears in a sentence j
 
 ---
 
-## Planned: Section 3 - Existential Concepts (yesh/ein)
+## Section 3 - Existential concepts
 
-**Status:** Planning phase. This section comes after sections 1 and 2 (Hebrew fundamentals) and two planned exams. Content is slightly more complicated than previous sections.
+This section comes after Hebrew 101. It opens when that exam is passed. Each level below is one pathway level: intro slides, then the exercises named for it.
+
+Exercise numbers are the pathway exercises: 2 recognise the sound, 3A fill the gaps, 3B choose the form that fits, 4 listen and repeat, 5 read, 6 write, 7 comprehension, 8 spell. When an exercise is marked optional, the learner can skip it.
 
 ### Level 1: Introducing יש (there is) and אין (there isn't)
 
-This level introduces the Hebrew concepts of **יש** (yesh - there is) and **אין** (ein - there isn't).
+This level introduces the Hebrew concepts of **יש** (yesh - there is) and **אין** (ein - there isn't). יש לי means I have. The word after ל changes with the person: לי, לך (masculine), לך (feminine), לו, לה.
 
 **Exercises included:**
 - Exercise 2
@@ -221,11 +223,15 @@ This level introduces the Hebrew concepts of **יש** (yesh - there is) and **א
 
 _(Note: Exercise 4 is intentionally skipped)_
 
-**Sentence content:** Exercises will use basic sentences provided by the user.
-
-**Open item:** A dedicated file or location in the repository is needed where specific sentences for these exercises can be added. This sentence bank will be separate from LearningFlow.md.
-
-**Sentence bank location:** Following the existing curriculum pattern, create a new TypeScript file at `my-app/lib/learn/level-yesh-ein.ts` (or similar naming). Use the `sentence()` helper from `my-app/lib/learn/sentences.ts` to define exercise sentences, following the same pattern used in `level-thirteen.ts`, `level-fourteen.ts`, and other curriculum level files.
+**Sentences:**
+- יש דג — there is a fish
+- אין גלידה — there is no ice cream
+- יש ספר — there is a book
+- אין בית — there is no house
+- יש לי כלב — I have a dog
+- אין לי לחם — I don't have bread
+- יש לו ספר — he has a book
+- יש לה מים — she has water
 
 ### Level 2: Age and Numbers
 
@@ -239,7 +245,19 @@ This level teaches how to state and ask about age in Hebrew.
 - בן כמה אתה (ben kama ata - how old are you, to a male)
 - בת כמה את (bat kama at - how old are you, to a female)
 
-**Sentence content:** Like Level 1, these sentences will be stored in the dedicated sentence bank file (same location as Level 1 sentences), not inside LearningFlow.md.
+**Numbers after בן and בת:** שנה (1), שנתיים (2), שלוש, ארבע, חמש, שש, שבע, שמונה, תשע, עשר, עשרים, שלושים, מאה, and אפס for zero.
+
+**Sentences:**
+- אני בן שנה — I am 1 (masculine)
+- אני בן עשר — I am 10 (masculine)
+- אני בן עשרים — I am 20 (masculine)
+- אני בן שנתיים — I am 2 (masculine)
+- אני בת שבע — I am 7 (feminine)
+- אני בת שלושים — I am 30 (feminine)
+- בן כמה אתה — how old are you (to a man)
+- בת כמה את — how old are you (to a woman)
+
+Exercises: 2, 3A, 3B, 4 (optional), 5, 6, 8.
 
 ### Level 3: Basic Interactions - Ordering Coffee in a Coffee Shop
 
@@ -250,7 +268,7 @@ This level covers a full interaction scenario between a customer and waiter/wait
 - מה נשמע (ma nishma - how are you) or מה קורה (ma koreh - what's up)
 - אפשר להזמין (efshar lehazmin - can I order)
 - אפשר בבקשה הפוך (efshar bevakasha hafuch - can I have a hafuch please)
-- אפשר בבקשה קפה קל (efshar bevakasha kafe kal - can I have a light coffee please)
+- אפשר בבקשה קפה קר (efshar bevakasha kafe kar - can I have an iced coffee please)
 - אספרסו (espresso)
 - וקרואסון (ve kuason - and a croissant)
 
@@ -263,7 +281,7 @@ This level covers a full interaction scenario between a customer and waiter/wait
 - איך אתה משלם (eich ata meshalem - how are you paying, masculine)
 - עם אשראי או מזומן (im ashray o mezuman - with card or cash)
 
-**Sentence content:** Like Level 1, these sentences will be stored in the dedicated sentence bank file (same location as Level 1 sentences), not inside LearningFlow.md.
+Exercises: 2, 3A, 3B, 4 (optional), 5, 7, 8.
 
 ---
 
