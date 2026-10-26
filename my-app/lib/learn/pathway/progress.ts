@@ -85,11 +85,29 @@ export function completeLevel(levelId: string) {
 
 export function passExam(sectionId: string) {
   const progress = readProgress();
+  const section = sectionById(sectionId);
+  const completed = new Set(progress.completed);
+  const exams = new Set(progress.exams);
+  // The skip exam stands in for every level before the section it opens.
+  if (section) {
+    for (const item of pathwaySections) {
+      if (item.index > section.index) {
+        break;
+      }
+      exams.add(item.id);
+      for (const level of item.levels) {
+        completed.add(level.id);
+      }
+    }
+  } else {
+    exams.add(sectionId);
+  }
   writeProgress({
     ...progress,
-    exams: progress.exams.includes(sectionId) ? progress.exams : [...progress.exams, sectionId],
+    completed: [...completed],
+    exams: [...exams],
     lastStudiedAt: Date.now(),
-    lastSectionId: sectionId,
+    lastSectionId: section?.id ?? sectionId,
   });
 }
 
