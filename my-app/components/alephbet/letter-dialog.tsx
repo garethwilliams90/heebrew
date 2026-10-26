@@ -13,7 +13,6 @@ import { flipSpring } from "@/components/flashcards/swipe-card";
 import { MasteryRing } from "@/components/flashcards/mastery-ring";
 import { Button } from "@/components/ui/button";
 import { highlightLetter, type LetterFact } from "@/lib/alephbet/letter-info";
-import { strokesFor } from "@/lib/alephbet/stroke-order";
 import { hasTwoSounds } from "@/lib/learn/consonant-sounds";
 
 const glyphFade = { duration: 0.15, ease: "easeOut" as const };
@@ -216,7 +215,6 @@ export function LetterDialog({
             key={`${fact.letter}-${cursive ? "cursive" : "print"}`}
             letter={fact.letter}
             fontClassName={cursive ? cursiveFont.className : cn("font-bold", printFont.className)}
-            paths={cursive ? undefined : strokesFor(fact.id)}
           />
         ) : null}
       </div>

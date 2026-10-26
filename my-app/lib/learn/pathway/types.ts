@@ -13,7 +13,6 @@ export type ExerciseType =
   | "write"
   | "comprehend"
   | "spell"
-  | "draw-letter"
   | "picture-word";
 
 export type SpokenItem = {
@@ -96,6 +95,10 @@ export type IntroSlide = {
   title: Gloss;
   body: Gloss;
   samples?: readonly IntroSample[];
+  /** One nikud from the vowel walkthrough, shown on bet. */
+  nikudId?: string;
+  /** The last intro slide: every nikud on bet, together. */
+  nikudOverview?: boolean;
 };
 
 export type ExerciseStep =
@@ -108,7 +111,6 @@ export type ExerciseStep =
   | { type: "read"; optional?: boolean; items: readonly ReadItem[] }
   | { type: "write"; optional?: boolean; items: readonly ReadItem[] }
   | { type: "comprehend"; optional?: boolean; items: readonly ComprehendItem[] }
-  | { type: "draw-letter"; optional?: boolean; letterIds: readonly string[] }
   | { type: "picture-word"; optional?: boolean; items: readonly PictureWordItem[] };
 
 export type PathwayLevel = {
@@ -118,6 +120,8 @@ export type PathwayLevel = {
   title: Gloss;
   about: Gloss;
   mark: string;
+  /** Path and frame label when this level is not a numbered lesson. */
+  badge?: string;
   intros: readonly IntroSlide[];
   exercises: readonly ExerciseStep[];
   knownWordIds: readonly string[];
@@ -129,7 +133,7 @@ export type PathwaySection = {
   title: Gloss;
   about: Gloss;
   levels: readonly PathwayLevel[];
-  exam: {
+  exam?: {
     questions: number;
     lives: number;
     types: readonly ExerciseType[];
@@ -146,7 +150,6 @@ export type ExamQuestion =
   | { type: "read"; item: ReadItem }
   | { type: "write"; item: ReadItem }
   | { type: "comprehend"; item: ComprehendItem }
-  | { type: "draw-letter"; letterId: string }
   | { type: "picture-word"; item: PictureWordItem };
 
 export function gloss(en: string, fr: string, es: string): Gloss {

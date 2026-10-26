@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { printFont } from "@/components/alephbet/print-font";
+import { DevSectionSkip } from "@/components/learn/dev-level";
 import { StonePath } from "@/components/learn/nature-scene";
 import { PathLamp } from "@/components/learn/pathway/path-lamp";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -36,6 +37,7 @@ export function PathwaySectionView({
         <span className="h-px flex-1 bg-emerald-900/20" />
         <div className="max-w-xs text-center">
           <p className="text-sm font-semibold tracking-wide text-emerald-800 uppercase">{title}</p>
+          <DevSectionSkip sectionId={section.id} />
           {open || !previousExamHref ? null : (
             <Link href={previousExamHref} className="mt-1 inline-block text-sm font-medium text-emerald-900 underline-offset-4 hover:underline">
               {t("skipSection")}
@@ -49,13 +51,14 @@ export function PathwaySectionView({
         const href = `/learn?section=${section.id}&level=${level.id}`;
         const place = startIndex + index;
         const lean = Math.round(((shifts[place % shifts.length] ?? 0) - 23) * 0.6);
-        const showStones = index < section.levels.length - 1 || open;
+        const showStones = index < section.levels.length - 1 || (open && Boolean(section.exam));
+        const number = level.badge ?? gematria(level.index + 1);
         return (
           <div key={level.id} className="flex w-full justify-center overflow-x-clip">
             <div className="flex flex-col items-center" style={{ translate: `clamp(-5.5rem, ${lean}vw, 5.5rem) 0` }}>
             <LevelNode
-              mark={gematria(level.index + 1)}
-              label={t("lessonName", { level: gematria(level.index + 1), title: glossOf(level.title, locale) })}
+              mark={number}
+              label={t("lessonName", { level: number, title: glossOf(level.title, locale) })}
               about={glossOf(level.about, locale)}
               href={unlocked ? href : undefined}
             />
@@ -73,7 +76,7 @@ export function PathwaySectionView({
           </div>
         );
       })}
-      {open ? (
+      {open && section.exam ? (
         <div className="relative">
           <LevelNode
             mark={t("examName")}

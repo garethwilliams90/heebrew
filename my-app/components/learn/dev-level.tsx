@@ -3,8 +3,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { levelById, sectionById } from "@/lib/learn/pathway/catalog";
-import { completeLevel, devSetPlace, devSkipAll, openSectionIndex, PATHWAY_EVENT } from "@/lib/learn/pathway/progress";
+import { nextStop } from "@/lib/learn/pathway/catalog";
+import { completeLevel, devSetPlace, devSkipAll, openSectionIndex, passExam, PATHWAY_EVENT } from "@/lib/learn/pathway/progress";
 import { isLocalHost } from "@/lib/learn/local-host";
 
 export function useLocalhost() {
@@ -15,6 +15,25 @@ export function useLocalhost() {
   }, []);
 
   return local;
+}
+
+export function DevSectionSkip({ sectionId }: { sectionId: string }) {
+  const t = useTranslations("Learn");
+  const local = useLocalhost();
+
+  if (!local) {
+    return null;
+  }
+
+  return (
+    <button
+      type="button"
+      className="mt-1 rounded-full border border-emerald-800 px-3 py-0.5 text-xs font-medium tracking-normal text-emerald-950 normal-case"
+      onClick={() => passExam(sectionId)}
+    >
+      {t("devSkipSection")}
+    </button>
+  );
 }
 
 export function DevLevelControl() {
@@ -66,14 +85,7 @@ export function DevLevelControl() {
       return;
     }
     completeLevel(here.level);
-    const active = sectionById(here.section);
-    const currentLevel = levelById(here.level);
-    const next = active?.levels.find((item) => currentLevel && item.index === currentLevel.index + 1);
-    if (next) {
-      router.push(`/learn?section=${here.section}&level=${next.id}`);
-      return;
-    }
-    router.push(`/learn?section=${here.section}&exam=1`);
+    router.push(nextStop(here.section, here.level));
   }
 
   return (
