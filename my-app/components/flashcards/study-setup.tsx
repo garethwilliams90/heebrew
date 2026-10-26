@@ -24,10 +24,14 @@ export function StudySetup({
   deckId,
   title,
   cards,
+  onStart,
+  onBack,
 }: {
   deckId: string;
   title: string;
   cards: Flashcard[];
+  onStart?: (mode: StudyMode, count: number) => void;
+  onBack?: () => void;
 }) {
   const t = useTranslations("Flashcards");
   const router = useRouter();
@@ -63,6 +67,10 @@ export function StudySetup({
 
   function start() {
     const nextCount = Math.min(countLimit, Math.max(1, Math.round(count) || DEFAULT_STUDY_COUNT));
+    if (onStart) {
+      onStart(mode, nextCount);
+      return;
+    }
     router.push(`/decks?deck=${deckId}&view=study&mode=${mode}&count=${nextCount}`);
   }
 
@@ -112,9 +120,15 @@ export function StudySetup({
         <Button type="button" size="lg" disabled={available === 0} onClick={start}>
           {trial ? t("startTrial") : t("startSession", { count: Math.min(count, available) })}
         </Button>
-        <Button asChild variant="outline" size="lg">
-          <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
-        </Button>
+        {onBack ? (
+          <Button type="button" variant="outline" size="lg" onClick={onBack}>
+            {t("backToDeck")}
+          </Button>
+        ) : (
+          <Button asChild variant="outline" size="lg">
+            <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
+          </Button>
+        )}
       </div>
     </main>
   );

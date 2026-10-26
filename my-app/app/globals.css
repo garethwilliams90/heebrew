@@ -246,7 +246,8 @@ html.dark {
 }
 
 /* Surfaces that were painted white stay lifted from the night ground. */
-.dark .bg-\[\#f3f6f1\] {
+.dark .bg-\[\#f3f6f1\],
+.dark .bg-\[\#f3f6f1\]\/95 {
   background-color: var(--night-page);
 }
 

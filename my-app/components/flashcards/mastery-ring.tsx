@@ -35,12 +35,12 @@ export function MasteryMark({
   onDark = false,
 }: {
   level: number;
-  size?: "sm" | "md";
+  size?: "xs" | "sm" | "md";
   onDark?: boolean;
 }) {
   const stage = Math.min(SEGMENTS, Math.max(0, Math.round(level)));
-  const box = size === "sm" ? "size-7" : "size-11";
-  const star = size === "sm" ? "size-3" : "size-4";
+  const box = size === "xs" ? "size-5" : size === "sm" ? "size-7" : "size-11";
+  const star = size === "xs" ? "size-2.5" : size === "sm" ? "size-3" : "size-4";
 
   return (
     <span className={cn("relative inline-flex shrink-0 items-center justify-center", box)} aria-hidden>

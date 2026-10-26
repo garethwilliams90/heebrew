@@ -44,11 +44,15 @@ export function FlashcardSession({
   cards,
   mode,
   count,
+  prompt = "english",
+  onExit,
 }: {
   deckId: string;
   cards: Flashcard[];
   mode: StudyMode;
   count: number;
+  prompt?: "english" | "hebrew";
+  onExit?: () => void;
 }) {
   const t = useTranslations("Flashcards");
   const locale = useLocale();
@@ -323,7 +327,7 @@ export function FlashcardSession({
   }
 
   function hebrewIsShowing() {
-    return flippedRef.current;
+    return prompt === "hebrew" ? !flippedRef.current : flippedRef.current;
   }
 
   function flip() {
@@ -331,7 +335,7 @@ export function FlashcardSession({
     flippedRef.current = next;
     setFlipped(next);
 
-    const showingHebrew = next;
+    const showingHebrew = prompt === "hebrew" ? !next : next;
 
     const sentence = display.displayRef.current.example ? exampleAudioRef.current : null;
 
@@ -654,6 +658,7 @@ export function FlashcardSession({
           onReplay={replay}
           onGrade={applyGrade}
           trial={mode === "trial" ? { secondsLeft, multiplier } : null}
+          prompt={prompt}
         />
       ) : phase === "caught-up" ? (
         <LeafHeroScreen
@@ -669,18 +674,30 @@ export function FlashcardSession({
               : t("caughtUpSoon")
           }
           actions={
-            <Button asChild variant="outline" size="lg">
-              <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
-            </Button>
+            onExit ? (
+              <Button type="button" variant="outline" size="lg" onClick={onExit}>
+                {t("backToDeck")}
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="lg">
+                <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
+              </Button>
+            )
           }
         />
       ) : cards.length === 0 ? (
         <LeafHeroScreen
           title={t("emptyDeck")}
           actions={
-            <Button asChild size="lg">
-              <Link href={`/decks?deck=${deckId}&view=cards`}>{t("addCard")}</Link>
-            </Button>
+            onExit ? (
+              <Button type="button" size="lg" onClick={onExit}>
+                {t("backToDeck")}
+              </Button>
+            ) : (
+              <Button asChild size="lg">
+                <Link href={`/decks?deck=${deckId}&view=cards`}>{t("addCard")}</Link>
+              </Button>
+            )
           }
         />
       ) : (
@@ -696,6 +713,7 @@ export function FlashcardSession({
           saving={saving}
           deckId={deckId}
           onStudyAgain={() => void studyAgain()}
+          onExit={onExit}
         />
       )}
     </main>

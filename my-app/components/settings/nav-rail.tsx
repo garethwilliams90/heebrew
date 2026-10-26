@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
-import { BookOpen, BookText, GraduationCap, House, Library, UserRound } from "lucide-react";
+import { BookOpen, BookText, GraduationCap, Hash, House, Library, UserRound } from "lucide-react";
 import { LockedNavLink, type LockedFeature } from "@/components/learn/feature-access";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "cn";
@@ -11,7 +11,7 @@ import { cn } from "cn";
 const spring = { type: "spring" as const, bounce: 0.16, visualDuration: 0.28 };
 
 type Tab = {
-  href: "/" | "/profile" | "/decks" | "/training" | "/aleph-bet" | "/dictionary";
+  href: "/" | "/profile" | "/decks" | "/training" | "/aleph-bet" | "/dictionary" | "/numbers";
   label: string;
   feature?: LockedFeature;
   icon: typeof House;
@@ -30,6 +30,7 @@ export function NavLinks({
   const training = useTranslations("Training");
   const alephBet = useTranslations("AlephBet");
   const dictionary = useTranslations("Dictionary");
+  const numbers = useTranslations("Numbers");
   const tabs: Tab[] = [
     { href: "/", label: home("nav"), icon: House },
     { href: "/profile", label: home("profile"), icon: UserRound },
@@ -37,6 +38,7 @@ export function NavLinks({
     { href: "/training", label: training("nav"), icon: GraduationCap, feature: "training" },
     { href: "/aleph-bet", label: alephBet("nav"), icon: BookOpen, feature: "aleph" },
     { href: "/dictionary", label: dictionary("nav"), icon: BookText },
+    { href: "/numbers", label: numbers("nav"), icon: Hash },
   ];
 
   return (

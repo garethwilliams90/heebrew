@@ -30,6 +30,7 @@ export function SessionSummary({
   saving,
   deckId,
   onStudyAgain,
+  onExit,
 }: {
   title: string;
   body: string;
@@ -38,6 +39,7 @@ export function SessionSummary({
   saving: boolean;
   deckId: string;
   onStudyAgain: () => void;
+  onExit?: () => void;
 }) {
   const t = useTranslations("Flashcards");
   const missed = cards.filter((card) => card.missed);
@@ -53,9 +55,15 @@ export function SessionSummary({
           <Button type="button" size="lg" disabled={saving} onClick={onStudyAgain}>
             {t("studyAgain")}
           </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
-          </Button>
+          {onExit ? (
+            <Button type="button" variant="outline" size="lg" onClick={onExit}>
+              {t("backToDeck")}
+            </Button>
+          ) : (
+            <Button asChild variant="outline" size="lg">
+              <Link href={`/decks?deck=${deckId}&view=cards`}>{t("backToDeck")}</Link>
+            </Button>
+          )}
         </>
       }
     >

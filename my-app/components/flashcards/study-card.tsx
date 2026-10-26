@@ -41,6 +41,7 @@ export function StudyCardView({
   onReplay,
   onGrade,
   trial = null,
+  prompt = "english",
 }: {
   card: StudyCard;
   flipped: boolean;
@@ -58,6 +59,7 @@ export function StudyCardView({
   onReplay: () => "word" | "sentence" | null;
   onGrade: (grade: FlashcardGrade) => void;
   trial?: { secondsLeft: number; multiplier: number } | null;
+  prompt?: "english" | "hebrew";
 }) {
   const t = useTranslations("Flashcards");
   const [direction, setDirection] = useState<SwipeDirection>(1);
@@ -215,9 +217,11 @@ export function StudyCardView({
       <div className="relative min-h-0 w-full flex-1 basis-0">
         <AnimatePresence mode="wait" initial={false} custom={direction}>
           <SwipeCard key={appearance} flipped={flipped} onFlip={onFlip}>
-            <CardFace className={flipped ? "pointer-events-none" : ""}>{englishFace}</CardFace>
+            <CardFace className={flipped ? "pointer-events-none" : ""}>
+              {prompt === "hebrew" ? hebrewFace : englishFace}
+            </CardFace>
             <CardFace className={`transform-[rotateY(180deg)] ${flipped ? "" : "pointer-events-none"}`}>
-              {hebrewFace}
+              {prompt === "hebrew" ? englishFace : hebrewFace}
             </CardFace>
           </SwipeCard>
         </AnimatePresence>

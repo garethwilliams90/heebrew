@@ -5,6 +5,13 @@ import type { LocaleGloss } from "@/lib/learn/sentences";
 import { wordCatalog } from "@/lib/learn/words/catalog";
 import { createClient } from "@/lib/supabase/client";
 
+export type WordForms = {
+  masculine: string;
+  feminine: string;
+  masculinePlural: string;
+  femininePlural: string;
+};
+
 export type DictionaryEntry = {
   id: string;
   hebrew: string;
@@ -13,7 +20,28 @@ export type DictionaryEntry = {
   audio: string | null;
   partOfSpeech: PartOfSpeech;
   gender: GrammaticalGender | null;
+  forms?: WordForms;
 };
+
+const adjectiveForms: Record<string, WordForms> = {
+  kal: { masculine: "קַל", feminine: "קַלָּה", masculinePlural: "קַלִּים", femininePlural: "קַלּוֹת" },
+  kar: { masculine: "קַר", feminine: "קָרָה", masculinePlural: "קָרִים", femininePlural: "קָרוֹת" },
+  cham: { masculine: "חַם", feminine: "חַמָּה", masculinePlural: "חַמִּים", femininePlural: "חַמּוֹת" },
+  ra: { masculine: "רַע", feminine: "רָעָה", masculinePlural: "רָעִים", femininePlural: "רָעוֹת" },
+  katan: { masculine: "קָטָן", feminine: "קְטַנָּה", masculinePlural: "קְטַנִּים", femininePlural: "קְטַנּוֹת" },
+  yafe: { masculine: "יָפֶה", feminine: "יָפָה", masculinePlural: "יָפִים", femininePlural: "יָפוֹת" },
+  chazak: { masculine: "חָזָק", feminine: "חֲזָקָה", masculinePlural: "חֲזָקִים", femininePlural: "חֲזָקוֹת" },
+  iti: { masculine: "אִטִּי", feminine: "אִטִּית", masculinePlural: "אִטִּיִּים", femininePlural: "אִטִּיּוֹת" },
+  yashan: { masculine: "יָשָׁן", feminine: "יְשָׁנָה", masculinePlural: "יְשָׁנִים", femininePlural: "יְשָׁנוֹת" },
+  chadash: { masculine: "חָדָשׁ", feminine: "חֲדָשָׁה", masculinePlural: "חֲדָשִׁים", femininePlural: "חֲדָשׁוֹת" },
+  "w-ayef": { masculine: "עָיֵף", feminine: "עֲיֵפָה", masculinePlural: "עֲיֵפִים", femininePlural: "עֲיֵפוֹת" },
+  "w-ayefa": { masculine: "עָיֵף", feminine: "עֲיֵפָה", masculinePlural: "עֲיֵפִים", femininePlural: "עֲיֵפוֹת" },
+};
+
+function withForms(entry: DictionaryEntry): DictionaryEntry {
+  const forms = adjectiveForms[entry.id];
+  return forms ? { ...entry, forms } : entry;
+}
 
 export type DeckChoice = {
   id: string;
@@ -46,11 +74,11 @@ function learnableEntry(word: (typeof learnableWords)[number]): DictionaryEntry 
 
 const byId = new Map<string, DictionaryEntry>();
 for (const word of wordCatalog) {
-  byId.set(word.id, catalogEntry(word));
+  byId.set(word.id, withForms(catalogEntry(word)));
 }
 for (const word of learnableWords) {
   if (!byId.has(word.id)) {
-    byId.set(word.id, learnableEntry(word));
+    byId.set(word.id, withForms(learnableEntry(word)));
   }
 }
 
