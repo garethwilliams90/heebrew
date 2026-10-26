@@ -810,5 +810,27 @@
   "Social": {
     "github": "GitHub",
     "linkedin": "LinkedIn"
+  },
+  "Dictionary": {
+    "nav": "Dictionnaire",
+    "title": "Dictionnaire",
+    "description": "Tous les mots de Webrew, avec ceux que vous connaissez déjà marqués.",
+    "known": "Mots que vous connaissez",
+    "unknown": "Mots à apprendre",
+    "knownEmpty": "Les mots vus dans les leçons apparaissent ici.",
+    "unknownEmpty": "Vous connaissez tous les mots de l'application.",
+    "knownMark": "Connu",
+    "count": "{count, plural, one {# mot} other {# mots}}",
+    "hear": "Écouter {word}",
+    "add": "Ajouter aux cartes",
+    "pickDeck": "Choisir une série",
+    "pickDeckBody": "Ajouter {word} à quelle série ?",
+    "loadingDecks": "Chargement de vos séries...",
+    "adding": "Ajout...",
+    "added": "Ajouté à {deck}.",
+    "duplicate": "{word} est déjà dans {deck}.",
+    "signedOut": "Connectez-vous pour ajouter des mots à une série.",
+    "saveError": "Le mot n'a pas pu être ajouté.",
+    "cancel": "Annuler"
   }
 }

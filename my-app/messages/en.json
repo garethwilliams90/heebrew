@@ -826,5 +826,27 @@
   "Social": {
     "github": "GitHub",
     "linkedin": "LinkedIn"
+  },
+  "Dictionary": {
+    "nav": "Dictionary",
+    "title": "Dictionary",
+    "description": "Every word in Webrew, with the ones you already know marked.",
+    "known": "Words you know",
+    "unknown": "Words to learn",
+    "knownEmpty": "Words you cover in lessons show up here.",
+    "unknownEmpty": "You know every word in the app.",
+    "knownMark": "Known",
+    "count": "{count, plural, one {# word} other {# words}}",
+    "hear": "Hear {word}",
+    "add": "Add to flashcards",
+    "pickDeck": "Choose a deck",
+    "pickDeckBody": "Add {word} to which deck?",
+    "loadingDecks": "Loading your decks...",
+    "adding": "Adding...",
+    "added": "Added to {deck}.",
+    "duplicate": "{word} is already in {deck}.",
+    "signedOut": "Sign in to add words to a deck.",
+    "saveError": "The word could not be added.",
+    "cancel": "Cancel"
   }
 }

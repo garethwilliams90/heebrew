@@ -810,5 +810,27 @@
   "Social": {
     "github": "GitHub",
     "linkedin": "LinkedIn"
+  },
+  "Dictionary": {
+    "nav": "Diccionario",
+    "title": "Diccionario",
+    "description": "Todas las palabras de Webrew, con una marca en las que ya conoces.",
+    "known": "Palabras que conoces",
+    "unknown": "Palabras por aprender",
+    "knownEmpty": "Las palabras de las lecciones aparecen aquí.",
+    "unknownEmpty": "Conoces todas las palabras de la aplicación.",
+    "knownMark": "Conocida",
+    "count": "{count, plural, one {# palabra} other {# palabras}}",
+    "hear": "Escuchar {word}",
+    "add": "Añadir a las tarjetas",
+    "pickDeck": "Elige un mazo",
+    "pickDeckBody": "¿A qué mazo añadimos {word}?",
+    "loadingDecks": "Cargando tus mazos...",
+    "adding": "Añadiendo...",
+    "added": "Añadida a {deck}.",
+    "duplicate": "{word} ya está en {deck}.",
+    "signedOut": "Entra para añadir palabras a un mazo.",
+    "saveError": "No se pudo añadir la palabra.",
+    "cancel": "Cancelar"
   }
 }

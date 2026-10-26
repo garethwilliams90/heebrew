@@ -12,7 +12,7 @@ import { soundKnownWords } from "@/lib/learn/sound-exercises";
 import { toBasicWord, wordById } from "@/lib/learn/words/catalog";
 
 // Every word the curriculum can teach. Ids are shared only when the Hebrew is the same.
-const learnableWords: readonly BasicWord[] = [
+export const learnableWords: readonly BasicWord[] = [
   ...basicWords,
   ...soundKnownWords,
   ...letterPairLevels.flatMap((level) => level.words.map(pairKnownWord)),
