@@ -1,4 +1,5 @@
 import { levelById, pathwaySections, sectionById } from "@/lib/learn/pathway/catalog";
+import { INTRO_LEVEL_ID } from "@/lib/learn/pathway/section-0-intro";
 
 const KEY = "webrew.pathway";
 
@@ -58,10 +59,21 @@ export function sectionIsOpen(index: number, progress = readProgress()) {
   return previous ? progress.exams.includes(previous.id) : false;
 }
 
+function introSatisfied(progress: PathwayProgress) {
+  if (progress.completed.includes(INTRO_LEVEL_ID)) {
+    return true;
+  }
+  // Anyone who already started stays on the lessons they reached.
+  return progress.completed.length > 0 || progress.exams.length > 0;
+}
+
 export function levelIsOpen(levelId: string, progress = readProgress()) {
   const level = levelById(levelId);
   const section = level ? sectionById(level.sectionId) : null;
   if (!level || !section || !sectionIsOpen(section.index, progress)) {
+    return false;
+  }
+  if (level.id !== INTRO_LEVEL_ID && !introSatisfied(progress)) {
     return false;
   }
   const index = section.levels.findIndex((item) => item.id === levelId);

@@ -8,6 +8,7 @@ import { AnswerPop, answerTone } from "@/components/learn/exercises/answer-mark"
 import { ExerciseChrome } from "@/components/learn/exercises/lesson-session";
 import { useAdvance } from "@/components/learn/exercises/use-advance";
 import { Button } from "@/components/ui/button";
+import { playStudyClip } from "@/lib/learn/pathway/play-study";
 import type { PictureWordItem } from "@/lib/learn/pathway/types";
 import type { CatalogWord } from "@/lib/learn/words/catalog";
 import { wordById } from "@/lib/learn/words/catalog";
@@ -74,7 +75,6 @@ export function PictureWord({ items, onPass, onMiss }: { items: readonly Picture
 
   const answer = wordById(item.answerId);
   const picture = item.direction === "picture-hebrew" ? images?.[item.answerId] : null;
-  const waiting = item.direction === "picture-hebrew" && images === null;
   const choices = item.choiceIds.flatMap((id) => {
     const word = wordById(id);
     return word && !hidden.includes(id) ? [word] : [];
@@ -89,13 +89,14 @@ export function PictureWord({ items, onPass, onMiss }: { items: readonly Picture
   return (
     <ExerciseChrome index={index} total={items.length} prompt={promptFor(item.direction, t)} canHint={canHint} onHint={hint}>
       <div className="flex w-full max-w-xl flex-col items-center gap-6">
-        {waiting ? (
+        {item.direction === "picture-hebrew" && !picture ? (
           <div className="h-40 w-full max-w-xs animate-pulse rounded-3xl bg-emerald-950/10" />
         ) : picture ? (
           <img src={picture} alt="" className="h-40 w-full max-w-xs rounded-3xl object-cover" />
         ) : answer ? (
           <PromptWord word={answer} hebrew={item.direction === "hebrew-english"} locale={locale} />
         ) : null}
+        {item.direction === "picture-hebrew" && !picture ? null : (
         <div className="grid w-full gap-3 sm:grid-cols-2">
           {choices.map((choice) => {
             const tone = rightId === choice.id ? "correct" : wrongIds.includes(choice.id) ? "wrong" : null;
@@ -116,6 +117,10 @@ export function PictureWord({ items, onPass, onMiss }: { items: readonly Picture
                   dir={hebrewChoice ? "rtl" : "ltr"}
                   onClick={() => {
                     if (rightId || wrongIds.includes(choice.id)) return;
+                    if (item.direction !== "picture-hebrew") {
+                      const hebrew = choice.niqqud || choice.hebrew;
+                      void playStudyClip({ hebrew, say: hebrew, audio: choice.audio ?? undefined });
+                    }
                     if (choice.id === item.answerId) {
                       setRightId(choice.id);
                       advance.pass();
@@ -131,6 +136,7 @@ export function PictureWord({ items, onPass, onMiss }: { items: readonly Picture
             );
           })}
         </div>
+        )}
       </div>
     </ExerciseChrome>
   );
