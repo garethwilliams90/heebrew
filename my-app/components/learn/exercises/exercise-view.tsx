@@ -3,8 +3,10 @@
 import { ComposeGap } from "@/components/learn/exercises/compose-gap";
 import { Comprehend } from "@/components/learn/exercises/comprehend";
 import { ConjugateChoice } from "@/components/learn/exercises/conjugate-choice";
+import { DrawLetter } from "@/components/learn/exercises/draw-letter";
 import { ListenRepeat } from "@/components/learn/exercises/listen-repeat";
 import { NikudDropExercise, NikudRoundQuestion } from "@/components/learn/exercises/nikud-drop-exercise";
+import { PictureWord } from "@/components/learn/exercises/picture-word";
 import { ReadTranslation, WriteHebrew } from "@/components/learn/exercises/read-translation";
 import { RecognizeSound } from "@/components/learn/exercises/recognize-sound";
 import { SpellWord } from "@/components/learn/exercises/spell-word";
@@ -34,6 +36,12 @@ export function ExerciseView({ step, onPass, onMiss }: { step: ExerciseStep; onP
   }
   if (step.type === "write") {
     return <WriteHebrew items={step.items} onPass={onPass} onMiss={onMiss} />;
+  }
+  if (step.type === "draw-letter") {
+    return <DrawLetter letterIds={step.letterIds} onPass={onPass} />;
+  }
+  if (step.type === "picture-word") {
+    return <PictureWord items={step.items} onPass={onPass} onMiss={onMiss} />;
   }
   return <Comprehend items={step.items} onPass={onPass} onMiss={onMiss} />;
 }
@@ -77,6 +85,12 @@ export function ExamQuestionView({
   }
   if (question.type === "write") {
     return <WriteHebrew items={[question.item]} onPass={onPass} onMiss={onMiss} />;
+  }
+  if (question.type === "draw-letter") {
+    return <DrawLetter letterIds={[question.letterId]} onPass={onPass} />;
+  }
+  if (question.type === "picture-word") {
+    return <PictureWord items={[question.item]} onPass={onPass} onMiss={onMiss} />;
   }
   return <Comprehend items={[question.item]} onPass={onPass} onMiss={onMiss} />;
 }

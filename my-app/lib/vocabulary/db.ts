@@ -151,6 +151,42 @@ export async function getWordAudio(wordId: string): Promise<string | null> {
 }
 
 /**
+ * Lesson pictures live in word_media with media_type "image".
+ * A row marked is_default wins when a word has more than one picture.
+ */
+export async function getWordImagesByKeys(wordKeys: string[]): Promise<Record<string, string>> {
+  const keys = [...new Set(wordKeys.filter((key) => key.length > 0))];
+  if (keys.length === 0) return {};
+
+  try {
+    const supabase = createClient();
+    const { data: words, error } = await supabase.from("vocabulary_words").select("id, word_key").in("word_key", keys);
+    if (error || !words?.length) return {};
+
+    const { data: media, error: mediaError } = await supabase
+      .from("word_media")
+      .select("word_id, media_url, is_default")
+      .in(
+        "word_id",
+        words.map((word) => word.id),
+      )
+      .eq("media_type", "image");
+    if (mediaError || !media) return {};
+
+    const keyById = new Map(words.map((word) => [word.id, word.word_key]));
+    const images: Record<string, string> = {};
+    for (const row of media) {
+      const key = keyById.get(row.word_id);
+      if (!key) continue;
+      if (!images[key] || row.is_default) images[key] = row.media_url;
+    }
+    return images;
+  } catch {
+    return {};
+  }
+}
+
+/**
  * Search words by Hebrew text or English translation
  */
 export async function searchWords(query: string, limit = 20): Promise<VocabularyWord[]> {

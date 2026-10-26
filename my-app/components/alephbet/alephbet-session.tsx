@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { letterDeckId, spokenNames } from "@/lib/alephbet/letters";
 import { loadDeckMastery } from "@/lib/flashcards/progress";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { consonantSrc, letterConsonantSrc, letterPair } from "@/lib/learn/consonant-sounds";
 import { playAudio } from "@/lib/settings/master-volume";
 
 const LetterStudy = dynamic(() =>
@@ -20,6 +21,20 @@ const LetterStudy = dynamic(() =>
 );
 
 const scrimFade = { duration: 0.2, ease: "easeOut" as const };
+const soundGapMs = 320;
+
+function loadFile(src: string) {
+  const audio = new Audio(src);
+  audio.preload = "auto";
+  if (audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+    return Promise.resolve(audio);
+  }
+
+  return new Promise<HTMLAudioElement | null>((resolve) => {
+    audio.addEventListener("canplaythrough", () => resolve(audio), { once: true });
+    audio.addEventListener("error", () => resolve(null), { once: true });
+  });
+}
 
 export function AlephBetSession() {
   const t = useTranslations("AlephBet");
@@ -27,6 +42,8 @@ export function AlephBetSession() {
   const { prefs, prefsRef, setChannel } = useSoundPrefs();
   const clips = useRef(new Map<string, HTMLAudioElement>());
   const pendingLetter = useRef<string | null>(null);
+  const playToken = useRef(0);
+  const gapTimer = useRef<number | null>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const [failed, setFailed] = useState(false);
   const [studying, setStudying] = useState(false);
@@ -82,25 +99,80 @@ export function AlephBetSession() {
   }, [closeLetter, openLetter]);
 
   function stopClips() {
+    if (gapTimer.current !== null) {
+      window.clearTimeout(gapTimer.current);
+      gapTimer.current = null;
+    }
+
     for (const clip of clips.current.values()) {
+      clip.onended = null;
       clip.pause();
       clip.currentTime = 0;
     }
   }
 
-  function playLoaded(letter: string) {
-    const name = spokenNames[letter];
-    const audio = name ? clips.current.get(name) : undefined;
-    if (!audio || !prefsRef.current.general || pendingLetter.current !== letter) {
-      return;
+  function clipRequests(letter: string) {
+    const fact = letterCells.find((cell) => cell.fact.letter === letter)?.fact;
+    if (!fact) {
+      return [];
     }
 
-    stopClips();
-    pendingLetter.current = null;
-    setFailed(false);
-    void playAudio(audio).catch(() => {
-      setFailed(true);
-    });
+    const pair = letterPair(fact.id);
+    if (!pair) {
+      const src = letterConsonantSrc(fact.id);
+      if (src) {
+        return [{ key: src, load: () => loadFile(src) }];
+      }
+
+      const name = spokenNames[letter];
+      return name ? [{ key: name, load: () => loadSpeechClip(name) }] : [];
+    }
+
+    const seen = new Set<string>();
+    const requests: { key: string; load: () => Promise<HTMLAudioElement | null> }[] = [];
+    for (const form of pair) {
+      const src = form.file ? consonantSrc(form.file) : null;
+      const key = src ?? `${form.glyph}\0${form.sound}`;
+      if (seen.has(key)) {
+        continue;
+      }
+
+      seen.add(key);
+      requests.push({
+        key,
+        load: () => (src ? loadFile(src) : loadSpeechClip(form.glyph, form.sound)),
+      });
+    }
+
+    return requests;
+  }
+
+  function playAudios(audios: HTMLAudioElement[], token: number) {
+    let index = 0;
+
+    const step = () => {
+      if (token !== playToken.current || !prefsRef.current.general) {
+        return;
+      }
+
+      const audio = audios[index];
+      audio.onended = () => {
+        index += 1;
+        if (index >= audios.length || token !== playToken.current) {
+          return;
+        }
+
+        gapTimer.current = window.setTimeout(step, soundGapMs);
+      };
+      audio.currentTime = 0;
+      void playAudio(audio).catch(() => {
+        if (token === playToken.current) {
+          setFailed(true);
+        }
+      });
+    };
+
+    step();
   }
 
   function playLetter(letter: string) {
@@ -108,37 +180,54 @@ export function AlephBetSession() {
       return;
     }
 
-    const name = spokenNames[letter];
-    if (!name) {
+    const requests = clipRequests(letter);
+    if (requests.length === 0) {
       return;
     }
 
     pendingLetter.current = letter;
+    playToken.current += 1;
+    const token = playToken.current;
     setFailed(false);
+    stopClips();
 
-    if (clips.current.has(name)) {
-      playLoaded(letter);
-      return;
-    }
-
-    void loadSpeechClip(name).then((audio) => {
-      if (!audio) {
-        if (pendingLetter.current === letter) {
-          pendingLetter.current = null;
-          setFailed(true);
+    void (async () => {
+      const audios: HTMLAudioElement[] = [];
+      for (const request of requests) {
+        const audio = clips.current.get(request.key) ?? (await request.load());
+        if (token !== playToken.current || pendingLetter.current !== letter || !prefsRef.current.general) {
+          return;
         }
+
+        if (audio) {
+          clips.current.set(request.key, audio);
+          audios.push(audio);
+        }
+      }
+
+      if (token !== playToken.current || pendingLetter.current !== letter || !prefsRef.current.general) {
         return;
       }
 
-      clips.current.set(name, audio);
-      playLoaded(letter);
-    });
+      pendingLetter.current = null;
+      if (audios.length === 0) {
+        setFailed(true);
+        return;
+      }
+
+      if (audios.length < requests.length) {
+        setFailed(true);
+      }
+
+      playAudios(audios, token);
+    })();
   }
 
   function toggleSound() {
     const next = !prefsRef.current.general;
     if (!next) {
       pendingLetter.current = null;
+      playToken.current += 1;
       stopClips();
     }
     setChannel("general", next);

@@ -19,7 +19,7 @@ export function Navbar({
   const flashcards = useTranslations("Flashcards");
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-hidden bg-[#f3f6f1] text-emerald-950">
+    <div className="relative flex h-dvh flex-col overflow-hidden bg-[#f3f6f1] text-emerald-950 transition-colors duration-300">
       <NatureScene />
       <div aria-hidden className="pointer-events-none absolute -top-24 -left-24 size-80 rounded-full bg-emerald-200/50 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute right-0 bottom-0 size-96 rounded-full bg-lime-100/80 blur-3xl" />

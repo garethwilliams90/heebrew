@@ -1,6 +1,6 @@
 export function NatureScene() {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden text-emerald-800/35">
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden text-emerald-800/35 transition-opacity duration-300 dark:opacity-40 dark:brightness-75 dark:saturate-50">
       <Tree className="absolute top-16 left-[8%] w-24" />
       <Tree className="absolute top-28 right-[12%] w-16 opacity-70" />
       <Bush className="absolute bottom-24 left-[18%] w-20" />

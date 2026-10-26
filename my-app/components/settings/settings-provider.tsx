@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import useSound from "use-sound";
 import { setMasterVolume } from "@/lib/settings/master-volume";
 
@@ -21,11 +21,13 @@ type StoredSettings = {
   sound: boolean;
   volume: number;
   clock: boolean;
+  night: boolean;
 };
 
 type SettingsContextValue = StoredSettings & {
   toggleSound: () => void;
   toggleClock: () => void;
+  toggleNight: () => void;
   setVolume: (volume: number) => void;
   playSwitch: (on: boolean) => void;
   playSample: (name: SampleName) => void;
@@ -33,7 +35,11 @@ type SettingsContextValue = StoredSettings & {
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
-const fallback: StoredSettings = { sound: true, volume: 0.8, clock: false };
+const fallback: StoredSettings = { sound: true, volume: 0.8, clock: false, night: false };
+
+function applyNight(night: boolean) {
+  document.documentElement.classList.toggle("dark", night);
+}
 
 function readStored(): StoredSettings {
   if (typeof window === "undefined") {
@@ -51,6 +57,7 @@ function readStored(): StoredSettings {
       sound: parsed.sound !== false,
       volume: Math.min(1, Math.max(0, volume)),
       clock: parsed.clock === true,
+      night: parsed.night === true,
     };
   } catch {
     return fallback;
@@ -68,9 +75,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [sound, setSound] = useState(true);
   const [volume, setVolumeState] = useState(0.8);
   const [clock, setClock] = useState(false);
+  const [night, setNight] = useState(false);
   const [ready, setReady] = useState(false);
   const soundRef = useRef(sound);
   const clockRef = useRef(clock);
+  const nightRef = useRef(night);
   // Toggling sound itself stays audible, so muting still clicks.
   const switchGain = Math.max(volume, 0.45);
   const [playOn] = useSound(samples.switchOn.src, { interrupt: true, volume: switchGain });
@@ -96,16 +105,25 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     };
     soundRef.current = sound;
     clockRef.current = clock;
+    nightRef.current = night;
     playOnRef.current = playOn;
     playOffRef.current = playOff;
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const stored = readStored();
     setSound(stored.sound);
     setVolumeState(stored.volume);
     setClock(stored.clock);
+    setNight(stored.night);
+    nightRef.current = stored.night;
+    applyNight(stored.night);
     setReady(true);
+    // Color fades start after the stored theme is on screen, so the first paint does not animate.
+    const frame = requestAnimationFrame(() => {
+      document.documentElement.classList.add("theme-ready");
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
@@ -116,9 +134,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     if (!ready) {
       return;
     }
-    const next: StoredSettings = { sound, volume, clock };
+    const next: StoredSettings = { sound, volume, clock, night };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  }, [ready, sound, volume, clock]);
+    applyNight(night);
+  }, [ready, sound, volume, clock, night]);
 
   const playSwitch = useCallback((on: boolean) => {
     const play = on ? playOnRef.current : playOffRef.current;
@@ -146,13 +165,21 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setClock(next);
   }, [playSwitch]);
 
+  const toggleNight = useCallback(() => {
+    const next = !nightRef.current;
+    nightRef.current = next;
+    applyNight(next);
+    playSwitch(next);
+    setNight(next);
+  }, [playSwitch]);
+
   const setVolume = useCallback((next: number) => {
     setVolumeState(Math.min(1, Math.max(0, next)));
   }, []);
 
   const value = useMemo(
-    () => ({ sound, volume, clock, toggleSound, toggleClock, setVolume, playSwitch, playSample }),
-    [sound, volume, clock, toggleSound, toggleClock, setVolume, playSwitch, playSample],
+    () => ({ sound, volume, clock, night, toggleSound, toggleClock, toggleNight, setVolume, playSwitch, playSample }),
+    [sound, volume, clock, night, toggleSound, toggleClock, toggleNight, setVolume, playSwitch, playSample],
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

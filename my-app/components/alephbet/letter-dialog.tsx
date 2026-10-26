@@ -8,11 +8,13 @@ import { cn } from "cn";
 import { cursiveFont } from "@/components/alephbet/cursive-font";
 import { LetterDraw } from "@/components/alephbet/letter-draw";
 import { printFont } from "@/components/alephbet/print-font";
-import { cardShadow, letterLayoutId, letterTransition } from "@/components/alephbet/letter-card";
+import { cardShadow, LetterGlyphs, letterLayoutId, letterTransition } from "@/components/alephbet/letter-card";
 import { flipSpring } from "@/components/flashcards/swipe-card";
 import { MasteryRing } from "@/components/flashcards/mastery-ring";
 import { Button } from "@/components/ui/button";
 import { highlightLetter, type LetterFact } from "@/lib/alephbet/letter-info";
+import { strokesFor } from "@/lib/alephbet/stroke-order";
+import { hasTwoSounds } from "@/lib/learn/consonant-sounds";
 
 const glyphFade = { duration: 0.15, ease: "easeOut" as const };
 
@@ -124,29 +126,24 @@ export function LetterDialog({
           </div>
         </div>
 
-        <div className="mt-2 flex h-32 items-center justify-center sm:h-40">
+        <div className="mt-2 flex min-h-32 items-center justify-center sm:min-h-40">
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
               key={cursive ? "cursive" : "print"}
-              dir="rtl"
-              lang="he"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={glyphFade}
-              className={cn(
-                "block leading-none",
-                cursive
-                  ? cn("text-8xl sm:text-9xl", cursiveFont.className)
-                  : cn("text-8xl font-bold sm:text-9xl", printFont.className),
-              )}
+              className="block"
             >
-              {fact.letter}
+              <LetterGlyphs fact={fact} cursive={cursive} size="dialog" />
             </motion.span>
           </AnimatePresence>
         </div>
 
-        <p className="text-center text-2xl font-semibold tracking-wide text-emerald-800">{fact.sound}</p>
+        {hasTwoSounds(fact.id) ? null : (
+          <p className="text-center text-2xl font-semibold tracking-wide text-emerald-800">{fact.sound}</p>
+        )}
         <p id={titleId} className="mt-1 text-center text-lg text-muted-foreground">
           {fact.name}
         </p>
@@ -219,6 +216,7 @@ export function LetterDialog({
             key={`${fact.letter}-${cursive ? "cursive" : "print"}`}
             letter={fact.letter}
             fontClassName={cursive ? cursiveFont.className : cn("font-bold", printFont.className)}
+            paths={cursive ? undefined : strokesFor(fact.id)}
           />
         ) : null}
       </div>

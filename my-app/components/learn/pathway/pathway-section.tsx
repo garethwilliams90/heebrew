@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { printFont } from "@/components/alephbet/print-font";
 import { StonePath } from "@/components/learn/nature-scene";
+import { PathLamp } from "@/components/learn/pathway/path-lamp";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "@/i18n/navigation";
 import type { PathwaySection } from "@/lib/learn/pathway/types";
@@ -46,7 +47,9 @@ export function PathwaySectionView({
       {section.levels.map((level, index) => {
         const unlocked = open && levelOpen(level.id);
         const href = `/learn?section=${section.id}&level=${level.id}`;
-        const lean = Math.round(((shifts[(startIndex + index) % shifts.length] ?? 0) - 23) * 0.6);
+        const place = startIndex + index;
+        const lean = Math.round(((shifts[place % shifts.length] ?? 0) - 23) * 0.6);
+        const showStones = index < section.levels.length - 1 || open;
         return (
           <div key={level.id} className="flex w-full justify-center overflow-x-clip">
             <div className="flex flex-col items-center" style={{ translate: `clamp(-5.5rem, ${lean}vw, 5.5rem) 0` }}>
@@ -56,19 +59,31 @@ export function PathwaySectionView({
               about={glossOf(level.about, locale)}
               href={unlocked ? href : undefined}
             />
-            {index < section.levels.length - 1 || open ? <StonePath turn={((startIndex + index) % 5) * 8 - 12} /> : null}
+            {showStones ? (
+              <div className="relative">
+                <StonePath turn={(place % 5) * 8 - 12} />
+                <PathLamp
+                  side={lean >= 0 ? "left" : "right"}
+                  kind={place % 2 === 0 ? "lantern" : "torch"}
+                  delay={(place % 6) * 0.45}
+                />
+              </div>
+            ) : null}
             </div>
           </div>
         );
       })}
       {open ? (
-        <LevelNode
-          mark={t("examName")}
-          label={t("examName")}
-          about={t("examAbout")}
-          href={`/learn?section=${section.id}&exam=1`}
-          exam
-        />
+        <div className="relative">
+          <LevelNode
+            mark={t("examName")}
+            label={t("examName")}
+            about={t("examAbout")}
+            href={`/learn?section=${section.id}&exam=1`}
+            exam
+          />
+          <PathLamp side="right" kind="lantern" delay={0.2} />
+        </div>
       ) : null}
     </div>
   );

@@ -12,7 +12,9 @@ export type ExerciseType =
   | "read"
   | "write"
   | "comprehend"
-  | "spell";
+  | "spell"
+  | "draw-letter"
+  | "picture-word";
 
 export type SpokenItem = {
   id: string;
@@ -64,6 +66,15 @@ export type ConjugateItem = {
   answerId: string;
 };
 
+export type PictureDirection = "picture-hebrew" | "english-hebrew" | "hebrew-english";
+
+export type PictureWordItem = {
+  id: string;
+  direction: PictureDirection;
+  answerId: string;
+  choiceIds: readonly string[];
+};
+
 export type ComprehendItem = {
   id: string;
   hebrew: string;
@@ -96,7 +107,9 @@ export type ExerciseStep =
   | { type: "conjugate"; optional?: boolean; items: readonly ConjugateItem[] }
   | { type: "read"; optional?: boolean; items: readonly ReadItem[] }
   | { type: "write"; optional?: boolean; items: readonly ReadItem[] }
-  | { type: "comprehend"; optional?: boolean; items: readonly ComprehendItem[] };
+  | { type: "comprehend"; optional?: boolean; items: readonly ComprehendItem[] }
+  | { type: "draw-letter"; optional?: boolean; letterIds: readonly string[] }
+  | { type: "picture-word"; optional?: boolean; items: readonly PictureWordItem[] };
 
 export type PathwayLevel = {
   id: string;
@@ -132,7 +145,9 @@ export type ExamQuestion =
   | { type: "conjugate"; item: ConjugateItem }
   | { type: "read"; item: ReadItem }
   | { type: "write"; item: ReadItem }
-  | { type: "comprehend"; item: ComprehendItem };
+  | { type: "comprehend"; item: ComprehendItem }
+  | { type: "draw-letter"; letterId: string }
+  | { type: "picture-word"; item: PictureWordItem };
 
 export function gloss(en: string, fr: string, es: string): Gloss {
   return { en, fr, es };

@@ -16,12 +16,26 @@ export type StrokePart = {
   pixels: Uint32Array;
 };
 
+// A teaching stroke, in 0–1 coordinates across the letter's ink, drawn in order.
+export type StrokePath = readonly (readonly [number, number])[];
+
+export type OrderedStroke = {
+  pixels: Uint32Array;
+  room: Uint8Array;
+  startX: number;
+  startY: number;
+  aimX: number;
+  aimY: number;
+};
+
 export type LetterGuide = {
   plate: HTMLCanvasElement;
   glyph: Uint8Array;
   room: Uint8Array;
   parts: readonly StrokePart[];
   penRadius: number;
+  order: readonly OrderedStroke[] | null;
+  startReach: number;
 };
 
 type Box = { x: number; y: number; w: number; h: number };
@@ -87,6 +101,72 @@ export function rasterizeLetter(letter: string, family: string, weight: string):
     room: dilate(glyph, Math.max(4, Math.round(radius * 0.4))),
     parts: strokeParts(glyph, target),
     penRadius: radius,
+    order: null,
+    startReach: 0,
+  };
+}
+
+// Split the glyph across the teaching strokes. Each ink pixel belongs to the
+// nearest stroke, so the guide follows the font instead of a hand-drawn outline.
+export function withStrokeOrder(guide: LetterGuide, paths: readonly StrokePath[]): LetterGuide {
+  const box = boxOf(guide.glyph, maskSize);
+  if (!box || paths.length === 0) return guide;
+
+  const polylines = paths.map((path) =>
+    path.map(([x, y]) => ({
+      x: box.x + x * Math.max(1, box.w - 1),
+      y: box.y + y * Math.max(1, box.h - 1),
+    })),
+  );
+
+  const owner = new Int16Array(guide.glyph.length);
+  owner.fill(-1);
+  const nearest = new Float32Array(guide.glyph.length);
+  nearest.fill(Number.POSITIVE_INFINITY);
+
+  for (let index = 0; index < guide.glyph.length; index += 1) {
+    if (!guide.glyph[index]) continue;
+    const x = index % maskSize;
+    const y = Math.floor(index / maskSize);
+    for (let stroke = 0; stroke < polylines.length; stroke += 1) {
+      const distance = distanceToPolyline(x, y, polylines[stroke]);
+      if (distance < nearest[index]) {
+        nearest[index] = distance;
+        owner[index] = stroke;
+      }
+    }
+  }
+
+  const order: OrderedStroke[] = [];
+  for (let stroke = 0; stroke < polylines.length; stroke += 1) {
+    const pixels: number[] = [];
+    for (let index = 0; index < owner.length; index += 1) {
+      if (owner[index] === stroke) pixels.push(index);
+    }
+    if (pixels.length < 8) continue;
+    const packed = Uint32Array.from(pixels);
+    const points = polylines[stroke];
+    const start = snapToPixels(points[0].x, points[0].y, packed);
+    const aimSource = points[Math.min(1, points.length - 1)];
+    const aim = snapToPixels(aimSource.x, aimSource.y, packed);
+    const mask = new Uint8Array(maskSize * maskSize);
+    for (const pixel of pixels) mask[pixel] = 1;
+    order.push({
+      pixels: packed,
+      room: dilate(mask, Math.max(10, Math.round(guide.penRadius * 0.85))),
+      startX: start.x,
+      startY: start.y,
+      aimX: aim.x === start.x && aim.y === start.y ? start.x + 8 : aim.x,
+      aimY: aim.x === start.x && aim.y === start.y ? start.y : aim.y,
+    });
+  }
+
+  if (order.length === 0) return guide;
+  return {
+    ...guide,
+    order,
+    parts: order.map((stroke) => ({ pixels: stroke.pixels })),
+    startReach: Math.max(28, guide.penRadius * 3),
   };
 }
 
@@ -452,4 +532,43 @@ function pruneSpurs(mask: Uint8Array, keep: number) {
   }
 
   return current;
+}
+
+function distanceToPolyline(x: number, y: number, points: readonly { x: number; y: number }[]) {
+  if (points.length === 0) return Number.POSITIVE_INFINITY;
+  if (points.length === 1) return Math.hypot(x - points[0].x, y - points[0].y);
+  let best = Number.POSITIVE_INFINITY;
+  for (let index = 0; index < points.length - 1; index += 1) {
+    best = Math.min(best, distanceToSegment(x, y, points[index], points[index + 1]));
+  }
+  return best;
+}
+
+function distanceToSegment(
+  x: number,
+  y: number,
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = dx * dx + dy * dy;
+  const t = length === 0 ? 0 : Math.max(0, Math.min(1, ((x - start.x) * dx + (y - start.y) * dy) / length));
+  return Math.hypot(x - (start.x + dx * t), y - (start.y + dy * t));
+}
+
+function snapToPixels(x: number, y: number, pixels: Uint32Array) {
+  let best = pixels[0] ?? 0;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (let index = 0; index < pixels.length; index += 1) {
+    const pixel = pixels[index];
+    const px = pixel % maskSize;
+    const py = Math.floor(pixel / maskSize);
+    const distance = (px - x) * (px - x) + (py - y) * (py - y);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = pixel;
+    }
+  }
+  return { x: best % maskSize, y: Math.floor(best / maskSize) };
 }

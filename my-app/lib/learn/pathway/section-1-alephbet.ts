@@ -110,6 +110,7 @@ function levelFor(group: { index: number; ids: readonly string[] }, learned: rea
       },
     ],
     exercises: [
+      { type: "draw-letter", letterIds: group.ids },
       { type: "nikud-drop", letterIds: group.ids },
       { type: "recognize-sound", items: recognize },
       { type: "listen-repeat", optional: true, items: group.ids.map((id) => letterItem(id, true)) },
@@ -133,7 +134,7 @@ export const section1: PathwaySection = {
   exam: {
     questions: 20,
     lives: 3,
-    types: ["nikud-drop", "recognize-sound", "listen-repeat"],
+    types: ["draw-letter", "nikud-drop", "recognize-sound", "listen-repeat"],
   },
 };
 
@@ -162,6 +163,12 @@ export function questionsFromStep(step: ExerciseStep): ExamQuestion[] {
   }
   if (step.type === "write") {
     return step.items.map((item) => ({ type: "write", item }));
+  }
+  if (step.type === "draw-letter") {
+    return step.letterIds.map((letterId) => ({ type: "draw-letter", letterId }));
+  }
+  if (step.type === "picture-word") {
+    return step.items.map((item) => ({ type: "picture-word", item }));
   }
   return step.items.map((item) => ({ type: "comprehend", item }));
 }

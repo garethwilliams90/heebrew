@@ -1,6 +1,7 @@
 import { normalizeHebrew } from "@/lib/learn/hebrew-text";
 import { seededOrder } from "@/lib/learn/pathway/order";
 import { gloss, type GapItem, type GapPiece, type Gloss, type PathwayLevel, type PathwaySection, type RecognizeItem, type SpellItem, type SpokenItem } from "@/lib/learn/pathway/types";
+import { pictureWordItems } from "@/lib/learn/pathway/picture-word";
 import { requireWord } from "@/lib/learn/words/catalog";
 
 const otherVowels = gloss("different vowels", "autres voyelles", "otras vocales");
@@ -149,6 +150,47 @@ function samples(ids: readonly string[]) {
   });
 }
 
+const sectionWords = [
+  "av",
+  "ba",
+  "gag",
+  "dag",
+  "bad",
+  ...pronouns,
+  "shalom",
+  "dan",
+  "me-anglia",
+  "anglia",
+  "korim",
+  "li",
+  "eifo",
+  "at",
+  "gar",
+  "gara",
+  "me-eifo",
+  "mah-shlomcha",
+  "mah-shlomech",
+  "shlomcha",
+  "shlomech",
+  "eich",
+  "ma",
+  "leehov",
+  "ohev",
+  "ohevet",
+  "ohavim",
+  "ohavot",
+  "glida",
+  "et",
+  "ha",
+  "hadag",
+  "hem",
+  "hen",
+];
+
+function pictureStep(ids: readonly string[], seed: string) {
+  return { type: "picture-word" as const, items: pictureWordItems(ids, sectionWords, seed) };
+}
+
 const levels: readonly PathwayLevel[] = [
   {
     id: "s2-l0",
@@ -174,6 +216,7 @@ const levels: readonly PathwayLevel[] = [
       },
     ],
     exercises: [
+      pictureStep(["av", "ba", "gag", "dag", "bad"], "s2-l0"),
       { type: "nikud-drop", letterIds: ["aleph", "bet", "gimel", "dalet", "he"] },
       { type: "recognize-sound", items: twoLetter },
       { type: "listen-repeat", optional: true, items: ["av", "ba", "gag", "dag", "bad"].map((id) => spoken(id)) },
@@ -203,6 +246,7 @@ const levels: readonly PathwayLevel[] = [
       },
     ],
     exercises: [
+      pictureStep(pronouns, "s2-l1"),
       { type: "recognize-sound", items: recognizeIds(pronouns) },
       { type: "listen-repeat", optional: true, items: pronouns.map((id) => spoken(id)) },
       { type: "spell", items: pronouns.map((id) => spelled(id)) },
@@ -232,6 +276,7 @@ const levels: readonly PathwayLevel[] = [
       },
     ],
     exercises: [
+      pictureStep(["shalom", "dan", "me-anglia", "anglia", "korim", "li", "eifo", "at", "gar", "gara", "me-eifo"], "s2-l2"),
       { type: "recognize-sound", items: recognizeLines(helloLines) },
       { type: "listen-repeat", optional: true, items: helloLines },
       { type: "spell", items: ["shalom", "ani", "eifo", "gar", "dan"].map((id) => spelled(id)) },
@@ -288,6 +333,7 @@ const levels: readonly PathwayLevel[] = [
       },
     ],
     exercises: [
+      pictureStep(["mah-shlomcha", "mah-shlomech", "shlomcha", "shlomech", "eich", "ma"], "s2-l3"),
       { type: "recognize-sound", items: recognizeLines(howLines) },
       { type: "listen-repeat", optional: true, items: howLines },
       { type: "spell", items: ["eich", "ma", "ata", "at"].map((id) => spelled(id)) },
@@ -346,6 +392,7 @@ const levels: readonly PathwayLevel[] = [
       },
     ],
     exercises: [
+      pictureStep(["leehov", "ohev", "ohevet", "ohavim", "ohavot", "glida", "et", "ha", "hadag", "hem", "hen"], "s2-l4"),
       { type: "recognize-sound", items: recognizeLines(likeLines) },
       { type: "listen-repeat", optional: true, items: likeLines },
       { type: "spell", items: ["ohev", "ohevet", "leehov", "glida"].map((id) => spelled(id)) },
@@ -393,6 +440,6 @@ export const section2: PathwaySection = {
   exam: {
     questions: 20,
     lives: 3,
-    types: ["nikud-drop", "recognize-sound", "listen-repeat", "spell", "compose-gap", "read"],
+    types: ["picture-word", "nikud-drop", "recognize-sound", "listen-repeat", "spell", "compose-gap", "read"],
   },
 };
