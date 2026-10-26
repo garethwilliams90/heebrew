@@ -21,11 +21,13 @@ On a first visit, the home entry offers two actions:
 - **Absolute beginner? Start here** — opens Level 0L.
 - **Already know some Hebrew? Take an assessment to skip levels** — a placeholder until that assessment exists.
 
-**Title of this section: Introduction to letters**
+**Title of this section: Introduction to vowels**
 
-## Level 0L 
+## Level 0L
 
-Start here opens Level 1. The screens are labelled like a game level:
+A walkthrough that comes before every other level. One slide for each nikud, always on בּ, then a last slide with every mark together. Each slide shows the mark large, plays the sound it makes, and can show the mark's name. There is no quiz. Finishing the walkthrough opens Level 1. A learner who already has progress is not sent back through it.
+
+The screens after that are labelled like a game level:
 
 - **1.0** — hear א, ב, and ג. Each card has the letter, its name, its sound, and a control to hear the consonant. ב is shown as both ב and בּ. The full aleph-bet is shown with these three in bold blue.
 - **1.1** — nikud practice for those letters.

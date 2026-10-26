@@ -163,5 +163,8 @@ export function questionsFromStep(step: ExerciseStep): ExamQuestion[] {
   if (step.type === "write") {
     return step.items.map((item) => ({ type: "write", item }));
   }
+  if (step.type === "picture-word") {
+    return step.items.map((item) => ({ type: "picture-word", item }));
+  }
   return step.items.map((item) => ({ type: "comprehend", item }));
 }

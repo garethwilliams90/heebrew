@@ -10,6 +10,7 @@ import { printFont } from "@/components/alephbet/print-font";
 import { MasteryRing } from "@/components/flashcards/mastery-ring";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { letterCatalog, type LetterFact } from "@/lib/alephbet/letter-info";
+import { hasTwoSounds, letterPair } from "@/lib/learn/consonant-sounds";
 
 const columns = { mobile: 3, desktop: 5 } as const;
 
@@ -289,22 +290,73 @@ function LetterSide({
   );
 }
 
+export function LetterGlyphs({
+  fact,
+  cursive = false,
+  size,
+}: {
+  fact: LetterFact;
+  cursive?: boolean;
+  size: "card" | "dialog";
+}) {
+  const pair = letterPair(fact.id);
+  const glyphs = pair ?? [{ glyph: fact.letter, sound: fact.sound }];
+  const twoSounds = hasTwoSounds(fact.id);
+  const paired = glyphs.length > 1;
+  const scale =
+    size === "dialog"
+      ? paired
+        ? "text-6xl sm:text-7xl"
+        : "text-8xl sm:text-9xl"
+      : cursive
+        ? paired
+          ? "text-4xl md:text-6xl xl:text-7xl"
+          : "text-5xl md:text-7xl xl:text-8xl"
+        : paired
+          ? "text-3xl md:text-5xl xl:text-6xl"
+          : "text-4xl md:text-6xl xl:text-7xl";
+
+  return (
+    <span
+      dir="rtl"
+      lang="he"
+      className={cn("flex items-end justify-center", paired && (size === "dialog" ? "gap-4" : "gap-1"))}
+    >
+      {glyphs.map((form) => (
+        <span key={form.glyph} className="flex flex-col items-center gap-1">
+          <span
+            className={cn(
+              "leading-none",
+              scale,
+              cursive ? cursiveFont.className : cn("font-bold", printFont.className),
+            )}
+          >
+            {form.glyph}
+          </span>
+          {twoSounds ? (
+            <span
+              dir="ltr"
+              className={cn(
+                "font-semibold tracking-wide text-emerald-800",
+                size === "dialog" ? "text-lg sm:text-xl" : "text-xs md:text-sm",
+              )}
+            >
+              {form.sound}
+            </span>
+          ) : null}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function LetterFace({ fact, cursive = false, loanLabel }: { fact: LetterFact; cursive?: boolean; loanLabel: string | null }) {
   return (
     <span className="flex min-w-0 flex-col items-center gap-1">
-      <span
-        dir="rtl"
-        lang="he"
-        className={cn(
-          "leading-none",
-          cursive
-            ? cn("text-5xl md:text-7xl xl:text-8xl", cursiveFont.className)
-            : cn("text-4xl font-bold md:text-6xl xl:text-7xl", printFont.className),
-        )}
-      >
-        {fact.letter}
-      </span>
-      <span className="text-sm font-semibold tracking-wide text-emerald-800 md:text-base">{fact.sound}</span>
+      <LetterGlyphs fact={fact} cursive={cursive} size="card" />
+      {hasTwoSounds(fact.id) ? null : (
+        <span className="text-sm font-semibold tracking-wide text-emerald-800 md:text-base">{fact.sound}</span>
+      )}
       <span className="max-w-full text-xs leading-tight text-muted-foreground md:text-sm">{fact.name}</span>
       {loanLabel ? (
         <span className="text-[0.65rem] font-medium tracking-wide text-emerald-800/70 uppercase">{loanLabel}</span>

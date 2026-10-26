@@ -42,7 +42,7 @@ export function LevelPath() {
             key={section.id}
             section={section}
             open={sectionIsOpen(section.index, progress)}
-            previousExamHref={previous ? `/learn?section=${previous.id}&exam=1` : undefined}
+            previousExamHref={previous?.exam ? `/learn?section=${previous.id}&exam=1` : undefined}
             levelOpen={(levelId) => levelIsOpen(levelId, progress)}
             startIndex={pathwaySections.slice(0, index).reduce((sum, item) => sum + item.levels.length, 0)}
           />

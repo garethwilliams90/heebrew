@@ -14,7 +14,7 @@ import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { gematria } from "@/lib/learn/gematria";
 import { rememberKnownWord } from "@/lib/learn/known-words";
-import { levelById, sectionById } from "@/lib/learn/pathway/catalog";
+import { levelById, nextStop, sectionById } from "@/lib/learn/pathway/catalog";
 import { completeLevel, levelIsOpen, touchStudy } from "@/lib/learn/pathway/progress";
 import type { ExerciseStep, IntroSlide } from "@/lib/learn/pathway/types";
 import { glossOf } from "@/lib/learn/sentences";
@@ -82,7 +82,7 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
 
   if (!allowed) {
     return (
-      <LevelFrame label={gematria(level.index + 1)} finished>
+      <LevelFrame label={level.badge ?? gematria(level.index + 1)} finished>
         <p className="text-center text-base text-emerald-900">{t("levelLocked")}</p>
       </LevelFrame>
     );
@@ -91,7 +91,8 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
   const activeLevel = level;
   const activeSection = section;
   const frame = frames[index];
-  const nextLevel = activeSection.levels[activeSection.levels.findIndex((item) => item.id === activeLevel.id) + 1];
+  const label = activeLevel.badge ?? gematria(activeLevel.index + 1);
+  const nextHref = nextStop(activeSection.id, activeLevel.id);
 
   function finishFrame() {
     if (index < frames.length - 1) {
@@ -110,7 +111,7 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
 
   return (
     <LevelFrame
-      label={gematria(activeLevel.index + 1)}
+      label={label}
       finished={done}
       footer={
         done || !frame || frame.kind === "exercise" ? null : (
@@ -124,15 +125,11 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
     >
       {done ? (
         <div className="flex max-w-xl flex-col items-center gap-4 text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("levelClear", { level: gematria(activeLevel.index + 1) })}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("levelClear", { level: label })}</h1>
           <p className="text-emerald-800">{glossOf(activeLevel.title, locale)}</p>
-          {nextLevel ? (
-            <Link href={`/learn?section=${activeSection.id}&level=${nextLevel.id}`} className={buttonVariants()}>
-              {t("nextLevel")}
-            </Link>
-          ) : (
-            <Link href={`/learn?section=${activeSection.id}&exam=1`} className={buttonVariants()}>
-              {t("examTitle")}
+          {nextHref === "/" ? null : (
+            <Link href={nextHref} className={buttonVariants()}>
+              {nextHref.includes("exam=1") ? t("examTitle") : t("nextLevel")}
             </Link>
           )}
           <Link href="/" className={cn(buttonVariants({ variant: "outline" }))}>

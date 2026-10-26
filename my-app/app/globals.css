@@ -99,38 +99,65 @@
   );
 }
 
+/* Night keeps the same forest palette: deeper ground, lifted cards, sage ink. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.55 0.12 163);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --night-page: oklch(0.18 0.022 166);
+  --night-raised: oklch(0.255 0.028 166);
+  --night-wash: oklch(0.3 0.038 166);
+  --night-wash-strong: oklch(0.345 0.048 164);
+  --night-mist: oklch(0.43 0.04 166);
+  --night-ink: oklch(0.95 0.016 158);
+  --night-ink-soft: oklch(0.84 0.028 163);
+  --night-leaf: oklch(0.78 0.09 163);
+  --night-button: oklch(0.48 0.1 163);
+  --night-button-hover: oklch(0.42 0.09 163);
+  --background: var(--night-page);
+  --foreground: var(--night-ink);
+  --card: var(--night-raised);
+  --card-foreground: var(--night-ink);
+  --popover: var(--night-raised);
+  --popover-foreground: var(--night-ink);
+  --primary: oklch(0.72 0.12 163);
+  --primary-foreground: oklch(0.18 0.03 166);
+  --secondary: var(--night-wash);
+  --secondary-foreground: var(--night-ink);
+  --muted: var(--night-wash);
+  --muted-foreground: oklch(0.74 0.03 163);
+  --accent: var(--night-wash-strong);
+  --accent-foreground: var(--night-ink);
+  --destructive: oklch(0.7 0.16 22);
+  --border: oklch(0.92 0.02 160 / 14%);
+  --input: oklch(0.92 0.02 160 / 16%);
+  --ring: oklch(0.62 0.08 163);
+  --chart-1: oklch(0.7 0.12 163);
+  --chart-2: oklch(0.64 0.04 163);
+  --chart-3: oklch(0.55 0.03 166);
+  --chart-4: oklch(0.46 0.03 166);
+  --chart-5: oklch(0.38 0.03 166);
+  --sidebar: var(--night-raised);
+  --sidebar-foreground: var(--night-ink);
+  --sidebar-primary: oklch(0.72 0.12 163);
+  --sidebar-primary-foreground: oklch(0.18 0.03 166);
+  --sidebar-accent: var(--night-wash);
+  --sidebar-accent-foreground: var(--night-ink);
+  --sidebar-border: oklch(0.92 0.02 160 / 14%);
+  --sidebar-ring: oklch(0.62 0.08 163);
+  color-scheme: dark;
+  --color-emerald-50: var(--night-wash);
+  --color-emerald-100: var(--night-wash-strong);
+  --color-emerald-200: var(--night-mist);
+  --color-emerald-800: var(--night-leaf);
+  --color-emerald-900: var(--night-ink-soft);
+  --color-emerald-950: var(--night-ink);
+}
+
+html {
+  color-scheme: light;
+  background-color: #f3f6f1;
+}
+
+html.dark {
+  background-color: var(--night-page);
 }
 
 @layer base {
@@ -216,4 +243,210 @@
 .webrew-nikud-in {
   opacity: 0;
   animation: webrew-nikud-in 0.35s ease forwards;
+}
+
+/* Surfaces that were painted white stay lifted from the night ground. */
+.dark .bg-\[\#f3f6f1\] {
+  background-color: var(--night-page);
+}
+
+.dark .bg-\[\#f7faf6\] {
+  background-color: var(--night-raised);
+}
+
+.dark .bg-white,
+.dark .bg-white\/95,
+.dark .bg-white\/90 {
+  background-color: var(--night-raised);
+}
+
+.dark .bg-white\/80 {
+  background-color: color-mix(in oklab, var(--night-raised) 88%, transparent);
+}
+
+.dark .bg-white\/70 {
+  background-color: color-mix(in oklab, var(--night-raised) 78%, transparent);
+}
+
+.dark .bg-white\/55 {
+  background-color: color-mix(in oklab, var(--night-raised) 70%, transparent);
+}
+
+.dark .bg-white\/50 {
+  background-color: color-mix(in oklab, var(--night-raised) 62%, transparent);
+}
+
+.dark .bg-white\/40 {
+  background-color: color-mix(in oklab, var(--night-raised) 50%, transparent);
+}
+
+.dark .bg-white.fill-white {
+  fill: var(--night-raised);
+}
+
+.dark .text-black {
+  color: var(--night-ink);
+}
+
+/* Filled greens stay buttons and progress, not the lightened leaf ink. */
+.dark .bg-emerald-800 {
+  background-color: var(--night-button);
+}
+
+.dark .hover\:bg-emerald-900:hover {
+  background-color: var(--night-button-hover);
+}
+
+.dark .text-emerald-700 {
+  color: oklch(0.82 0.1 163);
+}
+
+.dark .border-emerald-700,
+.dark .border-emerald-700\/35,
+.dark .border-emerald-700\/40,
+.dark .border-emerald-700\/60,
+.dark .hover\:border-emerald-700:hover {
+  border-color: color-mix(in oklab, oklch(0.76 0.11 163) 70%, transparent);
+}
+
+/* Scrims stay dark. The 950 ink is light, so a plain mix would turn these milky. */
+.dark .bg-emerald-950\/45,
+.dark .bg-emerald-950\/40,
+.dark .bg-emerald-950\/30,
+.dark .bg-emerald-950\/25 {
+  background-color: oklch(0.08 0.02 166 / 0.72);
+}
+
+.dark .bg-lime-100\/80 {
+  background-color: oklch(0.32 0.05 175 / 0.45);
+}
+
+.dark .ring-\[\#f3f6f1\] {
+  --tw-ring-color: var(--night-page);
+}
+
+.dark [data-slot="slider-thumb"] {
+  background-color: var(--night-ink);
+}
+
+.dark .bg-red-50,
+.dark .hover\:bg-red-50:hover {
+  background-color: oklch(0.3 0.06 25);
+}
+
+.dark .bg-red-100 {
+  background-color: oklch(0.33 0.07 25);
+}
+
+.dark .bg-red-200,
+.dark .bg-red-200\! {
+  background-color: oklch(0.36 0.09 25);
+}
+
+.dark .bg-red-200\! {
+  background-color: oklch(0.36 0.09 25) !important;
+}
+
+.dark .text-red-700,
+.dark .text-red-800 {
+  color: oklch(0.8 0.12 25);
+}
+
+.dark .text-red-800\! {
+  color: oklch(0.8 0.12 25) !important;
+}
+
+.dark .border-red-200,
+.dark .border-red-300 {
+  border-color: oklch(0.58 0.12 25 / 0.55);
+}
+
+.dark .bg-orange-50 {
+  background-color: oklch(0.3 0.05 60);
+}
+
+.dark .text-orange-950,
+.dark .text-orange-700 {
+  color: oklch(0.82 0.1 65);
+}
+
+.dark .border-orange-200 {
+  border-color: oklch(0.62 0.1 60 / 0.5);
+}
+
+.dark .bg-green-200,
+.dark .bg-green-200\! {
+  background-color: oklch(0.36 0.07 155);
+}
+
+.dark .bg-green-200\! {
+  background-color: oklch(0.36 0.07 155) !important;
+}
+
+.dark .text-green-700,
+.dark .text-green-950 {
+  color: oklch(0.88 0.1 155);
+}
+
+.dark .text-green-950\! {
+  color: oklch(0.88 0.1 155) !important;
+}
+
+.dark .bg-blue-50 {
+  background-color: oklch(0.3 0.05 255);
+}
+
+.dark .text-blue-800,
+.dark .text-blue-800\/80 {
+  color: oklch(0.8 0.08 250);
+}
+
+.dark ::selection {
+  background-color: oklch(0.45 0.08 163);
+  color: var(--night-ink);
+}
+
+/* Warm pool thrown by the pathway lamps. Screen blend lifts the stones and the lesson under it. */
+.dark .path-lamp-glow {
+  background: radial-gradient(
+    circle,
+    rgba(254, 249, 195, 0.72) 0%,
+    rgba(250, 204, 21, 0.34) 28%,
+    rgba(217, 119, 6, 0.12) 52%,
+    transparent 72%
+  );
+  mix-blend-mode: screen;
+  filter: blur(1px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dark .path-lamp-glow {
+    animation: path-lamp-flicker 3.8s ease-in-out infinite;
+  }
+}
+
+@keyframes path-lamp-flicker {
+  0%,
+  100% {
+    opacity: 0.62;
+  }
+  40% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 0.74;
+  }
+  76% {
+    opacity: 0.92;
+  }
+}
+
+@layer utilities {
+  @media (prefers-reduced-motion: no-preference) {
+    html.theme-ready :where(*) {
+      transition-property: background-color, color, border-color, outline-color, fill, stroke;
+      transition-duration: 280ms;
+      transition-timing-function: ease;
+    }
+  }
 }

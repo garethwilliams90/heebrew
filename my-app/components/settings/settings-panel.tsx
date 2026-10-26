@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Clock, Languages, LogIn, LogOut, Maximize, Minimize, UserPlus, Volume2, VolumeX } from "lucide-react";
+import { Clock, Languages, LogIn, LogOut, Maximize, Minimize, Moon, Sun, UserPlus, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useSettings } from "@/components/settings/settings-provider";
@@ -36,7 +36,7 @@ export function SettingsPanel({
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const { sound, volume, clock, toggleSound, toggleClock, setVolume } = useSettings();
+  const { sound, volume, clock, night, toggleSound, toggleClock, toggleNight, setVolume } = useSettings();
   const [fullscreen, setFullscreen] = useState(false);
   const [languagesOpen, setLanguagesOpen] = useState(false);
 
@@ -100,6 +100,18 @@ export function SettingsPanel({
         variant="outline"
         size="icon"
         className={iconButton}
+        aria-pressed={night}
+        aria-label={t("night")}
+        sound={false}
+        onClick={toggleNight}
+      >
+        {night ? <Moon /> : <Sun />}
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className={iconButton}
         aria-expanded={languagesOpen}
         aria-label={t("language")}
         onClick={() => setLanguagesOpen((current) => !current)}
@@ -148,7 +160,7 @@ export function SettingsPanel({
               <LogIn />
             </Link>
           </Button>
-          <Button asChild size="icon" className={iconButton} aria-label={auth("signUp")}>
+          <Button asChild variant="outline" size="icon" className={iconButton} aria-label={auth("signUp")}>
             <Link href="/sign-up" onClick={onDone}>
               <UserPlus />
             </Link>

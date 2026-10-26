@@ -53,7 +53,15 @@ export default async function LocaleLayout({
       lang={locale}
       dir="ltr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var raw=localStorage.getItem("webrew.settings");if(raw&&JSON.parse(raw).night)document.documentElement.classList.add("dark")}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="flex h-dvh flex-col overflow-hidden">
         <MotionProvider>
           <TooltipProvider delayDuration={300}>

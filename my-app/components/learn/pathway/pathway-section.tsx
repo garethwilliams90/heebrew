@@ -2,7 +2,9 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { printFont } from "@/components/alephbet/print-font";
+import { DevSectionSkip } from "@/components/learn/dev-level";
 import { StonePath } from "@/components/learn/nature-scene";
+import { PathLamp } from "@/components/learn/pathway/path-lamp";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "@/i18n/navigation";
 import type { PathwaySection } from "@/lib/learn/pathway/types";
@@ -35,6 +37,7 @@ export function PathwaySectionView({
         <span className="h-px flex-1 bg-emerald-900/20" />
         <div className="max-w-xs text-center">
           <p className="text-sm font-semibold tracking-wide text-emerald-800 uppercase">{title}</p>
+          <DevSectionSkip sectionId={section.id} />
           {open || !previousExamHref ? null : (
             <Link href={previousExamHref} className="mt-1 inline-block text-sm font-medium text-emerald-900 underline-offset-4 hover:underline">
               {t("skipSection")}
@@ -46,29 +49,44 @@ export function PathwaySectionView({
       {section.levels.map((level, index) => {
         const unlocked = open && levelOpen(level.id);
         const href = `/learn?section=${section.id}&level=${level.id}`;
-        const lean = Math.round(((shifts[(startIndex + index) % shifts.length] ?? 0) - 23) * 0.6);
+        const place = startIndex + index;
+        const lean = Math.round(((shifts[place % shifts.length] ?? 0) - 23) * 0.6);
+        const showStones = index < section.levels.length - 1 || (open && Boolean(section.exam));
+        const number = level.badge ?? gematria(level.index + 1);
         return (
           <div key={level.id} className="flex w-full justify-center overflow-x-clip">
             <div className="flex flex-col items-center" style={{ translate: `clamp(-5.5rem, ${lean}vw, 5.5rem) 0` }}>
             <LevelNode
-              mark={gematria(level.index + 1)}
-              label={t("lessonName", { level: gematria(level.index + 1), title: glossOf(level.title, locale) })}
+              mark={number}
+              label={t("lessonName", { level: number, title: glossOf(level.title, locale) })}
               about={glossOf(level.about, locale)}
               href={unlocked ? href : undefined}
             />
-            {index < section.levels.length - 1 || open ? <StonePath turn={((startIndex + index) % 5) * 8 - 12} /> : null}
+            {showStones ? (
+              <div className="relative">
+                <StonePath turn={(place % 5) * 8 - 12} />
+                <PathLamp
+                  side={lean >= 0 ? "left" : "right"}
+                  kind={place % 2 === 0 ? "lantern" : "torch"}
+                  delay={(place % 6) * 0.45}
+                />
+              </div>
+            ) : null}
             </div>
           </div>
         );
       })}
-      {open ? (
-        <LevelNode
-          mark={t("examName")}
-          label={t("examName")}
-          about={t("examAbout")}
-          href={`/learn?section=${section.id}&exam=1`}
-          exam
-        />
+      {open && section.exam ? (
+        <div className="relative">
+          <LevelNode
+            mark={t("examName")}
+            label={t("examName")}
+            about={t("examAbout")}
+            href={`/learn?section=${section.id}&exam=1`}
+            exam
+          />
+          <PathLamp side="right" kind="lantern" delay={0.2} />
+        </div>
       ) : null}
     </div>
   );

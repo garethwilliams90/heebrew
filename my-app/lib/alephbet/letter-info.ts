@@ -506,6 +506,12 @@ export const letterCatalog: readonly LetterFact[] = [
   },
 ];
 
+const factsById = new Map(letterCatalog.map((item) => [item.id, item]));
+
+export function letterFact(id: string) {
+  return factsById.get(id) ?? null;
+}
+
 const hebrewMark = /[\u0591-\u05C7]/;
 
 // Keeps vowel marks with the consonant they belong to, so the highlight stays one cluster.

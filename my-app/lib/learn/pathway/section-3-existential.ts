@@ -13,6 +13,7 @@ import {
   type SpellItem,
   type SpokenItem,
 } from "@/lib/learn/pathway/types";
+import { pictureWordItems } from "@/lib/learn/pathway/picture-word";
 import { requireWord } from "@/lib/learn/words/catalog";
 
 // Keep a Hebrew phrase in order when it sits inside an English sentence.
@@ -130,6 +131,53 @@ const waiterLines = [
   line("card-or-cash", "עִם אַשְׁרַאי אוֹ מְזוּמָן", "with card or cash", "par carte ou en espèces", "con tarjeta o en efectivo"),
 ];
 
+const sectionWords = [
+  "yesh",
+  "ein",
+  "li",
+  "lecha",
+  "lach",
+  "lo",
+  "lah",
+  "mayim",
+  "lechem",
+  "kelev",
+  "bayit",
+  "sefer",
+  "ben",
+  "bat",
+  "kama",
+  ...numberIds,
+  "nishma",
+  "kore",
+  "efshar",
+  "lehazmin",
+  "bevakasha",
+  "hafuch",
+  "kafe",
+  "kal",
+  "espresso",
+  "kruason",
+  "ve-kruason",
+  "rotze",
+  "rotza",
+  "rotzim",
+  "rotzot",
+  "ze",
+  "leshevet",
+  "o",
+  "likachat",
+  "meshalem",
+  "meshalmim",
+  "im",
+  "ashray",
+  "mezuman",
+];
+
+function pictureStep(ids: readonly string[], seed: string) {
+  return { type: "picture-word" as const, items: pictureWordItems(ids, sectionWords, seed) };
+}
+
 const levels: readonly PathwayLevel[] = [
   {
     id: "s3-l0",
@@ -172,6 +220,7 @@ const levels: readonly PathwayLevel[] = [
       },
     ],
     exercises: [
+      pictureStep(["yesh", "ein", "li", "lecha", "lach", "lo", "lah", "mayim", "lechem", "kelev", "bayit", "sefer"], "s3-l0"),
       { type: "recognize-sound", items: recognizeLines(yeshHear) },
       {
         type: "compose-gap",
@@ -339,6 +388,7 @@ const levels: readonly PathwayLevel[] = [
       },
     ],
     exercises: [
+      pictureStep(["ben", "bat", "kama", ...numberIds], "s3-l1"),
       { type: "recognize-sound", items: recognizeLines(ageSentences) },
       { type: "listen-repeat", optional: true, items: ageSentences },
       { type: "spell", items: ["ben", "bat", "kama", "shalosh", "esrim", "meah", "efes", "sheva"].map((id) => spelled(id)) },
@@ -484,6 +534,10 @@ const levels: readonly PathwayLevel[] = [
       },
     ],
     exercises: [
+      pictureStep(
+        ["kafe", "hafuch", "espresso", "kruason", "bevakasha", "mezuman", "ashray", "kal", "lehazmin", "nishma"],
+        "s3-l2",
+      ),
       { type: "recognize-sound", items: recognizeLines([...customerLines, ...waiterLines]) },
       {
         type: "listen-repeat",
@@ -619,6 +673,6 @@ export const section3: PathwaySection = {
   exam: {
     questions: 20,
     lives: 3,
-    types: ["recognize-sound", "listen-repeat", "spell", "compose-gap", "conjugate", "read", "write", "comprehend"],
+    types: ["picture-word", "recognize-sound", "listen-repeat", "spell", "compose-gap", "conjugate", "read", "write", "comprehend"],
   },
 };

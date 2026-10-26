@@ -4,15 +4,18 @@ export type ConsonantForm = {
   sound: string;
 };
 
+const dagesh = "\u05BC";
+
 // These letters have two consonant sounds. Shin’s s sound uses the samekh clip.
+// Undotted kaf is the same kh as chet, so that form uses the chet clip.
 const forms: Record<string, readonly ConsonantForm[]> = {
   bet: [
     { glyph: "ב", file: "02_bet_soft_ב.mp3", sound: "v" },
-    { glyph: "ב\u05BC", file: "03_bet_hard_בּ.mp3", sound: "b" },
+    { glyph: `ב${dagesh}`, file: "03_bet_hard_בּ.mp3", sound: "b" },
   ],
   kaf: [
-    { glyph: "כ", file: "12_kaf_soft_כ.mp3", sound: "kh" },
-    { glyph: "כ\u05BC", file: "13_kaf_hard_כּ.mp3", sound: "k" },
+    { glyph: "כ", file: "09_het_ח.mp3", sound: "kh" },
+    { glyph: `כ${dagesh}`, file: "13_kaf_hard_כּ.mp3", sound: "k" },
   ],
   shin: [
     { glyph: "ש\u05C1", file: "23_shin_ש.mp3", sound: "sh" },
@@ -20,12 +23,28 @@ const forms: Record<string, readonly ConsonantForm[]> = {
   ],
   pe: [
     { glyph: "פ", file: "19_pe_soft_פ.mp3", sound: "f" },
-    { glyph: "פ\u05BC", file: null, sound: "p" },
+    { glyph: `פ${dagesh}`, file: null, sound: "p" },
   ],
 };
 
 export function consonantForms(letterId: string) {
   return forms[letterId] ?? null;
+}
+
+const pairedLetters = new Set(["bet", "kaf", "pe", "shin"]);
+
+// Bet, kaf, pe, and shin each have two readings. The chart shows both.
+export function letterPair(letterId: string) {
+  if (!pairedLetters.has(letterId)) {
+    return null;
+  }
+
+  return forms[letterId] ?? null;
+}
+
+export function hasTwoSounds(letterId: string) {
+  const pair = letterPair(letterId);
+  return pair != null && new Set(pair.map((form) => form.sound)).size > 1;
 }
 
 const letters: readonly { id: string; file: string }[] = [
@@ -51,6 +70,11 @@ const letters: readonly { id: string; file: string }[] = [
   { id: "reish", file: "22_resh_ר.mp3" },
   { id: "shin", file: "23_shin_ש.mp3" },
   { id: "tav", file: "24_tav_ת.mp3" },
+  { id: "kafSofit", file: "09_het_ח.mp3" },
+  { id: "memSofit", file: "15_mem_מ.mp3" },
+  { id: "nunSofit", file: "16_nun_נ.mp3" },
+  { id: "peSofit", file: "19_pe_soft_פ.mp3" },
+  { id: "tsadiSofit", file: "20_tsadi_צ.mp3" },
 ];
 
 export function consonantSrc(file: string) {

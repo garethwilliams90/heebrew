@@ -9,6 +9,7 @@ import type { LetterFact } from "@/lib/alephbet/letter-info";
 import { playCue } from "@/lib/learn/play-cue";
 import { playStudyClip } from "@/lib/learn/pathway/play-study";
 import type { IntroSlide } from "@/lib/learn/pathway/types";
+import { NikudOverview, NikudWalkCard } from "@/components/learn/pathway/nikud-walk-card";
 import { GlossLabel } from "@/components/learn/gloss-label";
 import { withoutNikud } from "@/lib/learn/hebrew-text";
 import { glossOf } from "@/lib/learn/sentences";
@@ -44,6 +45,12 @@ function SampleList({ samples }: { samples: NonNullable<IntroSlide["samples"]> }
 
 export function IntroSlideView({ slide }: { slide: IntroSlide }) {
   const locale = useLocale();
+  if (slide.nikudOverview) {
+    return <NikudOverview />;
+  }
+  if (slide.nikudId) {
+    return <NikudWalkCard nikudId={slide.nikudId} />;
+  }
   const letters = (slide.samples ?? []).flatMap((sample) => {
     const letter = sample.letterId ? letterById.get(sample.letterId) : undefined;
     return letter ? [letter] : [];

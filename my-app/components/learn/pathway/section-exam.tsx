@@ -16,7 +16,7 @@ import type { ExamQuestion } from "@/lib/learn/pathway/types";
 export function SectionExam({ sectionId, review = false }: { sectionId: string; review?: boolean }) {
   const t = useTranslations("Learn");
   const section = sectionById(sectionId);
-  const lives = section?.exam.lives ?? 3;
+  const lives = section?.exam?.lives ?? 3;
   const { halves, failed, loseHeart, resetHearts } = usePracticeHearts(lives);
   const [attempt, setAttempt] = useState(0);
   const [ready, setReady] = useState(review);
@@ -30,15 +30,16 @@ export function SectionExam({ sectionId, review = false }: { sectionId: string; 
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState(false);
 
-  if (!section) {
+  if (!section?.exam) {
     return null;
   }
 
   const activeSection = section;
+  const exam = section.exam;
 
   function begin(microphone: boolean) {
     setQuestions(
-      examQuestions(activeSection, activeSection.exam.questions, `${activeSection.id}-exam-${microphone ? "mic" : "quiet"}`, {
+      examQuestions(activeSection, exam.questions, `${activeSection.id}-exam-${microphone ? "mic" : "quiet"}`, {
         microphone,
       }),
     );
