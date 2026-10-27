@@ -13,6 +13,7 @@ import { useSpeechClipCache } from "@/components/study/use-speech-clip-cache";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useRouter } from "@/i18n/navigation";
+import { resolveLessonAudio } from "@/lib/audio/lesson-audio";
 import { removeCard } from "@/lib/flashcards/library";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { playAudio } from "@/lib/settings/master-volume";
@@ -175,7 +176,7 @@ export function DeckBrowser({
     let audio = clips.current.get(url);
 
     if (!audio) {
-      audio = new Audio(url);
+      audio = new Audio(resolveLessonAudio(url));
       audio.preload = "auto";
       clips.current.set(url, audio);
     }

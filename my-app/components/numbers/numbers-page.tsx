@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { loadDeckMastery } from "@/lib/flashcards/progress";
 import type { StudyMode } from "@/lib/flashcards/study-plan";
 import { DEFAULT_STUDY_COUNT } from "@/lib/flashcards/study-plan";
+import { prefetchClips } from "@/lib/learn/pathway/prefetch-audio";
 import { playStudyClip } from "@/lib/learn/pathway/play-study";
 import { numberRecording, numberWords, numbersDeckId, toNumberCard, type NumberWord } from "@/lib/learn/numbers";
 import { cn } from "cn";
@@ -30,6 +31,13 @@ export function NumbersPage() {
   const digits = numberWords.filter((word) => word.group === "digit");
   const teens = numberWords.filter((word) => word.group === "teen");
   const rounds = numberWords.filter((word) => word.group === "round");
+
+  useEffect(() => {
+    prefetchClips(numberWords.flatMap((word) => {
+      const path = numberRecording(word.hebrew);
+      return path ? [path] : [];
+    }));
+  }, []);
 
   useEffect(() => {
     if (phase !== "list") {

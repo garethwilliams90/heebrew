@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Volume2 } from "lucide-react";
 import { HebrewGlyph } from "@/components/learn/hebrew-glyph";
@@ -27,6 +27,18 @@ export function LetterIntro({
   const numbered = places.every((place) => place != null);
   const clips = useRef(new Map<string, HTMLAudioElement>());
   const current = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    for (const letter of letters) {
+      const src = letterConsonantSrc(letter.id);
+      if (!src || clips.current.has(src)) {
+        continue;
+      }
+      const audio = new Audio(src);
+      audio.preload = "auto";
+      clips.current.set(src, audio);
+    }
+  }, [letters]);
 
   // The recorded clips sound cleaner than synthesized speech, which is only a fallback.
   function hearSrc(src: string, letter: LetterFact) {

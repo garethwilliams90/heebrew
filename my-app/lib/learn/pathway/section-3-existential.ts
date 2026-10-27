@@ -106,8 +106,8 @@ const customerLines = [
   line("ma-nishma", "מַה נִשְׁמָע", "how are you", "comment ça va", "cómo estás"),
   line("ma-kore", "מַה קוֹרֶה", "what's up", "quoi de neuf", "qué pasa"),
   line("efshar-order", "אֶפְשָׁר לְהַזְמִין", "can I order", "puis-je commander", "puedo pedir"),
-  line("please-hafuch", "אֶפְשָׁר בְּבַקָּשָׁה הָפוּךְ", "can I have a hafuch please", "puis-je avoir un hafouch s'il vous plaît", "puedo pedir un hafuj por favor"),
-  line("please-kal", "אֶפְשָׁר בְּבַקָּשָׁה קָפֶה קַל", "can I have a light coffee please", "puis-je avoir un café léger s'il vous plaît", "puedo pedir un café ligero por favor"),
+  line("please-hafuch", "אֶפְשָׁר בְּבַקָּשָׁה הָפוּךְ", "can I have a capuccino please", "puis-je avoir un capuccino s'il vous plaît", "puedo pedir un capuccino por favor"),
+  line("please-kal", "אֶפְשָׁר בְּבַקָּשָׁה קָפֶה קר", "can I have an iced coffee please", "puis-je avoir un café glacé s'il vous plaît", "puedo pedir un café helado por favor"),
   spoken("espresso"),
   spoken("ve-kruason"),
 ];

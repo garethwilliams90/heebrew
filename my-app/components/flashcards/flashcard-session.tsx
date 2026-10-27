@@ -16,6 +16,7 @@ import { recordDailyCards } from "@/lib/flashcards/daily-practice";
 import { addExperience, flashcardExperience, loadExperience } from "@/lib/flashcards/experience";
 import { loadDeckMemory, saveSessionProgress } from "@/lib/flashcards/progress";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
+import { resolveLessonAudio } from "@/lib/audio/lesson-audio";
 import { playAudio } from "@/lib/settings/master-volume";
 import {
   freshMemory,
@@ -213,7 +214,7 @@ export function FlashcardSession({
       return;
     }
 
-    const audio = new Audio(url);
+    const audio = new Audio(resolveLessonAudio(url));
     audio.preload = "auto";
 
     if (audio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) {
@@ -264,7 +265,7 @@ export function FlashcardSession({
     }
 
     if (!clips.current.has(text) && isStoredAudio(text)) {
-      const audio = new Audio(text);
+      const audio = new Audio(resolveLessonAudio(text));
       audio.preload = "auto";
       clips.current.set(text, audio);
     }

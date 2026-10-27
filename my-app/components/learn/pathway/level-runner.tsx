@@ -15,6 +15,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { gematria } from "@/lib/learn/gematria";
 import { rememberKnownWord } from "@/lib/learn/known-words";
 import { levelById, nextStop, sectionById } from "@/lib/learn/pathway/catalog";
+import { exerciseAudioPaths, introAudioPaths, prefetchClips } from "@/lib/learn/pathway/prefetch-audio";
 import { batchExercise } from "@/lib/learn/pathway/question-batch";
 import { completeLevel, levelIsOpen, touchStudy } from "@/lib/learn/pathway/progress";
 import type { ExerciseStep, IntroSlide } from "@/lib/learn/pathway/types";
@@ -56,6 +57,33 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
       touchStudy(level.sectionId);
     }
   }, [level, levelId, local]);
+
+  useEffect(() => {
+    if (!level || !batchSeed) {
+      return;
+    }
+
+    const introCount = level.intros.length;
+    const paths: string[] = [];
+    const currentSlide = level.intros[index];
+    const currentStep = level.exercises[index - introCount];
+
+    if (index < introCount && currentSlide) {
+      paths.push(...introAudioPaths(currentSlide));
+    } else if (currentStep) {
+      paths.push(...exerciseAudioPaths(batchExercise(currentStep, `${batchSeed}-${index}`)));
+    }
+
+    const nextSlide = level.intros[index + 1];
+    const nextStep = level.exercises[index + 1 - introCount];
+    if (index + 1 < introCount && nextSlide) {
+      paths.push(...introAudioPaths(nextSlide));
+    } else if (nextStep) {
+      paths.push(...exerciseAudioPaths(nextStep));
+    }
+
+    prefetchClips(paths);
+  }, [batchSeed, index, level]);
 
   const session = useMemo<LessonSession>(
     () => ({

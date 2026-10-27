@@ -71,7 +71,7 @@ const clipByHebrew = new Map(
   ]),
 );
 
-/** The recording in `public/numbers 2` for this spelling. */
+/** The numbers recording for this spelling. Playback resolves it in the lesson-audio bucket. */
 export function numberRecording(hebrew: string) {
   return clipByHebrew.get(hebrew);
 }

@@ -1,3 +1,4 @@
+import { resolveLessonAudio } from "@/lib/audio/lesson-audio";
 import { MAX_STUDY_COUNT } from "@/lib/flashcards/study-plan";
 
 export type SpeechClip = { text: string; audio: string };
@@ -91,7 +92,7 @@ export function prefetchStudyAudio(cards: SpokenCard[]) {
 
         const audio = new Audio();
         audio.preload = "auto";
-        audio.src = url;
+        audio.src = resolveLessonAudio(url);
         warmedAudio.set(url, audio);
       }
     }
