@@ -4,7 +4,7 @@
  * Phase 2 Data Migration: Load Duolingo Hebrew vocabulary into Supabase
  * 
  * This script migrates 10,664 words from the Duolingo Hebrew Anki deck
- * (public/hebrew_duolingo_app_bundle/vocabulary.json) into the vocabulary_words
+ * (data/duolingo/vocabulary.json) into the vocabulary_words
  * and word_media tables in Supabase.
  * 
  * Run from my-app directory:
@@ -150,7 +150,7 @@ async function migrateDuolingo() {
   }
   
   // Load vocabulary.json
-  const vocabPath = join(__dirname, '..', 'public', 'hebrew_duolingo_app_bundle', 'vocabulary.json');
+  const vocabPath = join(__dirname, '..', 'data', 'duolingo', 'vocabulary.json');
   const vocabData = JSON.parse(await readFile(vocabPath, 'utf-8'));
   
   const entries = vocabData.entries || [];

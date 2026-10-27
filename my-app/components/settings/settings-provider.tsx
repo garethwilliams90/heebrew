@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import useSound from "use-sound";
+import { lessonAudioUrl } from "@/lib/audio/lesson-audio";
 import { setMasterVolume } from "@/lib/settings/master-volume";
 
 const STORAGE_KEY = "webrew.settings";
@@ -9,12 +10,12 @@ const STORAGE_KEY = "webrew.settings";
 export type SampleName = "switchOn" | "switchOff" | "popUp" | "popDown" | "success" | "wrong";
 
 const samples: Record<SampleName, { src: string; gain: number }> = {
-  switchOn: { src: "/sounds/samples/switch-on.mp3", gain: 0.5 },
-  switchOff: { src: "/sounds/samples/switch-off.mp3", gain: 0.5 },
-  popUp: { src: "/sounds/samples/pop-up-on.mp3", gain: 0.5 },
-  popDown: { src: "/sounds/samples/pop-down.mp3", gain: 0.5 },
-  success: { src: "/sounds/samples/success.mp3", gain: 0.55 },
-  wrong: { src: "/sounds/samples/disable-sound.mp3", gain: 0.5 },
+  switchOn: { src: lessonAudioUrl("ui/switch-on.mp3"), gain: 0.5 },
+  switchOff: { src: lessonAudioUrl("ui/switch-off.mp3"), gain: 0.5 },
+  popUp: { src: lessonAudioUrl("ui/pop-up-on.mp3"), gain: 0.5 },
+  popDown: { src: lessonAudioUrl("ui/pop-down.mp3"), gain: 0.5 },
+  success: { src: lessonAudioUrl("ui/success.mp3"), gain: 0.55 },
+  wrong: { src: lessonAudioUrl("ui/disable-sound.mp3"), gain: 0.5 },
 };
 
 type StoredSettings = {

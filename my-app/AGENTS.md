@@ -21,7 +21,7 @@ Webrew is an interactive, modern, fully responsive web app for Hebrew learners a
 
 The app lives in this Next.js project (`my-app`). The repo root README describes it as a Hebrew language learning platform for all levels.
 
-The learning pathway is the home page. After login the learner sees the sections and levels from LearningFlow.md. A learner can skip to a later section by passing the previous section's exam. Passing that exam unlocks every level and exam before the section it opens. Flashcards, the aleph-bet reference, training, streaks, and auth stay as they are. Flashcards and the aleph-bet reference unlock when Section 2 unlocks. Training stays locked until Section 5. Words a learner covers are saved to the Known words deck. Lesson words are read from `lib/learn/words/catalog.json`, filtered from the Duolingo bundle. Recordings stay in `public/hebrew_duolingo_app_bundle/audio`.
+The learning pathway is the home page. After login the learner sees the sections and levels from LearningFlow.md. A learner can skip to a later section by passing the previous section's exam. Passing that exam unlocks every level and exam before the section it opens. Flashcards, the aleph-bet reference, training, streaks, and auth stay as they are. Flashcards and the aleph-bet reference unlock when Section 2 unlocks. Training stays locked until Section 5. Words a learner covers are saved to the Known words deck. Lesson words are read from `lib/learn/words/catalog.json`, filtered from the Duolingo bundle. Recordings live in the public Supabase bucket `lesson-audio`.
 
 ## Tech stack
 

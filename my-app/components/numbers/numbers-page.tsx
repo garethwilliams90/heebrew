@@ -84,7 +84,7 @@ export function NumbersPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full flex-1 flex-col px-4 py-8 sm:px-8">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8 sm:px-8">
       <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("title")}</h1>
       <p className="mt-2 text-emerald-900/75">{t("description")}</p>
 

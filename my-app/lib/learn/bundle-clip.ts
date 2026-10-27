@@ -1,13 +1,15 @@
+import { lessonAudioUrl } from "@/lib/audio/lesson-audio";
+
 const pending = new Map<string, Promise<HTMLAudioElement | null>>();
 
-/** Plays a lesson recording. A leading slash is a file in `public`; other paths stay in the Duolingo bundle. */
+/** Plays a lesson recording. A leading slash is already a URL path; other paths are Duolingo clips in storage. */
 export function loadBundleClip(path: string) {
   const existing = pending.get(path);
   if (existing) {
     return existing;
   }
 
-  const src = path.startsWith("/") ? path : `/hebrew_duolingo_app_bundle/${path}`;
+  const src = path.startsWith("/") || path.startsWith("http") ? path : lessonAudioUrl(`duolingo/${path}`);
   const request = new Promise<HTMLAudioElement | null>((resolve) => {
     const audio = new Audio(src);
     audio.preload = "auto";

@@ -7,6 +7,7 @@ import { Leaf, Menu, Settings, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLinks } from "@/components/settings/nav-rail";
 import { SettingsPanel } from "@/components/settings/settings-panel";
+import { lessonAudioUrl } from "@/lib/audio/lesson-audio";
 import { useSettings } from "@/components/settings/settings-provider";
 import { Link } from "@/i18n/navigation";
 
@@ -48,7 +49,7 @@ export function SettingsMenu({ email }: { email: string | null }) {
     if (stopAt.current) {
       window.clearTimeout(stopAt.current);
     }
-    const audio = clip.current ?? new Audio("/sounds/samples/settings.mp3");
+    const audio = clip.current ?? new Audio(lessonAudioUrl("ui/settings.mp3"));
     clip.current = audio;
     audio.volume = Math.max(volume, 0.45);
     const halt = () => {

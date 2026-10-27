@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const catalogPath = resolve(root, "lib/learn/words/catalog.json");
-const bundlePath = resolve(root, "public/hebrew_duolingo_app_bundle/vocabulary.json");
+const bundlePath = resolve(root, "data/duolingo/vocabulary.json");
 
 const posMap = {
   Verb: "verb",

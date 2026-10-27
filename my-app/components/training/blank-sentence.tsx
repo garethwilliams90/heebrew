@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { printFont } from "@/components/alephbet/print-font";
 import { cn } from "cn";
+import { lessonAudioUrl } from "@/lib/audio/lesson-audio";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 
 export function BlankSentence({
@@ -45,7 +46,7 @@ export function BlankSentence({
 
       // Play boop sound
       if (currentSequence !== sequenceRef.current) return;
-      const boopAudio = new Audio("/sounds/samples/boop.mp3");
+      const boopAudio = new Audio(lessonAudioUrl("ui/boop.mp3"));
       boopAudio.volume = 0.3;
       
       await new Promise<void>((resolve) => {
