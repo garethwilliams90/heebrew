@@ -24,6 +24,7 @@ import {
 } from "@/lib/learn/dictionary";
 import { isPartOfSpeech, partsOfSpeech, type PartOfSpeech } from "@/lib/flashcards/types";
 import { readKnownWords } from "@/lib/learn/known-words";
+import { useLocalhost } from "@/components/learn/dev-level";
 import { playStudyClip } from "@/lib/learn/pathway/play-study";
 import { cn } from "cn";
 
@@ -36,6 +37,7 @@ const typeRank = ["noun", "adjective", "verb"];
 export function DictionaryPage() {
   const t = useTranslations("Dictionary");
   const flashcards = useTranslations("Flashcards");
+  const local = useLocalhost();
   const [knownIds, setKnownIds] = useState<ReadonlySet<string>>(() => new Set());
   const [picking, setPicking] = useState<DictionaryEntry | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -127,6 +129,7 @@ export function DictionaryPage() {
           empty={narrowed ? t("filterEmpty") : t("knownEmpty")}
           known
           notes={notes}
+          markUnrecorded={local}
           onAdd={setPicking}
         />
       )}
@@ -138,6 +141,7 @@ export function DictionaryPage() {
           empty={narrowed ? t("filterEmpty") : t("unknownEmpty")}
           known={false}
           notes={notes}
+          markUnrecorded={local}
           onAdd={setPicking}
         />
       )}
@@ -162,6 +166,7 @@ function WordSection({
   empty,
   known,
   notes,
+  markUnrecorded = false,
   onAdd,
 }: {
   title: string;
@@ -170,6 +175,7 @@ function WordSection({
   empty: string;
   known: boolean;
   notes: Record<string, string>;
+  markUnrecorded?: boolean;
   onAdd: (word: DictionaryEntry) => void;
 }) {
   return (
@@ -183,7 +189,14 @@ function WordSection({
       ) : (
         <ul className="mt-3 flex flex-col gap-2">
           {words.map((word) => (
-            <WordRow key={word.id} word={word} known={known} note={notes[word.id]} onAdd={onAdd} />
+            <WordRow
+              key={word.id}
+              word={word}
+              known={known}
+              note={notes[word.id]}
+              markUnrecorded={markUnrecorded}
+              onAdd={onAdd}
+            />
           ))}
         </ul>
       )}
@@ -224,21 +237,32 @@ function WordRow({
   word,
   known,
   note,
+  markUnrecorded = false,
   onAdd,
 }: {
   word: DictionaryEntry;
   known: boolean;
   note?: string;
+  markUnrecorded?: boolean;
   onAdd: (word: DictionaryEntry) => void;
 }) {
   const t = useTranslations("Dictionary");
   const [open, setOpen] = useState(false);
+  const unrecorded = markUnrecorded && !word.audio;
 
   return (
-    <li className="rounded-2xl border border-emerald-950/10 bg-white/90 px-4 py-3">
+    <li
+      className={cn(
+        "rounded-2xl border bg-white/90 px-4 py-3",
+        unrecorded ? "border-amber-400 bg-amber-50/80" : "border-emerald-950/10",
+      )}
+    >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {unrecorded ? (
+              <span className="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-medium text-amber-950">Needs recording</span>
+            ) : null}
             {known ? (
               <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-800">
                 <Check className="size-4" aria-hidden />

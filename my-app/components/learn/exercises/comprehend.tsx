@@ -81,7 +81,7 @@ export function Comprehend({
                     }
                     if (choiceIndex !== item.answer) {
                       setWrongIds((current) => [...current, choiceIndex]);
-                      advance.miss(() => void playStudyClip({ hebrew: item.hebrew, say: item.hebrew }));
+                      advance.miss(() => void playStudyClip({ hebrew: item.hebrew, say: item.hebrew, audio: item.audio }));
                       return;
                     }
                     setRight(choiceIndex);

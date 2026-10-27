@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Volume2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { printFont } from "@/components/alephbet/print-font";
 import { FlashcardSession } from "@/components/flashcards/flashcard-session";
@@ -10,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { loadDeckMastery } from "@/lib/flashcards/progress";
 import type { StudyMode } from "@/lib/flashcards/study-plan";
 import { DEFAULT_STUDY_COUNT } from "@/lib/flashcards/study-plan";
-import { numberGloss, numberWords, numbersDeckId, toNumberCard, type NumberWord } from "@/lib/learn/numbers";
+import { playStudyClip } from "@/lib/learn/pathway/play-study";
+import { numberRecording, numberWords, numbersDeckId, toNumberCard, type NumberWord } from "@/lib/learn/numbers";
 import { cn } from "cn";
 
 type Direction = "en-he" | "he-en";
@@ -82,7 +84,7 @@ export function NumbersPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-8 sm:px-8">
+    <main className="mx-auto flex w-full flex-1 flex-col px-4 py-8 sm:px-8">
       <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{t("title")}</h1>
       <p className="mt-2 text-emerald-900/75">{t("description")}</p>
 
@@ -156,6 +158,7 @@ function NumberGrid({
   mastery: Record<string, number>;
   nested?: boolean;
 }) {
+  const t = useTranslations("Numbers");
   const locale = useLocale();
 
   return (
@@ -167,12 +170,23 @@ function NumberGrid({
         {words.map((word) => (
           <li key={word.id} className="relative rounded-2xl border border-emerald-950/10 bg-white/90 p-4">
             <NumberMastery level={mastery[word.id] ?? 0} />
-            <p className="text-sm tabular-nums text-emerald-800/70">{word.value}</p>
-            <p dir="rtl" lang="he" className={cn("mt-1 text-3xl leading-none text-emerald-950", printFont.className)}>
-              {word.hebrew}
-            </p>
-            <p className="mt-3 text-base text-emerald-950">{numberGloss(word, locale)}</p>
-            <p className="text-sm text-emerald-800/70">{word.transliteration}</p>
+            <p className="text-2xl font-semibold tabular-nums text-emerald-800/70">{word.value}</p>
+            <div className="mt-1 flex items-center justify-between gap-2">
+              <p dir="rtl" lang="he" className={cn("text-2xl leading-none text-emerald-950", printFont.className)}>
+                {word.hebrew}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-8 shrink-0"
+                sound={false}
+                aria-label={t("hear", { word: word.value.toString() })}
+                onClick={() => void playStudyClip({ hebrew: word.hebrew, say: word.hebrew, audio: numberRecording(word.hebrew) })}
+              >
+                <Volume2 />
+              </Button>
+            </div>
           </li>
         ))}
       </ul>

@@ -86,7 +86,7 @@ function TypedAnswer({
     const correct = writing ? normalizeHebrew(value) === normalizeHebrew(item.hebrew) : matchesGloss(value, item.gloss);
     if (!correct) {
       setTone("wrong");
-      advance.miss(() => void playStudyClip({ hebrew: item.hebrew, say: item.hebrew }));
+      advance.miss(() => void playStudyClip({ hebrew: item.hebrew, say: item.hebrew, audio: item.audio }));
       return;
     }
     setTone("correct");

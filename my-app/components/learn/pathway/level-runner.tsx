@@ -15,6 +15,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { gematria } from "@/lib/learn/gematria";
 import { rememberKnownWord } from "@/lib/learn/known-words";
 import { levelById, nextStop, sectionById } from "@/lib/learn/pathway/catalog";
+import { batchExercise } from "@/lib/learn/pathway/question-batch";
 import { completeLevel, levelIsOpen, touchStudy } from "@/lib/learn/pathway/progress";
 import type { ExerciseStep, IntroSlide } from "@/lib/learn/pathway/types";
 import { glossOf } from "@/lib/learn/sentences";
@@ -33,12 +34,14 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [batchSeed, setBatchSeed] = useState<string | null>(null);
   const { halves, failed, loseHeart, resetHearts } = usePracticeHearts(5);
 
   useEffect(() => {
     setIndex(0);
     setDone(false);
     setAttempt(0);
+    setBatchSeed(`${levelId}-${Date.now()}`);
     resetHearts();
   }, [levelId, resetHearts]);
 
@@ -63,6 +66,7 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
       resetHearts,
       retry() {
         resetHearts();
+        setBatchSeed(`${levelId}-${Date.now()}`);
         setAttempt((current) => current + 1);
       },
       spendHint() {
@@ -73,7 +77,7 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
         return true;
       },
     }),
-    [failed, halves, loseHeart, resetHearts],
+    [failed, halves, levelId, loseHeart, resetHearts],
   );
 
   if (!level || !section || level.sectionId !== section.id || allowed === null) {
@@ -138,7 +142,7 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
         </div>
       ) : frame?.kind === "intro" ? (
         <IntroSlideView slide={frame.slide} />
-      ) : frame?.kind === "exercise" ? (
+      ) : frame?.kind === "exercise" && batchSeed ? (
         <div className="flex h-full min-h-0 w-full flex-1 flex-col items-center gap-4">
           {frame.step.optional ? (
             <Button type="button" variant="ghost" onClick={finishFrame}>
@@ -146,7 +150,13 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
             </Button>
           ) : null}
           <LessonSessionProvider value={session}>
-            <ExerciseView key={`${index}-${attempt}`} step={frame.step} onPass={finishFrame} onMiss={() => loseHeart(2)} />
+            <ExerciseView
+              key={`${index}-${attempt}-${batchSeed}`}
+              step={batchExercise(frame.step, `${batchSeed}-${index}`)}
+              nikudSeed={`${batchSeed}-nikud`}
+              onPass={finishFrame}
+              onMiss={() => loseHeart(2)}
+            />
           </LessonSessionProvider>
         </div>
       ) : null}

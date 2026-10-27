@@ -11,9 +11,19 @@ import { RecognizeSound } from "@/components/learn/exercises/recognize-sound";
 import { SpellWord } from "@/components/learn/exercises/spell-word";
 import type { ExamQuestion, ExerciseStep } from "@/lib/learn/pathway/types";
 
-export function ExerciseView({ step, onPass, onMiss }: { step: ExerciseStep; onPass: () => void; onMiss?: () => void }) {
+export function ExerciseView({
+  step,
+  onPass,
+  onMiss,
+  nikudSeed,
+}: {
+  step: ExerciseStep;
+  onPass: () => void;
+  onMiss?: () => void;
+  nikudSeed?: string;
+}) {
   if (step.type === "nikud-drop") {
-    return <NikudDropExercise letterIds={step.letterIds} onPass={onPass} />;
+    return <NikudDropExercise letterIds={step.letterIds} seed={nikudSeed} onPass={onPass} />;
   }
   if (step.type === "recognize-sound") {
     return <RecognizeSound items={step.items} onPass={onPass} onMiss={onMiss} />;

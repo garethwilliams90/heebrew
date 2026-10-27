@@ -1,4 +1,4 @@
-import { normalizeHebrew } from "@/lib/learn/hebrew-text";
+import { levelClip } from "@/lib/learn/pathway/level-16-21-audio";
 import { seededOrder } from "@/lib/learn/pathway/order";
 import {
   gloss,
@@ -10,7 +10,6 @@ import {
   type PathwaySection,
   type ReadItem,
   type RecognizeItem,
-  type SpellItem,
   type SpokenItem,
 } from "@/lib/learn/pathway/types";
 import { pictureWordItems } from "@/lib/learn/pathway/picture-word";
@@ -28,7 +27,7 @@ function spoken(id: string): SpokenItem {
     hebrew: word.niqqud || word.hebrew,
     say: word.niqqud || word.hebrew,
     gloss: { en: word.en, fr: word.fr, es: word.es },
-    audio: word.audio ?? undefined,
+    audio: word.audio ?? levelClip(word.niqqud || word.hebrew),
   };
 }
 
@@ -37,15 +36,8 @@ function piece(id: string): GapPiece {
   return { id: item.id, hebrew: item.hebrew, gloss: item.gloss, audio: item.audio };
 }
 
-function spelled(id: string): SpellItem {
-  const item = spoken(id);
-  const needed = [...normalizeHebrew(item.hebrew)];
-  const extra = [..."אבגדהוזחטיכלמנסעפצקרשת"].filter((letter) => !needed.includes(letter));
-  return { prompt: item, letters: seededOrder([...needed, ...extra.slice(0, 3)], id) };
-}
-
 function line(id: string, hebrew: string, en: string, fr: string, es: string): SpokenItem {
-  return { id, hebrew, say: hebrew, gloss: gloss(en, fr, es) };
+  return { id, hebrew, say: hebrew, gloss: gloss(en, fr, es), audio: levelClip(hebrew) };
 }
 
 function recognizeLines(items: readonly SpokenItem[]): RecognizeItem[] {
@@ -59,15 +51,15 @@ function recognizeLines(items: readonly SpokenItem[]): RecognizeItem[] {
 }
 
 function gap(id: string, say: string, translation: Gloss, tokens: GapItem["tokens"], extras: readonly GapPiece[]): GapItem {
-  return { id, say, gloss: translation, tokens, extras };
+  return { id, say, gloss: translation, tokens, extras, audio: levelClip(say) };
 }
 
 function reading(id: string, hebrew: string, en: string, fr: string, es: string): ReadItem {
-  return { id, hebrew, gloss: gloss(en, fr, es) };
+  return { id, hebrew, gloss: gloss(en, fr, es), audio: levelClip(hebrew) };
 }
 
 function form(id: string, hebrew: string, en: string, fr: string, es: string): SpokenItem {
-  return { id, hebrew, gloss: gloss(en, fr, es) };
+  return { id, hebrew, gloss: gloss(en, fr, es), audio: levelClip(hebrew) };
 }
 
 function conjugate(
@@ -199,12 +191,17 @@ const levels: readonly PathwayLevel[] = [
           `${he("יש")} veut dire il y a. ${he("אין")} veut dire il n'y a pas. Au quotidien, ces mots s'écrivent en général sans nikoud.`,
           `${he("יש")} significa hay. ${he("אין")} significa no hay. En el hebreo de cada día, estas palabras suelen escribirse sin niqud.`,
         ),
-        samples: [
-          { hebrew: "יֵשׁ דָּג", gloss: gloss("there is a fish", "il y a un poisson", "hay un pez") },
-          { hebrew: "אֵין גְּלִידָה", gloss: gloss("there is no ice cream", "il n'y a pas de glace", "no hay helado") },
-          { hebrew: "יֵשׁ סֵפֶר", gloss: gloss("there is a book", "il y a un livre", "hay un libro") },
-          { hebrew: "אֵין בַּיִת", gloss: gloss("there is no house", "il n'y a pas de maison", "no hay casa") },
-        ],
+        samples: ["יֵשׁ דָּג", "אֵין גְּלִידָה", "יֵשׁ סֵפֶר", "אֵין בַּיִת"].map((hebrew, index) => ({
+          hebrew,
+          gloss: [
+            gloss("there is a fish", "il y a un poisson", "hay un pez"),
+            gloss("there is no ice cream", "il n'y a pas de glace", "no hay helado"),
+            gloss("there is a book", "il y a un livre", "hay un libro"),
+            gloss("there is no house", "il n'y a pas de maison", "no hay casa"),
+          ][index]!,
+          audio: levelClip(hebrew),
+          say: hebrew,
+        })),
       },
       {
         title: gloss(`${he("יש לי")} means I have`, `${he("יש לי")} veut dire j'ai`, `${he("יש לי")} significa tengo`),
@@ -214,8 +211,13 @@ const levels: readonly PathwayLevel[] = [
           `${he("ל")} se une a la persona. ${he("לי")} es yo, ${he("לך")} es tú, ${he("לו")} es él, ${he("לה")} es ella. ${he("אין לי")} significa no tengo.`,
         ),
         samples: [
-          ...yeshForms.map((item) => ({ hebrew: item.hebrew, gloss: item.gloss })),
-          { hebrew: "אֵין לִי לֶחֶם", gloss: gloss("I don't have bread", "je n'ai pas de pain", "no tengo pan") },
+          ...yeshForms.map((item) => ({ hebrew: item.hebrew, gloss: item.gloss, audio: item.audio, say: item.say })),
+          {
+            hebrew: "אֵין לִי לֶחֶם",
+            gloss: gloss("I don't have bread", "je n'ai pas de pain", "no tengo pan"),
+            audio: levelClip("אֵין לִי לֶחֶם"),
+            say: "אֵין לִי לֶחֶם",
+          },
         ],
       },
     ],
@@ -315,6 +317,7 @@ const levels: readonly PathwayLevel[] = [
             id: "ask-dog",
             hebrew: "יֵשׁ לִי כֶּלֶב",
             gloss: gloss("I have a dog", "j'ai un chien", "tengo un perro"),
+            audio: levelClip("יֵשׁ לִי כֶּלֶב"),
             question: gloss("What do I have?", "Qu'est-ce que j'ai ?", "¿Qué tengo?"),
             choices: [
               gloss("a dog", "un chien", "un perro"),
@@ -327,6 +330,7 @@ const levels: readonly PathwayLevel[] = [
             id: "ask-water",
             hebrew: "אֵין מַיִם",
             gloss: gloss("there is no water", "il n'y a pas d'eau", "no hay agua"),
+            audio: levelClip("אֵין מַיִם"),
             question: gloss("Is there water?", "Est-ce qu'il y a de l'eau ?", "¿Hay agua?"),
             choices: [
               gloss("no", "non", "no"),
@@ -339,6 +343,7 @@ const levels: readonly PathwayLevel[] = [
             id: "ask-book",
             hebrew: "יֵשׁ לוֹ סֵפֶר",
             gloss: gloss("he has a book", "il a un livre", "él tiene un libro"),
+            audio: levelClip("יֵשׁ לוֹ סֵפֶר"),
             question: gloss("Who has a book?", "Qui a un livre ?", "¿Quién tiene un libro?"),
             choices: [
               gloss("he", "lui", "él"),
@@ -349,7 +354,6 @@ const levels: readonly PathwayLevel[] = [
           },
         ],
       },
-      { type: "spell", items: ["yesh", "ein", "kelev", "mayim", "sefer", "bayit"].map((id) => spelled(id)) },
     ],
   },
   {
@@ -372,7 +376,7 @@ const levels: readonly PathwayLevel[] = [
           `Un homme dit ${he("אני בן")} et une femme dit ${he("אני בת")}, puis le nombre. Un an se dit ${he("שנה")}. Deux ans se dit ${he("שנתיים")}. ${he("בן כמה אתה")} s'adresse à un homme. ${he("בת כמה את")} s'adresse à une femme.`,
           `Un hombre dice ${he("אני בן")} y una mujer dice ${he("אני בת")}, y luego el número. Un año es ${he("שנה")}. Dos años es ${he("שנתיים")}. ${he("בן כמה אתה")} se lo preguntas a un hombre. ${he("בת כמה את")} se lo preguntas a una mujer.`,
         ),
-        samples: ageSentences.map((item) => ({ hebrew: item.hebrew, gloss: item.gloss })),
+        samples: ageSentences.map((item) => ({ hebrew: item.hebrew, gloss: item.gloss, audio: item.audio, say: item.say })),
       },
       {
         title: gloss("The numbers", "Les nombres", "Los números"),
@@ -391,7 +395,6 @@ const levels: readonly PathwayLevel[] = [
       pictureStep(["ben", "bat", "kama", ...numberIds], "s3-l1"),
       { type: "recognize-sound", items: recognizeLines(ageSentences) },
       { type: "listen-repeat", optional: true, items: ageSentences },
-      { type: "spell", items: ["ben", "bat", "kama", "shalosh", "esrim", "meah", "efes", "sheva"].map((id) => spelled(id)) },
       {
         type: "compose-gap",
         items: [
@@ -625,6 +628,7 @@ const levels: readonly PathwayLevel[] = [
             id: "ask-hafuch",
             hebrew: "אֶפְשָׁר בְּבַקָּשָׁה הָפוּךְ",
             gloss: gloss("can I have a hafuch please", "puis-je avoir un hafouch", "puedo pedir un hafuj"),
+            audio: levelClip("אֶפְשָׁר בְּבַקָּשָׁה הָפוּךְ"),
             question: gloss("What does the customer want?", "Que veut le client ?", "¿Qué quiere el cliente?"),
             choices: [
               gloss("a hafuch", "un hafouch", "un hafuj"),
@@ -637,6 +641,7 @@ const levels: readonly PathwayLevel[] = [
             id: "ask-pay",
             hebrew: "אֵיךְ אַתָּה מְשַׁלֵּם",
             gloss: gloss("how are you paying", "comment paies-tu", "cómo pagas"),
+            audio: levelClip("אֵיךְ אַתָּה מְשַׁלֵּם"),
             question: gloss("What is the café asking?", "Que demande le café ?", "¿Qué pregunta el café?"),
             choices: [
               gloss("how you are paying", "comment tu paies", "cómo pagas"),
@@ -649,6 +654,7 @@ const levels: readonly PathwayLevel[] = [
             id: "ask-sit",
             hebrew: "זֶה לָשֶׁבֶת אוֹ לָקַחַת",
             gloss: gloss("to sit in or take away", "sur place ou à emporter", "para tomar aquí o para llevar"),
+            audio: levelClip("זֶה לָשֶׁבֶת אוֹ לָקַחַת"),
             question: gloss("What is the choice?", "Quel est le choix ?", "¿Cuál es la opción?"),
             choices: [
               gloss("to sit or take away", "sur place ou à emporter", "aquí o para llevar"),
@@ -659,7 +665,6 @@ const levels: readonly PathwayLevel[] = [
           },
         ],
       },
-      { type: "spell", items: ["kafe", "hafuch", "rotze", "efshar", "kal", "ze"].map((id) => spelled(id)) },
     ],
   },
 ];
@@ -673,6 +678,6 @@ export const section3: PathwaySection = {
   exam: {
     questions: 20,
     lives: 3,
-    types: ["picture-word", "recognize-sound", "listen-repeat", "spell", "compose-gap", "conjugate", "read", "write", "comprehend"],
+    types: ["picture-word", "recognize-sound", "listen-repeat", "compose-gap", "conjugate", "read", "write", "comprehend"],
   },
 };

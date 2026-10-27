@@ -17,6 +17,7 @@ import { armAfterSpeech } from "@/lib/learn/arm-after-speech";
 import { LESSON_EXPERIENCE } from "@/lib/learn/lesson-experience";
 import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { nikudDropRounds, nikudSlot, type NikudDropOption, type NikudDropRound, type NikudSlot } from "@/lib/learn/nikud-drop";
+import { takeLevelQuestions } from "@/lib/learn/pathway/question-batch";
 import { rasterNikud, type NikudImage } from "@/lib/learn/nikud-raster";
 import { nikudCue, type SpeechCue } from "@/lib/alephbet/intro-alphabet";
 
@@ -45,11 +46,13 @@ export function NikudDropQuiz({
   hearts,
   showHeader = true,
   awardExperience = true,
+  seed,
 }: {
   letterIds?: readonly string[];
   rounds?: readonly NikudDropRound[];
   onPlay: (cue: SpeechCue) => void | Promise<void>;
   onPass: () => void;
+  seed?: string;
   hearts?: {
     halves: number;
     failed: boolean;
@@ -60,7 +63,9 @@ export function NikudDropQuiz({
   awardExperience?: boolean;
 }) {
   const t = useTranslations("Learn");
-  const [rounds] = useState(() => (givenRounds ? [...givenRounds] : nikudDropRounds(letterIds)));
+  const [rounds] = useState(() =>
+    givenRounds ? [...givenRounds] : takeLevelQuestions(nikudDropRounds(letterIds), seed ?? letterIds.join("-")),
+  );
   const awardRef = useRef(awardExperience);
   awardRef.current = awardExperience;
   const [index, setIndex] = useState(0);

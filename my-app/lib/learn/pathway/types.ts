@@ -54,6 +54,7 @@ export type ReadItem = {
   id: string;
   hebrew: string;
   gloss: Gloss;
+  audio?: string;
 };
 
 export type ConjugateItem = {
@@ -78,6 +79,7 @@ export type ComprehendItem = {
   id: string;
   hebrew: string;
   gloss: Gloss;
+  audio?: string;
   question: Gloss;
   choices: readonly Gloss[];
   answer: number;

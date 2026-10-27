@@ -9,7 +9,7 @@
     "es": "padre",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/two_letter_words_mp3s/word_01.mp3"
   },
   {
     "id": "ba",
@@ -21,7 +21,7 @@
     "es": "viene",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": "audio/-28269e475e67be4bfd5e71f525df16b5d43754ec_b99cb94b.mp3"
+    "audio": "/two_letter_words_mp3s/word_02.mp3"
   },
   {
     "id": "gag",
@@ -33,7 +33,7 @@
     "es": "techo",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": "audio/-25563c4dc0195202b0ba7965723aa3e8bda21dfe_f8b2dbba.mp3"
+    "audio": "/two_letter_words_mp3s/word_03.mp3"
   },
   {
     "id": "dag",
@@ -45,7 +45,7 @@
     "es": "pez",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": "audio/-99382a3e0b7e92b0f67707dc4ec391b71115aed2_314f7d06.mp3"
+    "audio": "/two_letter_words_mp3s/word_04.mp3"
   },
   {
     "id": "bad",
@@ -57,7 +57,7 @@
     "es": "tela",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/two_letter_words_mp3s/word_05.mp3"
   },
   {
     "id": "ani",
@@ -69,7 +69,7 @@
     "es": "yo",
     "gender": null,
     "partOfSpeech": "pronoun",
-    "audio": "audio/-e19fa2839d1a9d3febadb4666cf1b80b96d43222_0bb9e370.mp3"
+    "audio": "/pronouns_mp3s/pronoun_01.mp3"
   },
   {
     "id": "ata",
@@ -81,7 +81,7 @@
     "es": "tú (masculino)",
     "gender": "masculine",
     "partOfSpeech": "pronoun",
-    "audio": "audio/-74922486db20e3e47f41c33411aaaf0937340cfc_a32a33e7.mp3"
+    "audio": "/pronouns_mp3s/pronoun_02.mp3"
   },
   {
     "id": "at",
@@ -93,7 +93,7 @@
     "es": "tú (femenino)",
     "gender": "feminine",
     "partOfSpeech": "pronoun",
-    "audio": "audio/-d0bd9114a97ec8b6afb708cd154a1366391fdce6_11d0a835.mp3"
+    "audio": "/pronouns_mp3s/pronoun_03.mp3"
   },
   {
     "id": "anachnu",
@@ -105,7 +105,7 @@
     "es": "nosotros",
     "gender": null,
     "partOfSpeech": "pronoun",
-    "audio": "audio/-e47021c6ff741cf09b5684fc811bdc3c61cbdcf4_35aa0b11.mp3"
+    "audio": "/pronouns_mp3s/pronoun_04.mp3"
   },
   {
     "id": "atem",
@@ -117,7 +117,7 @@
     "es": "vosotros",
     "gender": "masculine",
     "partOfSpeech": "pronoun",
-    "audio": "audio/-e183db2ad61dd7b5cfc63c2c3d06d5d64a8608b6_45168d20.mp3"
+    "audio": "/pronouns_mp3s/pronoun_05.mp3"
   },
   {
     "id": "aten",
@@ -129,7 +129,7 @@
     "es": "vosotras",
     "gender": "feminine",
     "partOfSpeech": "pronoun",
-    "audio": "audio/-1b149a1fbe8a744a15b9a6b1aefac0f851d73cd9_b5243870.mp3"
+    "audio": "/pronouns_mp3s/pronoun_06.mp3"
   },
   {
     "id": "hu",
@@ -141,7 +141,7 @@
     "es": "él",
     "gender": "masculine",
     "partOfSpeech": "pronoun",
-    "audio": "audio/-35c8cd77af8e82374a6109161fad2c5eb2c47631_2f4ba2df.mp3"
+    "audio": "/pronouns_mp3s/pronoun_07.mp3"
   },
   {
     "id": "hi",
@@ -153,7 +153,7 @@
     "es": "ella",
     "gender": "feminine",
     "partOfSpeech": "pronoun",
-    "audio": "audio/-7fa10294b93e6513dcd207034a6016133b3909fc_4793d368.mp3"
+    "audio": "/pronouns_mp3s/pronoun_08.mp3"
   },
   {
     "id": "hem",
@@ -165,7 +165,7 @@
     "es": "ellos",
     "gender": "masculine",
     "partOfSpeech": "pronoun",
-    "audio": "audio/-8c319c5d1bed65c470ee702abbe35eeb672e3939_94e7668b.mp3"
+    "audio": "/pronouns_mp3s/pronoun_10.mp3"
   },
   {
     "id": "hen",
@@ -177,7 +177,43 @@
     "es": "ellas",
     "gender": "feminine",
     "partOfSpeech": "pronoun",
-    "audio": "audio/-0d47678f715a386f5c3918f120722a05a6877d52_9b60008d.mp3"
+    "audio": "/pronouns_mp3s/pronoun_09.mp3"
+  },
+  {
+    "id": "yafe",
+    "hebrew": "יפה",
+    "niqqud": "יָפֶה",
+    "transliteration": "yafe",
+    "en": "beautiful (masculine)",
+    "fr": "beau",
+    "es": "hermoso",
+    "gender": "masculine",
+    "partOfSpeech": "adjective",
+    "audio": "/pronouns_part2/pronouns_05.mp3"
+  },
+  {
+    "id": "yafa",
+    "hebrew": "יפה",
+    "niqqud": "יָפָה",
+    "transliteration": "yafa",
+    "en": "beautiful (feminine)",
+    "fr": "belle",
+    "es": "hermosa",
+    "gender": "feminine",
+    "partOfSpeech": "adjective",
+    "audio": "/pronouns_part2/pronouns_06.mp3"
+  },
+  {
+    "id": "yafim",
+    "hebrew": "יפים",
+    "niqqud": "יָפִים",
+    "transliteration": "yafim",
+    "en": "beautiful (masculine plural)",
+    "fr": "beaux",
+    "es": "hermosos",
+    "gender": "masculine",
+    "partOfSpeech": "adjective",
+    "audio": "/pronouns_part2/pronouns_07.mp3"
   },
   {
     "id": "shalom",
@@ -189,7 +225,7 @@
     "es": "hola",
     "gender": null,
     "partOfSpeech": "interjection",
-    "audio": "audio/-9f3080967cc8d31a43e4e2cc1224e958009b5fc2_d3a47329.mp3"
+    "audio": "/level_16-21/level_16-21_001.mp3"
   },
   {
     "id": "anglia",
@@ -201,7 +237,7 @@
     "es": "Inglaterra",
     "gender": "feminine",
     "partOfSpeech": "noun",
-    "audio": "audio/-eb1ce4a4f42867b99d61a3616ef5225cb446898c_5dd55dc5.mp3"
+    "audio": "/level_16-21/level_16-21_011.mp3"
   },
   {
     "id": "me-anglia",
@@ -213,7 +249,7 @@
     "es": "de Inglaterra",
     "gender": null,
     "partOfSpeech": "phrase",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_010.mp3"
   },
   {
     "id": "korim",
@@ -225,7 +261,7 @@
     "es": "llaman; leen",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": "audio/-d94908fd7510ab39789203057f571f15ee66593c_4706e7be.mp3"
+    "audio": "/level_16-21/level_16-21_012.mp3"
   },
   {
     "id": "li",
@@ -237,7 +273,7 @@
     "es": "a mí",
     "gender": null,
     "partOfSpeech": "phrase",
-    "audio": "audio/-c74a42d9cf3be0f7b24bc87c2cb914295ba9aec9_03cb67a7.mp3"
+    "audio": "/level_16-21/level_16-21_013.mp3"
   },
   {
     "id": "eifo",
@@ -249,7 +285,7 @@
     "es": "dónde",
     "gender": null,
     "partOfSpeech": "question",
-    "audio": "audio/-aab0f1de9b22f299636cc797778e3c24605207de_25e78875.mp3"
+    "audio": "/level_16-21/level_16-21_014.mp3"
   },
   {
     "id": "gar",
@@ -261,7 +297,7 @@
     "es": "vive",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": "audio/-3e975eb34270bdd28bfe5ae8b2f314285a75da9c_31a4d0dc.mp3"
+    "audio": "/level_16-21/level_16-21_016.mp3"
   },
   {
     "id": "gara",
@@ -273,7 +309,7 @@
     "es": "vive",
     "gender": "feminine",
     "partOfSpeech": "verb",
-    "audio": "audio/-e3e45ced983a2b539b5f719c5e40f0b17760344b_f672e90f.mp3"
+    "audio": "/level_16-21/level_16-21_017.mp3"
   },
   {
     "id": "me-eifo",
@@ -285,7 +321,7 @@
     "es": "de dónde",
     "gender": null,
     "partOfSpeech": "question",
-    "audio": "audio/-e8370df6026c73f26721f199e5e4212d01704948_5746cf6e.mp3"
+    "audio": "/level_16-21/level_16-21_018.mp3"
   },
   {
     "id": "ma",
@@ -297,7 +333,7 @@
     "es": "qué",
     "gender": null,
     "partOfSpeech": "question",
-    "audio": "audio/-3c3e366a95abec6b56649fbd40da76e8bdc30ca6_e7c7b095.mp3"
+    "audio": "/level_16-21/level_16-21_028.mp3"
   },
   {
     "id": "eich",
@@ -309,7 +345,7 @@
     "es": "cómo",
     "gender": null,
     "partOfSpeech": "question",
-    "audio": "audio/-e64ef58d97273d9e9bbc226330abd734eefc72c9_1135c2c0.mp3"
+    "audio": "/level_16-21/level_16-21_027.mp3"
   },
   {
     "id": "mah-shlomcha",
@@ -321,7 +357,7 @@
     "es": "cómo estás",
     "gender": "masculine",
     "partOfSpeech": "phrase",
-    "audio": "audio/-34b22c4794c1bdad7148334620f097e1b5308942_092eefc5.mp3"
+    "audio": "/level_16-21/level_16-21_021.mp3"
   },
   {
     "id": "mah-shlomech",
@@ -333,7 +369,7 @@
     "es": "cómo estás",
     "gender": "feminine",
     "partOfSpeech": "phrase",
-    "audio": "audio/-604f2e588b06078f0f784c3241f36141983986e0_ae69b1a1.mp3"
+    "audio": "/level_16-21/level_16-21_022.mp3"
   },
   {
     "id": "shlomcha",
@@ -345,7 +381,7 @@
     "es": "tu estado",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_025.mp3"
   },
   {
     "id": "shlomech",
@@ -357,7 +393,7 @@
     "es": "tu estado",
     "gender": "feminine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_026.mp3"
   },
   {
     "id": "leehov",
@@ -369,7 +405,7 @@
     "es": "amar",
     "gender": null,
     "partOfSpeech": "verb",
-    "audio": "audio/-5c7748a1f11c8e9aec32b88596a06af55cc86c9c_e19188e9.mp3"
+    "audio": "/level_16-21/level_16-21_044.mp3"
   },
   {
     "id": "ohev",
@@ -381,7 +417,7 @@
     "es": "ama",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": "audio/-5fcd6ba6450a1f2b3ca66848e772724d93f58cd2_daf79d27.mp3"
+    "audio": "/level_16-21/level_16-21_020.mp3"
   },
   {
     "id": "ohevet",
@@ -393,7 +429,7 @@
     "es": "ama",
     "gender": "feminine",
     "partOfSpeech": "verb",
-    "audio": "audio/-3b54f91c728ceeecb4beacdf391a85ed8dc88359_ab94b5ad.mp3"
+    "audio": "/level_16-21/level_16-21_045.mp3"
   },
   {
     "id": "ohavim",
@@ -405,7 +441,7 @@
     "es": "aman",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": "audio/-153cbbcd5ab99b8f26523e14abe650cae154a3cd_cb9b3323.mp3"
+    "audio": "/level_16-21/level_16-21_046.mp3"
   },
   {
     "id": "ohavot",
@@ -417,7 +453,7 @@
     "es": "aman",
     "gender": "feminine",
     "partOfSpeech": "verb",
-    "audio": "audio/-c2b386460e1ee8f9f69196649225477604c45525_83b64612.mp3"
+    "audio": "/level_16-21/level_16-21_047.mp3"
   },
   {
     "id": "glida",
@@ -429,7 +465,7 @@
     "es": "helado",
     "gender": "feminine",
     "partOfSpeech": "noun",
-    "audio": "audio/-9b64ac4736c85314db188e330c36c602dcd403c4_fd7cdf9a.mp3"
+    "audio": "/level_16-21/level_16-21_019.mp3"
   },
   {
     "id": "et",
@@ -441,7 +477,7 @@
     "es": "marca de objeto et",
     "gender": null,
     "partOfSpeech": "particle",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_048.mp3"
   },
   {
     "id": "ha",
@@ -453,7 +489,7 @@
     "es": "el, la",
     "gender": null,
     "partOfSpeech": "particle",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_049.mp3"
   },
   {
     "id": "hadag",
@@ -465,7 +501,7 @@
     "es": "el pez",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_050.mp3"
   },
   {
     "id": "dan",
@@ -477,7 +513,7 @@
     "es": "Dan",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_009.mp3"
   },
   {
     "id": "yesh",
@@ -489,7 +525,7 @@
     "es": "hay",
     "gender": null,
     "partOfSpeech": "particle",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_063.mp3"
   },
   {
     "id": "ein",
@@ -501,7 +537,7 @@
     "es": "no hay",
     "gender": null,
     "partOfSpeech": "particle",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_064.mp3"
   },
   {
     "id": "lecha",
@@ -513,7 +549,7 @@
     "es": "a ti (masculino)",
     "gender": "masculine",
     "partOfSpeech": "preposition",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_065.mp3"
   },
   {
     "id": "lach",
@@ -525,7 +561,7 @@
     "es": "a ti (femenino)",
     "gender": "feminine",
     "partOfSpeech": "preposition",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_066.mp3"
   },
   {
     "id": "lo",
@@ -537,7 +573,7 @@
     "es": "a él",
     "gender": "masculine",
     "partOfSpeech": "preposition",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_067.mp3"
   },
   {
     "id": "lah",
@@ -549,7 +585,7 @@
     "es": "a ella",
     "gender": "feminine",
     "partOfSpeech": "preposition",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_068.mp3"
   },
   {
     "id": "mayim",
@@ -561,7 +597,7 @@
     "es": "agua",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_069.mp3"
   },
   {
     "id": "lechem",
@@ -573,7 +609,7 @@
     "es": "pan",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_070.mp3"
   },
   {
     "id": "kelev",
@@ -585,7 +621,7 @@
     "es": "perro",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_071.mp3"
   },
   {
     "id": "bayit",
@@ -597,7 +633,7 @@
     "es": "casa",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_072.mp3"
   },
   {
     "id": "sefer",
@@ -609,7 +645,7 @@
     "es": "libro",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_073.mp3"
   },
   {
     "id": "ben",
@@ -621,7 +657,7 @@
     "es": "hijo",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_101.mp3"
   },
   {
     "id": "bat",
@@ -633,7 +669,7 @@
     "es": "hija",
     "gender": "feminine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_102.mp3"
   },
   {
     "id": "kama",
@@ -645,7 +681,7 @@
     "es": "cuántos",
     "gender": null,
     "partOfSpeech": "question",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_103.mp3"
   },
   {
     "id": "shana",
@@ -657,7 +693,7 @@
     "es": "año",
     "gender": "feminine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_088.mp3"
   },
   {
     "id": "shnatayim",
@@ -669,7 +705,7 @@
     "es": "dos años",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_089.mp3"
   },
   {
     "id": "efes",
@@ -681,7 +717,7 @@
     "es": "cero",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_01.mp3"
   },
   {
     "id": "shalosh",
@@ -693,7 +729,7 @@
     "es": "tres",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_04.mp3"
   },
   {
     "id": "arba",
@@ -705,7 +741,7 @@
     "es": "cuatro",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_05.mp3"
   },
   {
     "id": "hamesh",
@@ -717,7 +753,7 @@
     "es": "cinco",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_06.mp3"
   },
   {
     "id": "shesh",
@@ -729,7 +765,7 @@
     "es": "seis",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_07.mp3"
   },
   {
     "id": "sheva",
@@ -741,7 +777,7 @@
     "es": "siete",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_08.mp3"
   },
   {
     "id": "shmone",
@@ -753,7 +789,7 @@
     "es": "ocho",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_09.mp3"
   },
   {
     "id": "tesha",
@@ -765,7 +801,7 @@
     "es": "nueve",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_10.mp3"
   },
   {
     "id": "eser",
@@ -777,7 +813,7 @@
     "es": "diez",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_11.mp3"
   },
   {
     "id": "esrim",
@@ -789,7 +825,7 @@
     "es": "veinte",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_21.mp3"
   },
   {
     "id": "shloshim",
@@ -801,7 +837,7 @@
     "es": "treinta",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_22.mp3"
   },
   {
     "id": "meah",
@@ -813,7 +849,7 @@
     "es": "cien",
     "gender": null,
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/numbers%202/numbers_29.mp3"
   },
   {
     "id": "nishma",
@@ -825,7 +861,7 @@
     "es": "oído",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_121.mp3"
   },
   {
     "id": "kore",
@@ -837,7 +873,7 @@
     "es": "pasa",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_122.mp3"
   },
   {
     "id": "efshar",
@@ -849,7 +885,7 @@
     "es": "posible",
     "gender": null,
     "partOfSpeech": "adverb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_123.mp3"
   },
   {
     "id": "lehazmin",
@@ -861,7 +897,7 @@
     "es": "pedir",
     "gender": null,
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_124.mp3"
   },
   {
     "id": "bevakasha",
@@ -873,7 +909,7 @@
     "es": "por favor",
     "gender": null,
     "partOfSpeech": "interjection",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_125.mp3"
   },
   {
     "id": "hafuch",
@@ -885,7 +921,7 @@
     "es": "hafuj",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_126.mp3"
   },
   {
     "id": "kafe",
@@ -897,7 +933,7 @@
     "es": "café",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_127.mp3"
   },
   {
     "id": "kal",
@@ -909,7 +945,7 @@
     "es": "ligero",
     "gender": "masculine",
     "partOfSpeech": "adjective",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_128.mp3"
   },
   {
     "id": "espresso",
@@ -921,7 +957,7 @@
     "es": "espresso",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_111.mp3"
   },
   {
     "id": "kruason",
@@ -933,7 +969,7 @@
     "es": "cruasán",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_129.mp3"
   },
   {
     "id": "ve-kruason",
@@ -945,7 +981,7 @@
     "es": "y un cruasán",
     "gender": null,
     "partOfSpeech": "phrase",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_112.mp3"
   },
   {
     "id": "rotze",
@@ -957,7 +993,7 @@
     "es": "quiere (masculino)",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_130.mp3"
   },
   {
     "id": "rotza",
@@ -969,7 +1005,7 @@
     "es": "quiere (femenino)",
     "gender": "feminine",
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_131.mp3"
   },
   {
     "id": "rotzim",
@@ -981,7 +1017,7 @@
     "es": "quieren (masculino)",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_132.mp3"
   },
   {
     "id": "rotzot",
@@ -993,7 +1029,7 @@
     "es": "quieren (femenino)",
     "gender": "feminine",
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_133.mp3"
   },
   {
     "id": "ze",
@@ -1005,7 +1041,7 @@
     "es": "esto (masculino)",
     "gender": "masculine",
     "partOfSpeech": "pronoun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_134.mp3"
   },
   {
     "id": "leshevet",
@@ -1017,7 +1053,7 @@
     "es": "sentarse",
     "gender": null,
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_135.mp3"
   },
   {
     "id": "o",
@@ -1029,7 +1065,7 @@
     "es": "o",
     "gender": null,
     "partOfSpeech": "conjunction",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_136.mp3"
   },
   {
     "id": "likachat",
@@ -1041,7 +1077,7 @@
     "es": "llevar",
     "gender": null,
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_137.mp3"
   },
   {
     "id": "meshalem",
@@ -1053,7 +1089,7 @@
     "es": "paga (masculino)",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_138.mp3"
   },
   {
     "id": "meshalmim",
@@ -1065,7 +1101,7 @@
     "es": "pagan (masculino)",
     "gender": "masculine",
     "partOfSpeech": "verb",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_139.mp3"
   },
   {
     "id": "im",
@@ -1077,7 +1113,7 @@
     "es": "con",
     "gender": null,
     "partOfSpeech": "preposition",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_140.mp3"
   },
   {
     "id": "ashray",
@@ -1089,7 +1125,7 @@
     "es": "crédito",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_141.mp3"
   },
   {
     "id": "mezuman",
@@ -1101,6 +1137,6 @@
     "es": "efectivo",
     "gender": "masculine",
     "partOfSpeech": "noun",
-    "audio": null
+    "audio": "/level_16-21/level_16-21_142.mp3"
   }
 ]

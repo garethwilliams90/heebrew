@@ -1,6 +1,6 @@
-import { normalizeHebrew } from "@/lib/learn/hebrew-text";
+import { levelClip } from "@/lib/learn/pathway/level-16-21-audio";
 import { seededOrder } from "@/lib/learn/pathway/order";
-import { gloss, type GapItem, type GapPiece, type Gloss, type PathwayLevel, type PathwaySection, type RecognizeItem, type SpellItem, type SpokenItem } from "@/lib/learn/pathway/types";
+import { gloss, type GapItem, type GapPiece, type Gloss, type PathwayLevel, type PathwaySection, type RecognizeItem, type SpokenItem } from "@/lib/learn/pathway/types";
 import { pictureWordItems } from "@/lib/learn/pathway/picture-word";
 import { requireWord } from "@/lib/learn/words/catalog";
 
@@ -13,20 +13,13 @@ function spoken(id: string): SpokenItem {
     hebrew: word.niqqud || word.hebrew,
     say: word.niqqud || word.hebrew,
     gloss: { en: word.en, fr: word.fr, es: word.es },
-    audio: word.audio ?? undefined,
+    audio: word.audio ?? levelClip(word.niqqud || word.hebrew),
   };
 }
 
 function piece(id: string): GapPiece {
   const item = spoken(id);
   return { id: item.id, hebrew: item.hebrew, gloss: item.gloss, audio: item.audio };
-}
-
-function spelled(id: string): SpellItem {
-  const item = spoken(id);
-  const needed = [...normalizeHebrew(item.hebrew)];
-  const extra = [..."אבגדהוז"].filter((letter) => !needed.includes(letter));
-  return { prompt: item, letters: seededOrder([...needed, ...extra.slice(0, 3)], id) };
 }
 
 function recognizeIds(ids: readonly string[]): RecognizeItem[] {
@@ -43,7 +36,7 @@ function recognizeIds(ids: readonly string[]): RecognizeItem[] {
 }
 
 function line(id: string, hebrew: string, en: string, fr: string, es: string, audio?: string): SpokenItem {
-  return { id, hebrew, say: hebrew, gloss: gloss(en, fr, es), audio };
+  return { id, hebrew, say: hebrew, gloss: gloss(en, fr, es), audio: audio ?? levelClip(hebrew) };
 }
 
 function recognizeLines(items: readonly SpokenItem[]): RecognizeItem[] {
@@ -56,8 +49,15 @@ function recognizeLines(items: readonly SpokenItem[]): RecognizeItem[] {
   });
 }
 
-function gap(id: string, say: string, translation: Gloss, tokens: GapItem["tokens"], extras: readonly GapPiece[]): GapItem {
-  return { id, say, gloss: translation, tokens, extras };
+function gap(
+  id: string,
+  say: string,
+  translation: Gloss,
+  tokens: GapItem["tokens"],
+  extras: readonly GapPiece[],
+  audio?: string,
+): GapItem {
+  return { id, say, gloss: translation, tokens, extras, audio: audio ?? levelClip(say) };
 }
 
 const twoLetter: RecognizeItem[] = [
@@ -98,7 +98,23 @@ const twoLetter: RecognizeItem[] = [
   },
 ];
 
-const pronouns = ["ani", "ata", "anachnu", "atem", "aten", "hu", "hi"] as const;
+const pronouns = ["ani", "ata", "at", "anachnu", "atem", "aten", "hu", "hi", "hem", "hen"] as const;
+
+const beautyWords = ["yafe", "yafa", "yafim"] as const;
+
+const beautyLines = [
+  line("hu-yafe", "הוּא יָפֶה", "he is beautiful (masculine)", "il est beau", "él es hermoso", "/pronouns_part2/pronouns_01.mp3"),
+  line("hi-yafa", "הִיא יָפָה", "she is beautiful (feminine)", "elle est belle", "ella es hermosa", "/pronouns_part2/pronouns_02.mp3"),
+  line(
+    "anachnu-yafim",
+    "אֲנַחְנוּ יָפִים",
+    "we are beautiful (masculine plural)",
+    "nous sommes beaux",
+    "somos hermosos",
+    "/pronouns_part2/pronouns_03.mp3",
+  ),
+  line("ani-ve-hu", "אֲנִי וְהוּא", "I and he", "moi et lui", "yo y él", "/pronouns_part2/pronouns_04.mp3"),
+];
 
 const helloLines = [
   line("hi-shalom", "שָׁלוֹם", "hello", "bonjour", "hola", requireWord("shalom").audio ?? undefined),
@@ -157,6 +173,7 @@ const sectionWords = [
   "dag",
   "bad",
   ...pronouns,
+  ...beautyWords,
   "shalom",
   "dan",
   "me-anglia",
@@ -164,7 +181,6 @@ const sectionWords = [
   "korim",
   "li",
   "eifo",
-  "at",
   "gar",
   "gara",
   "me-eifo",
@@ -183,8 +199,6 @@ const sectionWords = [
   "et",
   "ha",
   "hadag",
-  "hem",
-  "hen",
 ];
 
 function pictureStep(ids: readonly string[], seed: string) {
@@ -228,28 +242,77 @@ const levels: readonly PathwayLevel[] = [
     index: 1,
     title: gloss("Pronouns", "Pronoms", "Pronombres"),
     about: gloss(
-      "I, you, we, he, and she.",
-      "Je, tu, nous, il et elle.",
-      "Yo, tú, nosotros, él y ella.",
+      "I, you, we, he, she, they, and how beautiful changes with them.",
+      "Je, tu, nous, il, elle, ils, et comment beau change avec eux.",
+      "Yo, tú, nosotros, él, ella, ellos, y cómo cambia hermoso con ellos.",
     ),
     mark: "אֲנִי",
-    knownWordIds: [...pronouns],
+    knownWordIds: [...pronouns, ...beautyWords],
     intros: [
       {
         title: gloss("Who is speaking?", "Qui parle ?", "¿Quién habla?"),
         body: gloss(
-          "A pronoun tells you who does the action. You will hear each one, then spell it.",
-          "Un pronom dit qui fait l'action. Tu vas entendre chacun, puis l'écrire.",
-          "Un pronombre dice quién hace la acción. Oirás cada uno y luego lo escribirás.",
+          "A pronoun tells you who does the action. You will hear each one.",
+          "Un pronom dit qui fait l'action. Tu vas entendre chacun.",
+          "Un pronombre dice quién hace la acción. Oirás cada uno.",
         ),
         samples: samples(pronouns),
       },
+      {
+        title: gloss("Beautiful changes", "Beau change", "Hermoso cambia"),
+        body: gloss(
+          "יָפֶה is for a man or הוא. יָפָה is for a woman or היא. יָפִים is for a masculine we. אֲנִי וְהוּא joins two people with ו.",
+          "יָפֶה est pour un homme ou הוא. יָפָה est pour une femme ou היא. יָפִים est pour un nous masculin. אֲנִי וְהוּא relie deux personnes avec ו.",
+          "יָפֶה es para un hombre o הוא. יָפָה es para una mujer o היא. יָפִים es para un nosotros masculino. אֲנִי וְהוּא une a dos personas con ו.",
+        ),
+        samples: [
+          ...beautyLines.map((item) => ({ hebrew: item.hebrew, gloss: item.gloss, audio: item.audio, say: item.say })),
+          ...samples(beautyWords),
+        ],
+      },
     ],
     exercises: [
-      pictureStep(pronouns, "s2-l1"),
+      pictureStep([...pronouns, ...beautyWords], "s2-l1"),
       { type: "recognize-sound", items: recognizeIds(pronouns) },
-      { type: "listen-repeat", optional: true, items: pronouns.map((id) => spoken(id)) },
-      { type: "spell", items: pronouns.map((id) => spelled(id)) },
+      { type: "recognize-sound", items: recognizeLines([...beautyLines, ...beautyWords.map((id) => spoken(id))]) },
+      { type: "listen-repeat", optional: true, items: [...pronouns.map((id) => spoken(id)), ...beautyLines, ...beautyWords.map((id) => spoken(id))] },
+      {
+        type: "compose-gap",
+        items: [
+          gap(
+            "gap-hu-yafe",
+            "הוּא יָפֶה",
+            gloss("he is beautiful", "il est beau", "él es hermoso"),
+            [{ ...piece("hu") }, { ...piece("yafe"), blank: true }],
+            [piece("yafa"), piece("yafim")],
+            "/pronouns_part2/pronouns_01.mp3",
+          ),
+          gap(
+            "gap-hi-yafa",
+            "הִיא יָפָה",
+            gloss("she is beautiful", "elle est belle", "ella es hermosa"),
+            [{ ...piece("hi") }, { ...piece("yafa"), blank: true }],
+            [piece("yafe"), piece("yafim")],
+            "/pronouns_part2/pronouns_02.mp3",
+          ),
+          gap(
+            "gap-we-yafim",
+            "אֲנַחְנוּ יָפִים",
+            gloss("we are beautiful", "nous sommes beaux", "somos hermosos"),
+            [{ ...piece("anachnu") }, { ...piece("yafim"), blank: true }],
+            [piece("yafe"), piece("yafa")],
+            "/pronouns_part2/pronouns_03.mp3",
+          ),
+          gap(
+            "gap-ani-ve-hu",
+            "אֲנִי וְהוּא",
+            gloss("I and he", "moi et lui", "yo y él"),
+            [{ ...piece("ani") }, { id: "ve-hu", hebrew: "וְהוּא", gloss: gloss("and he", "et lui", "y él"), blank: true }],
+            [piece("hu"), piece("hi")],
+            "/pronouns_part2/pronouns_04.mp3",
+          ),
+        ],
+      },
     ],
   },
   {
@@ -279,7 +342,6 @@ const levels: readonly PathwayLevel[] = [
       pictureStep(["shalom", "dan", "me-anglia", "anglia", "korim", "li", "eifo", "at", "gar", "gara", "me-eifo"], "s2-l2"),
       { type: "recognize-sound", items: recognizeLines(helloLines) },
       { type: "listen-repeat", optional: true, items: helloLines },
-      { type: "spell", items: ["shalom", "ani", "eifo", "gar", "dan"].map((id) => spelled(id)) },
       {
         type: "compose-gap",
         items: [
@@ -336,7 +398,6 @@ const levels: readonly PathwayLevel[] = [
       pictureStep(["mah-shlomcha", "mah-shlomech", "shlomcha", "shlomech", "eich", "ma"], "s2-l3"),
       { type: "recognize-sound", items: recognizeLines(howLines) },
       { type: "listen-repeat", optional: true, items: howLines },
-      { type: "spell", items: ["eich", "ma", "ata", "at"].map((id) => spelled(id)) },
       {
         type: "compose-gap",
         items: [
@@ -376,7 +437,12 @@ const levels: readonly PathwayLevel[] = [
           "L'infinitif est la forme « aimer ». Le présent change selon qui parle.",
           "El infinitivo es la forma « amar ». El presente cambia según quién habla.",
         ),
-        samples: loveForms.map((item) => ({ hebrew: item.hebrew, gloss: gloss(item.en, item.fr, item.es) })),
+        samples: loveForms.map((item) => ({
+          hebrew: item.hebrew,
+          gloss: gloss(item.en, item.fr, item.es),
+          audio: levelClip(item.hebrew),
+          say: item.hebrew,
+        })),
       },
       {
         title: gloss("את ה marks the", "את ה marque le défini", "את ה marca lo definido"),
@@ -386,8 +452,18 @@ const levels: readonly PathwayLevel[] = [
           "El helado aquí es indefinido, así que no hay את. El pez es definido, así que la frase lleva את más ה.",
         ),
         samples: [
-          { hebrew: "אָנִי אוֹהֵב גְּלִידָה", gloss: gloss("I like ice cream", "j'aime la glace", "me gusta el helado") },
-          { hebrew: "הִיא אוֹהֶבֶת אֵת הַדָּג", gloss: gloss("she likes the fish", "elle aime le poisson", "a ella le gusta el pez") },
+          {
+            hebrew: "אָנִי אוֹהֵב גְּלִידָה",
+            gloss: gloss("I like ice cream", "j'aime la glace", "me gusta el helado"),
+            audio: levelClip("אָנִי אוֹהֵב גְּלִידָה"),
+            say: "אָנִי אוֹהֵב גְּלִידָה",
+          },
+          {
+            hebrew: "הִיא אוֹהֶבֶת אֵת הַדָּג",
+            gloss: gloss("she likes the fish", "elle aime le poisson", "a ella le gusta el pez"),
+            audio: levelClip("הִיא אוֹהֶבֶת אֵת הַדָּג"),
+            say: "הִיא אוֹהֶבֶת אֵת הַדָּג",
+          },
         ],
       },
     ],
@@ -395,7 +471,6 @@ const levels: readonly PathwayLevel[] = [
       pictureStep(["leehov", "ohev", "ohevet", "ohavim", "ohavot", "glida", "et", "ha", "hadag", "hem", "hen"], "s2-l4"),
       { type: "recognize-sound", items: recognizeLines(likeLines) },
       { type: "listen-repeat", optional: true, items: likeLines },
-      { type: "spell", items: ["ohev", "ohevet", "leehov", "glida"].map((id) => spelled(id)) },
       {
         type: "compose-gap",
         items: [
@@ -419,11 +494,13 @@ const levels: readonly PathwayLevel[] = [
             id: "read-ice",
             hebrew: "אָנִי אוֹהֵב גְּלִידָה",
             gloss: gloss("I like ice cream", "j'aime la glace", "me gusta el helado"),
+            audio: levelClip("אָנִי אוֹהֵב גְּלִידָה"),
           },
           {
             id: "read-fish",
             hebrew: "הִיא אוֹהֶבֶת אֵת הַדָּג",
             gloss: gloss("she likes the fish", "elle aime le poisson", "a ella le gusta el pez"),
+            audio: levelClip("הִיא אוֹהֶבֶת אֵת הַדָּג"),
           },
         ],
       },
@@ -440,6 +517,6 @@ export const section2: PathwaySection = {
   exam: {
     questions: 20,
     lives: 3,
-    types: ["picture-word", "nikud-drop", "recognize-sound", "listen-repeat", "spell", "compose-gap", "read"],
+    types: ["picture-word", "nikud-drop", "recognize-sound", "listen-repeat", "compose-gap", "read"],
   },
 };

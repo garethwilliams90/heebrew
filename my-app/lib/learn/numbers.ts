@@ -9,8 +9,6 @@ export type NumberWord = {
   value: number;
   group: NumberGroup;
   hebrew: string;
-  transliteration: string;
-  gloss: { en: string; fr: string; es: string };
 };
 
 const word = (
@@ -18,67 +16,77 @@ const word = (
   value: number,
   group: NumberGroup,
   hebrew: string,
-  transliteration: string,
-  en: string,
-  fr: string,
-  es: string,
-): NumberWord => ({ id, value, group, hebrew, transliteration, gloss: { en, fr, es } });
+): NumberWord => ({ id, value, group, hebrew });
 
 /**
- * Counting forms that match the number words already taught in the app
- * (שָׁלוֹשׁ, אַרְבַּע, …). This list is the numbers deck only.
+ * Counting forms in the same order as `public/numbers 2`:
+ * zero through nine, ten through nineteen, the tens,
+ * one hundred through nine hundred, then one thousand.
  */
 export const numberWords: readonly NumberWord[] = [
-  word("n0", 0, "digit", "אֶפֶס", "efes", "zero", "zéro", "cero"),
-  word("n1", 1, "digit", "אַחַת", "achat", "one", "un", "uno"),
-  word("n2", 2, "digit", "שְׁתַּיִם", "shtayim", "two", "deux", "dos"),
-  word("n3", 3, "digit", "שָׁלוֹשׁ", "shalosh", "three", "trois", "tres"),
-  word("n4", 4, "digit", "אַרְבַּע", "arba", "four", "quatre", "cuatro"),
-  word("n5", 5, "digit", "חָמֵשׁ", "hamesh", "five", "cinq", "cinco"),
-  word("n6", 6, "digit", "שֵׁשׁ", "shesh", "six", "six", "seis"),
-  word("n7", 7, "digit", "שֶׁבַע", "sheva", "seven", "sept", "siete"),
-  word("n8", 8, "digit", "שְׁמוֹנֶה", "shmone", "eight", "huit", "ocho"),
-  word("n9", 9, "digit", "תֵּשַׁע", "tesha", "nine", "neuf", "nueve"),
-  word("n10", 10, "round", "עֶשֶׂר", "eser", "ten", "dix", "diez"),
-  word("n11", 11, "teen", "אַחַת עֶשְׂרֵה", "achat esre", "eleven", "onze", "once"),
-  word("n12", 12, "teen", "שְׁתֵּים עֶשְׂרֵה", "shtem esre", "twelve", "douze", "doce"),
-  word("n13", 13, "teen", "שְׁלוֹשׁ עֶשְׂרֵה", "shlosh esre", "thirteen", "treize", "trece"),
-  word("n14", 14, "teen", "אַרְבַּע עֶשְׂרֵה", "arba esre", "fourteen", "quatorze", "catorce"),
-  word("n15", 15, "teen", "חֲמֵשׁ עֶשְׂרֵה", "hamesh esre", "fifteen", "quinze", "quince"),
-  word("n16", 16, "teen", "שֵׁשׁ עֶשְׂרֵה", "shesh esre", "sixteen", "seize", "dieciséis"),
-  word("n17", 17, "teen", "שְׁבַע עֶשְׂרֵה", "sheva esre", "seventeen", "dix-sept", "diecisiete"),
-  word("n18", 18, "teen", "שְׁמוֹנֶה עֶשְׂרֵה", "shmone esre", "eighteen", "dix-huit", "dieciocho"),
-  word("n19", 19, "teen", "תְּשַׁע עֶשְׂרֵה", "tesha esre", "nineteen", "dix-neuf", "diecinueve"),
-  word("n20", 20, "round", "עֶשְׂרִים", "esrim", "twenty", "vingt", "veinte"),
-  word("n30", 30, "round", "שְׁלוֹשִׁים", "shloshim", "thirty", "trente", "treinta"),
-  word("n40", 40, "round", "אַרְבָּעִים", "arbaim", "forty", "quarante", "cuarenta"),
-  word("n50", 50, "round", "חֲמִשִּׁים", "chamishim", "fifty", "cinquante", "cincuenta"),
-  word("n60", 60, "round", "שִׁשִּׁים", "shishim", "sixty", "soixante", "sesenta"),
-  word("n70", 70, "round", "שִׁבְעִים", "shivim", "seventy", "soixante-dix", "setenta"),
-  word("n80", 80, "round", "שְׁמוֹנִים", "shmonim", "eighty", "quatre-vingts", "ochenta"),
-  word("n90", 90, "round", "תִּשְׁעִים", "tishim", "ninety", "quatre-vingt-dix", "noventa"),
-  word("n100", 100, "round", "מֵאָה", "meah", "one hundred", "cent", "cien"),
-  word("n1000", 1000, "round", "אֶלֶף", "elef", "one thousand", "mille", "mil"),
+  word("n0", 0, "digit", "אֶפֶס"),
+  word("n1", 1, "digit", "אַחַת"),
+  word("n2", 2, "digit", "שְׁתַּיִם"),
+  word("n3", 3, "digit", "שָׁלוֹשׁ"),
+  word("n4", 4, "digit", "אַרְבַּע"),
+  word("n5", 5, "digit", "חָמֵשׁ"),
+  word("n6", 6, "digit", "שֵׁשׁ"),
+  word("n7", 7, "digit", "שֶׁבַע"),
+  word("n8", 8, "digit", "שְׁמוֹנֶה"),
+  word("n9", 9, "digit", "תֵּשַׁע"),
+  word("n10", 10, "round", "עֶשֶׂר"),
+  word("n11", 11, "teen", "אַחַת עֶשְׂרֵה"),
+  word("n12", 12, "teen", "שְׁתֵּים עֶשְׂרֵה"),
+  word("n13", 13, "teen", "שְׁלוֹשׁ עֶשְׂרֵה"),
+  word("n14", 14, "teen", "אַרְבַּע עֶשְׂרֵה"),
+  word("n15", 15, "teen", "חֲמֵשׁ עֶשְׂרֵה"),
+  word("n16", 16, "teen", "שֵׁשׁ עֶשְׂרֵה"),
+  word("n17", 17, "teen", "שְׁבַע עֶשְׂרֵה"),
+  word("n18", 18, "teen", "שְׁמוֹנֶה עֶשְׂרֵה"),
+  word("n19", 19, "teen", "תְּשַׁע עֶשְׂרֵה"),
+  word("n20", 20, "round", "עֶשְׂרִים"),
+  word("n30", 30, "round", "שְׁלוֹשִׁים"),
+  word("n40", 40, "round", "אַרְבָּעִים"),
+  word("n50", 50, "round", "חֲמִשִּׁים"),
+  word("n60", 60, "round", "שִׁשִּׁים"),
+  word("n70", 70, "round", "שִׁבְעִים"),
+  word("n80", 80, "round", "שְׁמוֹנִים" ),
+  word("n90", 90, "round", "תִּשְׁעִים"),
+  word("n100", 100, "round", "מֵאָה"),
+  word("n200", 200, "round", "מָאתַיִם"),
+  word("n300", 300, "round", "שְׁלוֹשׁ מֵאוֹת"),
+  word("n400", 400, "round", "אַרְבַּע מֵאוֹת"),
+  word("n500", 500, "round", "חֲמֵשׁ מֵאוֹת"),
+  word("n600", 600, "round", "שֵׁשׁ מֵאוֹת"),
+  word("n700", 700, "round", "שְׁבַע מֵאוֹת"),
+  word("n800", 800, "round", "שְׁמוֹנֶה מֵאוֹת"),
+  word("n900", 900, "round", "תְּשַׁע מֵאוֹת"),
+  word("n1000", 1000, "round", "אֶלֶף"),
 ];
 
-export function numberGloss(word: NumberWord, locale: string) {
-  if (locale === "fr") {
-    return word.gloss.fr;
-  }
-  if (locale === "es") {
-    return word.gloss.es;
-  }
-  return word.gloss.en;
+const clipByHebrew = new Map(
+  numberWords.map((entry, index) => [
+    entry.hebrew,
+    `/numbers%202/numbers_${String(index + 1).padStart(2, "0")}.mp3`,
+  ]),
+);
+
+/** The recording in `public/numbers 2` for this spelling. */
+export function numberRecording(hebrew: string) {
+  return clipByHebrew.get(hebrew);
 }
+
+
 
 export function toNumberCard(word: NumberWord, locale: string): Flashcard {
   return {
     id: word.id,
-    english: numberGloss(word, locale),
+    english: word.value.toString(),
     partOfSpeech: "noun",
     example: "",
     hebrew: word.hebrew,
     hebrewExample: "",
     gender: null,
+    audioUrl: numberRecording(word.hebrew),
   };
 }

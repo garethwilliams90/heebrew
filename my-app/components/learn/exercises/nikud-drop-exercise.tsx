@@ -12,11 +12,20 @@ type SharedHearts = {
   resetHearts: () => void;
 };
 
-export function NikudDropExercise({ letterIds, onPass }: { letterIds: readonly string[]; onPass: () => void }) {
+export function NikudDropExercise({
+  letterIds,
+  seed,
+  onPass,
+}: {
+  letterIds: readonly string[];
+  seed?: string;
+  onPass: () => void;
+}) {
   const session = useLessonSession();
   return (
     <NikudDropQuiz
       letterIds={letterIds}
+      seed={seed}
       onPlay={(cue) => void playCue(cue)}
       onPass={onPass}
       hearts={
