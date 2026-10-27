@@ -9,6 +9,7 @@ import { SettingsProvider } from "@/components/settings/settings-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/i18n/routing";
 import { createClient } from "@/lib/supabase/server";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import "../globals.css";
 
 const geistSans = Geist({
@@ -67,6 +68,7 @@ export default async function LocaleLayout({
         <MotionProvider>
           <TooltipProvider delayDuration={300}>
             <NextIntlClientProvider locale={locale} messages={messages}>
+              <SpeedInsights />
               <SettingsProvider>
                 <Navbar email={email}>{children}</Navbar>
               </SettingsProvider>
