@@ -73,7 +73,7 @@ export function BrowserCard({
           </Button>
         </div>
       </div>
-      <p dir="rtl" lang="he" className="mt-4 text-3xl font-semibold">
+      <p dir="rtl" lang="he" translate="no" className="mt-4 text-3xl font-semibold">
         {card.hebrew}
       </p>
       {card.hebrewExample ? (
