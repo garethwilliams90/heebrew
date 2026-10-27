@@ -6,6 +6,14 @@ import { useTranslations } from "next-intl";
 import { printFont } from "@/components/alephbet/print-font";
 import { GenderMark } from "@/components/flashcards/gender-mark";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Link } from "@/i18n/navigation";
 import {
   addWordToDeck,
@@ -21,6 +29,7 @@ import { cn } from "cn";
 
 type KnowledgeFilter = "all" | "known" | "unknown";
 type TypeFilter = "all" | PartOfSpeech;
+type DeckStatus = "loading" | "ready" | "signed-out" | "error";
 
 const typeRank = ["noun", "adjective", "verb"];
 
@@ -32,6 +41,15 @@ export function DictionaryPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [knowledge, setKnowledge] = useState<KnowledgeFilter>("all");
   const [wordType, setWordType] = useState<TypeFilter>("all");
+  const [customDecks, setCustomDecks] = useState<DeckChoice[]>([]);
+  const [deckStatus, setDeckStatus] = useState<DeckStatus>("loading");
+  const natureTitle = flashcards("natureTitle");
+  const scratchTitle = flashcards("scratchTitle");
+  const decks = [
+    { id: "nature", title: natureTitle },
+    { id: "hebrew-from-scratch", title: scratchTitle },
+    ...customDecks,
+  ];
   const typeOptions = partsOfSpeech
     .filter((part) => dictionaryWords.some((word) => word.partOfSpeech === part))
     .sort((left, right) => {
@@ -42,6 +60,24 @@ export function DictionaryPage() {
 
   useEffect(() => {
     setKnownIds(new Set(readKnownWords().map((word) => word.id)));
+  }, []);
+
+  useEffect(() => {
+    let current = true;
+    loadCustomDecks().then((result) => {
+      if (!current) {
+        return;
+      }
+      if (result === "signed-out" || result === "error") {
+        setDeckStatus(result);
+        return;
+      }
+      setCustomDecks(result);
+      setDeckStatus("ready");
+    });
+    return () => {
+      current = false;
+    };
   }, []);
 
   const typed = dictionaryWords.filter((word) => wordType === "all" || word.partOfSpeech === wordType);
@@ -109,6 +145,8 @@ export function DictionaryPage() {
       {picking ? (
         <DeckPicker
           word={picking}
+          decks={decks}
+          deckStatus={deckStatus}
           onClose={() => setPicking(null)}
           onResult={(message) => setNotes((current) => ({ ...current, [picking.id]: message }))}
         />
@@ -165,18 +203,20 @@ function FilterSelect({
   onChange: (value: string) => void;
 }) {
   return (
-    <select
-      aria-label={label}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className="h-8 rounded-lg border border-emerald-950/15 bg-white px-2 text-sm text-emerald-950"
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger aria-label={label}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -281,47 +321,25 @@ function FormCards({ forms }: { forms: NonNullable<DictionaryEntry["forms"]> }) 
 
 function DeckPicker({
   word,
+  decks,
+  deckStatus,
   onClose,
   onResult,
 }: {
   word: DictionaryEntry;
+  decks: readonly DeckChoice[];
+  deckStatus: DeckStatus;
   onClose: () => void;
   onResult: (message: string) => void;
 }) {
   const t = useTranslations("Dictionary");
-  const flashcards = useTranslations("Flashcards");
   const titleId = useId();
-  const natureTitle = flashcards("natureTitle");
-  const scratchTitle = flashcards("scratchTitle");
-  const [decks, setDecks] = useState<DeckChoice[] | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "signed-out" | "error">("loading");
+  const [status, setStatus] = useState<DeckStatus>(deckStatus);
   const [saving, setSaving] = useState<string | null>(null);
 
   useEffect(() => {
-    let current = true;
-    loadCustomDecks().then((result) => {
-      if (!current) {
-        return;
-      }
-      if (result === "signed-out") {
-        setStatus("signed-out");
-        return;
-      }
-      if (result === "error") {
-        setStatus("error");
-        return;
-      }
-      setDecks([
-        { id: "nature", title: natureTitle },
-        { id: "hebrew-from-scratch", title: scratchTitle },
-        ...result,
-      ]);
-      setStatus("ready");
-    });
-    return () => {
-      current = false;
-    };
-  }, [natureTitle, scratchTitle]);
+    setStatus(deckStatus);
+  }, [deckStatus]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
