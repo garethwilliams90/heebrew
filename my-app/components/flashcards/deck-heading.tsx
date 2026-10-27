@@ -138,6 +138,8 @@ export function DeckHeading({
             <Title
               className={titleClassName}
               title={t("renameHint")}
+              lang={/[\u0590-\u05FF]/.test(title) ? "he" : undefined}
+              translate="no"
               onClick={scheduleOpen}
               onDoubleClick={() => beginEdit("title")}
             >

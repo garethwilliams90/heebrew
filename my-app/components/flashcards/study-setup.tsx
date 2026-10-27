@@ -77,7 +77,9 @@ export function StudySetup({
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-8 sm:px-8">
       <h1 className="text-3xl font-semibold tracking-tight">{t("setupTitle")}</h1>
-      <p className="mt-2 text-emerald-950/70">{title}</p>
+      <p className="mt-2 text-emerald-950/70" lang={/[\u0590-\u05FF]/.test(title) ? "he" : undefined} translate="no">
+        {title}
+      </p>
       <p className="mt-1 text-sm text-emerald-900/70">{t("setupBody")}</p>
 
       <StudyAmountField

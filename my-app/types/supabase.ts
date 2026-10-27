@@ -241,6 +241,82 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"blog_posts": {
+                  Row: {
+                    "author_id": string | null,"body": string,"created_at": string,"id": string,"published": boolean,"published_at": string | null,"slug": string,"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id"?: string | null,"body": string,"created_at"?: string,"id"?: string,"published"?: boolean,"published_at"?: string | null,"slug": string,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "author_id"?: string | null,"body"?: string,"created_at"?: string,"id"?: string,"published"?: boolean,"published_at"?: string | null,"slug"?: string,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"stories": {
+                  Row: {
+                    "audio_path": string,"created_at": string,"created_by": string | null,"hebrew_transcript": string,"id": string,"level": string,"published": boolean,"title": string,"transcript_en": string,"transcript_es": string,"transcript_fr": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "audio_path": string,"created_at"?: string,"created_by"?: string | null,"hebrew_transcript": string,"id"?: string,"level": string,"published"?: boolean,"title": string,"transcript_en"?: string,"transcript_es"?: string,"transcript_fr"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "audio_path"?: string,"created_at"?: string,"created_by"?: string | null,"hebrew_transcript"?: string,"id"?: string,"level"?: string,"published"?: boolean,"title"?: string,"transcript_en"?: string,"transcript_es"?: string,"transcript_fr"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"content_media": {
+                  Row: {
+                    "alt_text": string,"created_at": string,"id": string,"kind": string,"post_id": string | null,"sort_order": number,"storage_path": string,"story_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "alt_text"?: string,"created_at"?: string,"id"?: string,"kind": string,"post_id"?: string | null,"sort_order"?: number,"storage_path": string,"story_id"?: string | null
+                  }
+                  Update: {
+                    "alt_text"?: string,"created_at"?: string,"id"?: string,"kind"?: string,"post_id"?: string | null,"sort_order"?: number,"storage_path"?: string,"story_id"?: string | null
+                  }
+                  Relationships: []
+                },"story_hearts": {
+                  Row: { "created_at": string,"story_id": string,"user_id": string }
+                  ComputedFields: never
+                  Insert: { "created_at"?: string,"story_id": string,"user_id": string }
+                  Update: { "created_at"?: string,"story_id"?: string,"user_id"?: string }
+                  Relationships: []
+                },"story_completions": {
+                  Row: { "completed_at": string,"story_id": string,"user_id": string }
+                  ComputedFields: never
+                  Insert: { "completed_at"?: string,"story_id": string,"user_id": string }
+                  Update: { "completed_at"?: string,"story_id"?: string,"user_id"?: string }
+                  Relationships: []
+                },"story_words": {
+                  Row: {
+                    "created_at": string,"end_ms": number,"id": string,"label": string,"phrase": string,"sort_order": number,"start_ms": number,"story_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"end_ms": number,"id"?: string,"label": string,"phrase": string,"sort_order"?: number,"start_ms": number,"story_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"end_ms"?: number,"id"?: string,"label"?: string,"phrase"?: string,"sort_order"?: number,"start_ms"?: number,"story_id"?: string
+                  }
+                  Relationships: []
+                },"story_questions": {
+                  Row: { "id": string,"prompt": string,"sort_order": number,"story_id": string }
+                  ComputedFields: never
+                  Insert: { "id"?: string,"prompt": string,"sort_order"?: number,"story_id": string }
+                  Update: { "id"?: string,"prompt"?: string,"sort_order"?: number,"story_id"?: string }
+                  Relationships: []
+                },"story_choices": {
+                  Row: { "correct": boolean,"id": string,"label": string,"question_id": string,"sort_order": number }
+                  ComputedFields: never
+                  Insert: { "correct"?: boolean,"id"?: string,"label": string,"question_id": string,"sort_order"?: number }
+                  Update: { "correct"?: boolean,"id"?: string,"label"?: string,"question_id"?: string,"sort_order"?: number }
+                  Relationships: []
                 }
           }
           Views: {
