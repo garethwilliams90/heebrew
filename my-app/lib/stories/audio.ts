@@ -89,6 +89,12 @@ export function isStoryAudioPath(path: string) {
   return AUDIO_PATH.test(path);
 }
 
+/** Public object URL. Playback does not go through a signed redirect. */
+export function storyAudioUrl(path: string) {
+  const base = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/$/, "");
+  return `${base}/storage/v1/object/public/story-audio/${encodeURIComponent(path)}`;
+}
+
 export function contentTypeForStoryPath(path: string) {
   if (path.endsWith(".mp3")) return "audio/mpeg";
   if (path.endsWith(".m4a")) return "audio/mp4";

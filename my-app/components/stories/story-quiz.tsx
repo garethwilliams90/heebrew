@@ -6,6 +6,7 @@ import { usePlaySample } from "@/components/settings/settings-provider";
 import { Button } from "@/components/ui/button";
 import { gradeQuiz, saveQuiz, type QuizActionState, type QuizGrade } from "@/lib/stories/quiz";
 import type { StoryQuestion } from "@/lib/stories/queries";
+import { Label } from "../ui/label";
 
 const initial: QuizActionState = { error: "" };
 
@@ -163,13 +164,13 @@ export function StoryQuiz({ storyId, questions, bare = false }: { storyId: strin
       }}
     >
       {bare ? null : <h3 className="text-sm font-medium text-emerald-800">{t("quizTitle")}</h3>}
-      {questions.map((question) => {
+      {questions.map((question, index) => {
         const grade = byId.get(question.id);
         return (
-          <fieldset key={question.id} className="flex flex-col gap-2">
-            <legend className="text-sm font-medium">{question.prompt}</legend>
+          <fieldset key={question.id} className="flex flex-col gap-2" dir="rtl" lang="he" translate="no">
+            <legend className="text-xl font-semibold">{index + 1}. {question.prompt}</legend>
             {question.choices.map((choice) => (
-              <label key={choice.id} className="flex items-center gap-2 text-sm">
+              <Label key={choice.id} className="flex items-center gap-2 text-lg" dir="rtl" lang="he" translate="no">
                 <input
                   type="radio"
                   name={question.id}
@@ -178,7 +179,7 @@ export function StoryQuiz({ storyId, questions, bare = false }: { storyId: strin
                   onChange={() => setPicked((current) => ({ ...current, [question.id]: choice.id }))}
                 />
                 {choice.text}
-              </label>
+              </Label>
             ))}
             {grade ? (
               <p className={grade.ok ? "text-sm text-emerald-800" : "text-sm text-red-800"}>

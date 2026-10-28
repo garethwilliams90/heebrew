@@ -978,7 +978,14 @@
     "hideCard": "Hide the meaning",
     "previousCard": "Previous card",
     "nextCard": "Next card",
-    "cardOf": "{current} of {total}"
+    "cardOf": "{current} of {total}",
+    "viewKeywords": "View keywords",
+    "tabStory": "Story",
+    "tabWords": "Words",
+    "tabQuiz": "Quiz",
+    "studyFlashcards": "Study flashcards",
+    "emptyWords": "No words yet.",
+    "emptyQuiz": "No questions yet."
   },
   "Media": {
     "title": "Pictures and video",

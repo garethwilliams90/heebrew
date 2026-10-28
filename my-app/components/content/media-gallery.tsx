@@ -22,7 +22,14 @@ export function MediaGallery({ items, owner }: { items: MediaView[]; owner: bool
           ) : (
             // Signed URLs expire, so the image optimizer cannot cache them.
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="max-h-[28rem] w-full rounded-2xl object-contain" src={item.url} alt={item.alt} />
+            <img
+              className="max-h-[28rem] w-full rounded-2xl object-contain"
+              src={item.url}
+              alt={item.alt}
+              decoding="async"
+              fetchPriority={item === items[0] ? "high" : "auto"}
+              loading={item === items[0] ? "eager" : "lazy"}
+            />
           )}
           {item.alt ? <figcaption className="mt-1 text-sm text-emerald-900/70">{item.alt}</figcaption> : null}
           {owner ? (

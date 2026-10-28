@@ -10,9 +10,15 @@ export type StoryPlayerHandle = {
   currentTime: () => number;
 };
 
-export const StoryPlayer = forwardRef<StoryPlayerHandle, { src: string }>(function StoryPlayer({ src }, ref) {
+export const StoryPlayer = forwardRef<StoryPlayerHandle, { src: string; onTime?: (seconds: number) => void; onPlaying?: (playing: boolean) => void; onDuration?: (seconds: number) => void }>(function StoryPlayer({ src, onTime, onPlaying, onDuration }, ref) {
   const t = useTranslations("Stories");
   const audioRef = useRef<HTMLAudioElement>(null);
+  const onTimeRef = useRef(onTime);
+  const onPlayingRef = useRef(onPlaying);
+  const onDurationRef = useRef(onDuration);
+  onTimeRef.current = onTime;
+  onPlayingRef.current = onPlaying;
+  onDurationRef.current = onDuration;
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState(1);
   const [clock, setClock] = useState("0:00");
@@ -29,6 +35,23 @@ export const StoryPlayer = forwardRef<StoryPlayerHandle, { src: string }>(functi
     }
   }, [rate, src]);
 
+  useEffect(() => {
+    if (!playing) {
+      return;
+    }
+    let frame = 0;
+    function tick() {
+      const audio = audioRef.current;
+      if (!audio || audio.paused) {
+        return;
+      }
+      onTimeRef.current?.(audio.currentTime);
+      frame = window.requestAnimationFrame(tick);
+    }
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [playing]);
+
   function skip(delta: number) {
     const audio = audioRef.current;
     if (!audio) {
@@ -36,6 +59,7 @@ export const StoryPlayer = forwardRef<StoryPlayerHandle, { src: string }>(functi
     }
     audio.currentTime = nextTime(audio.currentTime, delta, duration);
     setClock(formatClock(audio.currentTime));
+    onTimeRef.current?.(audio.currentTime);
   }
 
   function stop() {
@@ -47,6 +71,8 @@ export const StoryPlayer = forwardRef<StoryPlayerHandle, { src: string }>(functi
     audio.currentTime = 0;
     setPlaying(false);
     setClock("0:00");
+    onTimeRef.current?.(0);
+    onPlayingRef.current?.(false);
   }
 
   function toggle() {
@@ -67,10 +93,22 @@ export const StoryPlayer = forwardRef<StoryPlayerHandle, { src: string }>(functi
         ref={audioRef}
         preload="metadata"
         src={src}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onTimeUpdate={(event) => setClock(formatClock(event.currentTarget.currentTime))}
-        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
+        onPlay={() => {
+          setPlaying(true);
+          onPlayingRef.current?.(true);
+        }}
+        onPause={() => {
+          setPlaying(false);
+          onPlayingRef.current?.(false);
+        }}
+        onTimeUpdate={(event) => {
+          setClock(formatClock(event.currentTarget.currentTime));
+          onTimeRef.current?.(event.currentTarget.currentTime);
+        }}
+        onLoadedMetadata={(event) => {
+          setDuration(event.currentTarget.duration);
+          onDurationRef.current?.(event.currentTarget.duration);
+        }}
       />
       <p className="text-sm text-emerald-900/70">
         {clock}

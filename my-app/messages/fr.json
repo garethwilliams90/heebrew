@@ -961,7 +961,14 @@
     "hideCard": "Masquer le sens",
     "previousCard": "Carte précédente",
     "nextCard": "Carte suivante",
-    "cardOf": "{current} sur {total}"
+    "cardOf": "{current} sur {total}",
+    "viewKeywords": "Voir les mots clés",
+    "tabStory": "Histoire",
+    "tabWords": "Mots",
+    "tabQuiz": "Quiz",
+    "studyFlashcards": "Étudier les cartes",
+    "emptyWords": "Pas encore de mots.",
+    "emptyQuiz": "Pas encore de questions."
   },
   "Media": {
     "title": "Images et vidéo",

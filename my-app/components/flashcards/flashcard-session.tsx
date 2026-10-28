@@ -46,6 +46,7 @@ export function FlashcardSession({
   mode,
   count,
   prompt = "english",
+  embedded = false,
   onExit,
 }: {
   deckId: string;
@@ -53,6 +54,7 @@ export function FlashcardSession({
   mode: StudyMode;
   count: number;
   prompt?: "english" | "hebrew";
+  embedded?: boolean;
   onExit?: () => void;
 }) {
   const t = useTranslations("Flashcards");
@@ -636,8 +638,10 @@ export function FlashcardSession({
     playClip(sentence, null, "sentence");
   }
 
+  const Frame = embedded ? "section" : "main";
+
   return (
-    <main className="flex min-h-0 flex-1 flex-col items-center overflow-x-clip overflow-y-auto px-4 pt-2 pb-8 sm:px-8">
+    <Frame className={embedded ? "flex min-h-[70vh] w-full flex-1 flex-col items-center" : "flex min-h-0 flex-1 flex-col items-center overflow-x-clip overflow-y-auto px-4 pt-2 pb-8 sm:px-8"}>
       <AccountNotice signedOut={signedIn === false} saveError={saveError} />
       {!ready ? (
         <ProgramLoader label={t("loadingProgram")} />
@@ -717,7 +721,7 @@ export function FlashcardSession({
           onExit={onExit}
         />
       )}
-    </main>
+    </Frame>
   );
 }
 

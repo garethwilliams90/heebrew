@@ -1,12 +1,13 @@
 "use server";
 
 import { translateHebrewToLocales } from "@/lib/azure/translate";
-import { transcribeHebrewAudio } from "@/lib/azure/transcribe";
+import { transcribeHebrewDetail } from "@/lib/azure/transcribe";
 import { mediaPathsFor } from "@/lib/content/media-actions";
 import { revalidateLocalized } from "@/lib/content/revalidate";
 import { cleanOptional, cleanRequired } from "@/lib/content/text";
 import { requireOwner } from "@/lib/owner-session";
 import { contentTypeForStoryPath, isStoryAudioPath, validateStoryAudio } from "@/lib/stories/audio";
+import { alignCues, transcriptTokenLines } from "@/lib/stories/cues";
 import { createServiceClient } from "@/lib/supabase/service";
 
 const LEVELS = ["beginner", "intermediate", "advanced"] as const;
@@ -75,6 +76,7 @@ export async function saveStory(_state: StoryActionState, formData: FormData): P
   }
 
   let hebrew = hebrewInput;
+  let wordCues: { startMs: number; endMs: number }[] = [];
   if (generate) {
     let bytes = pending?.bytes;
     let contentType = pending?.contentType ?? "";
@@ -91,7 +93,9 @@ export async function saveStory(_state: StoryActionState, formData: FormData): P
       return { error: "audio" };
     }
     try {
-      hebrew = await transcribeHebrewAudio(bytes, contentType, filename);
+      const detail = await transcribeHebrewDetail(bytes, contentType, filename);
+      hebrew = detail.text;
+      wordCues = alignCues(transcriptTokenLines(hebrew).flat(), detail.words, 0);
     } catch {
       return { error: "transcript" };
     }
@@ -146,6 +150,7 @@ export async function saveStory(_state: StoryActionState, formData: FormData): P
     audio_path: audioPath,
     published,
     created_by: owner.id,
+    word_cues: wordCues,
   };
   const { error } = id
     ? await service.from("stories").update(row).eq("id", id)

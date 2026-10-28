@@ -12,8 +12,9 @@ const dagesh = "\u05BC";
 // Undotted kaf is the same kh as chet, so that form uses the chet clip.
 const forms: Record<string, readonly ConsonantForm[]> = {
   bet: [
-    { glyph: "ב", file: "02_bet_soft.mp3", sound: "v" },
-    { glyph: `ב${dagesh}`, file: "03_bet_hard.mp3", sound: "b" },
+    // The soft and hard recordings are stored under the opposite names.
+    { glyph: "ב", file: "03_bet_hard.mp3", sound: "v" },
+    { glyph: `ב${dagesh}`, file: "02_bet_soft.mp3", sound: "b" },
   ],
   kaf: [
     { glyph: "כ", file: "09_het.mp3", sound: "kh" },
@@ -51,7 +52,7 @@ export function hasTwoSounds(letterId: string) {
 
 const letters: readonly { id: string; file: string }[] = [
   { id: "aleph", file: "01_alef.mp3" },
-  { id: "bet", file: "03_bet_hard.mp3" },
+  { id: "bet", file: "02_bet_soft.mp3" },
   { id: "gimel", file: "04_gimel.mp3" },
   { id: "dalet", file: "05_dalet.mp3" },
   { id: "he", file: "06_he.mp3" },

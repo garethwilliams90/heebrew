@@ -9,6 +9,57 @@ function speechConfig() {
   return { key, region };
 }
 
+export type TimedWord = {
+  text: string;
+  startMs: number;
+  endMs: number;
+};
+
+function milliseconds(ms: unknown, ticks: unknown) {
+  if (typeof ms === "number" && Number.isFinite(ms)) {
+    return Math.max(0, Math.round(ms));
+  }
+  if (typeof ticks === "number" && Number.isFinite(ticks)) {
+    return Math.max(0, Math.round(ticks / 10_000));
+  }
+  return null;
+}
+
+/** Pulls word start and end times out of an Azure fast-transcription response. */
+export function wordsFromFastResult(payload: unknown): TimedWord[] {
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+  const phrases = (payload as { phrases?: unknown }).phrases;
+  if (!Array.isArray(phrases)) {
+    return [];
+  }
+  const words: TimedWord[] = [];
+  for (const phrase of phrases) {
+    if (!phrase || typeof phrase !== "object") {
+      continue;
+    }
+    const list = (phrase as { words?: unknown }).words;
+    if (!Array.isArray(list)) {
+      continue;
+    }
+    for (const word of list) {
+      if (!word || typeof word !== "object") {
+        continue;
+      }
+      const record = word as { text?: unknown; offsetMilliseconds?: unknown; durationMilliseconds?: unknown; offset?: unknown; duration?: unknown };
+      const text = typeof record.text === "string" ? record.text.trim() : "";
+      const startMs = milliseconds(record.offsetMilliseconds, record.offset);
+      const durationMs = milliseconds(record.durationMilliseconds, record.duration);
+      if (!text || startMs === null || durationMs === null) {
+        continue;
+      }
+      words.push({ text, startMs, endMs: startMs + Math.max(durationMs, 1) });
+    }
+  }
+  return words;
+}
+
 /** Pulls the Hebrew text out of an Azure fast-transcription response. */
 export function transcriptFromFastResult(payload: unknown) {
   if (!payload || typeof payload !== "object") {
@@ -22,7 +73,7 @@ export function transcriptFromFastResult(payload: unknown) {
     .trim();
 }
 
-export async function transcribeHebrewAudio(bytes: Uint8Array, contentType: string, filename: string) {
+export async function transcribeHebrewDetail(bytes: Uint8Array, contentType: string, filename: string) {
   const { key, region } = speechConfig();
   const copy = new ArrayBuffer(bytes.byteLength);
   new Uint8Array(copy).set(bytes);
@@ -41,9 +92,15 @@ export async function transcribeHebrewAudio(bytes: Uint8Array, contentType: stri
   if (!response.ok) {
     throw new Error("Transcription failed");
   }
-  const text = transcriptFromFastResult(await response.json());
+  const payload: unknown = await response.json();
+  const text = transcriptFromFastResult(payload);
   if (!text) {
     throw new Error("Transcription was empty");
   }
-  return text;
+  return { text, words: wordsFromFastResult(payload) };
+}
+
+export async function transcribeHebrewAudio(bytes: Uint8Array, contentType: string, filename: string) {
+  const detail = await transcribeHebrewDetail(bytes, contentType, filename);
+  return detail.text;
 }

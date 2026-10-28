@@ -1,8 +1,9 @@
 import { loadMediaMap, type MediaView } from "@/lib/content/media-queries";
 import { visibleToVisitor } from "@/lib/content/visibility";
 import { glossOf, type LocaleGloss } from "@/lib/learn/sentences";
-import { requireOwner } from "@/lib/owner-session";
-import { isStoryAudioPath } from "@/lib/stories/audio";
+import { isOwnerUser } from "@/lib/owner";
+import { isStoryAudioPath, storyAudioUrl } from "@/lib/stories/audio";
+import { readCues, type WordCue } from "@/lib/stories/cues";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -17,6 +18,7 @@ export type StoryView = {
   gloss: LocaleGloss;
   published: boolean;
   audioUrl: string | null;
+  cues: WordCue[];
   updatedAt: string;
 };
 
@@ -59,6 +61,7 @@ type StoryRow = {
   audio_path: string;
   published: boolean;
   updated_at: string;
+  word_cues: unknown;
 };
 
 function isLevel(value: string): value is StoryLevel {
@@ -69,26 +72,7 @@ export function parseStoryLevel(value: string | undefined): StoryLevel | null {
   return value && isLevel(value) ? value : null;
 }
 
-async function signAudio(paths: string[]) {
-  const unique = [...new Set(paths.filter(isStoryAudioPath))];
-  if (unique.length === 0) {
-    return new Map<string, string>();
-  }
-  try {
-    const service = createServiceClient();
-    const signed = await Promise.all(
-      unique.map(async (path) => {
-        const { data, error } = await service.storage.from("story-audio").createSignedUrl(path, 60 * 60);
-        return error || !data?.signedUrl ? null : ([path, data.signedUrl] as const);
-      }),
-    );
-    return new Map(signed.filter((item): item is readonly [string, string] => item !== null));
-  } catch {
-    return new Map<string, string>();
-  }
-}
-
-function toView(row: StoryRow, audioUrl: string | null): StoryView | null {
+function toView(row: StoryRow): StoryView | null {
   if (!isLevel(row.level) || !isStoryAudioPath(row.audio_path)) {
     return null;
   }
@@ -99,59 +83,70 @@ function toView(row: StoryRow, audioUrl: string | null): StoryView | null {
     hebrew: row.hebrew_transcript,
     gloss: { en: row.transcript_en, fr: row.transcript_fr, es: row.transcript_es },
     published: row.published,
-    audioUrl,
+    audioUrl: storyAudioUrl(row.audio_path),
+    cues: readCues(row.word_cues),
     updatedAt: row.updated_at,
   };
 }
 
-export async function loadStories(level: StoryLevel | null) {
-  const owner = await requireOwner();
-  const rows = owner ? await loadOwnerStories(level) : await loadPublishedStories(level);
-  const audio = await signAudio(rows.map((row) => row.audio_path));
-  const stories = rows.flatMap((row) => {
-    const view = toView(row, audio.get(row.audio_path) ?? null);
-    return view && visibleToVisitor(view.published, Boolean(owner)) ? [view] : [];
-  });
-  const details = await attachStoryDetails(stories, Boolean(owner));
-  return {
-    owner: Boolean(owner),
-    signedIn: details.signedIn,
-    stories: details.stories,
-  };
-}
-
-async function attachStoryDetails(stories: StoryView[], owner: boolean) {
-  const ids = stories.map((story) => story.id);
+async function readViewer() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  const signedIn = Boolean(data.user);
-  const [media, marks, words, questions] = await Promise.all([
-    loadMediaMap("story", ids),
-    loadMarks(ids, signedIn),
-    loadWords(ids),
-    loadQuestions(ids, owner),
-  ]);
+  const user = data.user ?? null;
   return {
-    signedIn,
-    stories: stories.map((story) => ({
-      ...story,
-      media: media.get(story.id) ?? [],
-      words: words.get(story.id) ?? [],
-      questions: questions.get(story.id) ?? [],
-      hearted: marks.hearts.has(story.id),
-      completed: marks.done.has(story.id),
-    })),
+    supabase,
+    signedIn: Boolean(user),
+    owner: Boolean(user && isOwnerUser(user, process.env.APP_OWNER_EMAIL)),
   };
 }
 
-async function loadMarks(ids: string[], signedIn: boolean) {
+export async function loadStories(level: StoryLevel | null) {
+  const viewer = await readViewer();
+  const rows = viewer.owner ? await loadOwnerStories(level) : await loadPublishedStories(viewer.supabase, level);
+  const stories = rows.flatMap((row) => {
+    const view = toView(row);
+    return view && visibleToVisitor(view.published, viewer.owner) ? [view] : [];
+  });
+  const details = await attachStoryDetails(stories, viewer);
+  return {
+    owner: viewer.owner,
+    signedIn: viewer.signedIn,
+    stories: details,
+  };
+}
+
+async function attachStoryDetails(
+  stories: StoryView[],
+  viewer: { supabase: Awaited<ReturnType<typeof createClient>>; signedIn: boolean; owner: boolean },
+) {
+  const ids = stories.map((story) => story.id);
+  const [media, marks, words, questions] = await Promise.all([
+    loadMediaMap("story", ids),
+    loadMarks(viewer.supabase, ids, viewer.signedIn),
+    loadWords(ids),
+    loadQuestions(viewer.supabase, ids, viewer.owner),
+  ]);
+  return stories.map((story) => ({
+    ...story,
+    media: media.get(story.id) ?? [],
+    words: words.get(story.id) ?? [],
+    questions: questions.get(story.id) ?? [],
+    hearted: marks.hearts.has(story.id),
+    completed: marks.done.has(story.id),
+  }));
+}
+
+async function loadMarks(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ids: string[],
+  signedIn: boolean,
+) {
   const hearts = new Set<string>();
   const done = new Set<string>();
   if (!signedIn || ids.length === 0) {
     return { hearts, done };
   }
   try {
-    const supabase = await createClient();
     const [heartRows, doneRows] = await Promise.all([
       supabase.from("story_hearts").select("story_id").in("story_id", ids),
       supabase.from("story_completions").select("story_id").in("story_id", ids),
@@ -194,13 +189,17 @@ async function loadWords(ids: string[]) {
   return grouped;
 }
 
-async function loadQuestions(ids: string[], owner: boolean) {
+async function loadQuestions(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ids: string[],
+  owner: boolean,
+) {
   const grouped = new Map<string, StoryQuestion[]>();
   if (ids.length === 0) {
     return grouped;
   }
   try {
-    const client = owner ? createServiceClient() : await createClient();
+    const client = owner ? createServiceClient() : supabase;
     const { data, error } = await client.from("story_questions").select("id, story_id, prompt, sort_order").in("story_id", ids).order("sort_order", { ascending: true });
     if (error || !data || data.length === 0) {
       return grouped;
@@ -227,12 +226,11 @@ async function loadQuestions(ids: string[], owner: boolean) {
   return grouped;
 }
 
-async function loadPublishedStories(level: StoryLevel | null) {
+async function loadPublishedStories(supabase: Awaited<ReturnType<typeof createClient>>, level: StoryLevel | null) {
   try {
-    const supabase = await createClient();
     let query = supabase
       .from("stories")
-      .select("id, level, title, hebrew_transcript, transcript_en, transcript_fr, transcript_es, audio_path, published, updated_at")
+      .select("id, level, title, hebrew_transcript, transcript_en, transcript_fr, transcript_es, audio_path, published, updated_at, word_cues")
       .eq("published", true)
       .order("created_at", { ascending: false });
     if (level) {
@@ -253,7 +251,7 @@ async function loadOwnerStories(level: StoryLevel | null) {
     const service = createServiceClient();
     let query = service
       .from("stories")
-      .select("id, level, title, hebrew_transcript, transcript_en, transcript_fr, transcript_es, audio_path, published, updated_at")
+      .select("id, level, title, hebrew_transcript, transcript_en, transcript_fr, transcript_es, audio_path, published, updated_at, word_cues")
       .order("created_at", { ascending: false });
     if (level) {
       query = query.eq("level", level);

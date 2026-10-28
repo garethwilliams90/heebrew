@@ -17,6 +17,7 @@ export function BrowserCard({
   wordEnabled,
   sentenceEnabled,
   confirmingDelete,
+  readOnly = false,
   onPlayWord,
   onPlaySentence,
   onEdit,
@@ -32,12 +33,13 @@ export function BrowserCard({
   wordEnabled: boolean;
   sentenceEnabled: boolean;
   confirmingDelete: boolean;
+  readOnly?: boolean;
   onPlayWord: () => void;
-  onPlaySentence: () => void;
-  onEdit: () => void;
-  onAskDelete: () => void;
-  onCancelDelete: () => void;
-  onDelete: () => void;
+  onPlaySentence?: () => void;
+  onEdit?: () => void;
+  onAskDelete?: () => void;
+  onCancelDelete?: () => void;
+  onDelete?: () => void;
 }) {
   const t = useTranslations("Flashcards");
 
@@ -58,7 +60,7 @@ export function BrowserCard({
           ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <MasteryRing level={level} />
+          {readOnly ? null : <MasteryRing level={level} />}
           <Button
             type="button"
             variant="outline"
@@ -102,46 +104,48 @@ export function BrowserCard({
           {t("speechError")}
         </p>
       ) : null}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          className="h-9 border-emerald-900/10 bg-white text-emerald-950 hover:bg-emerald-50"
-          onClick={onEdit}
-        >
-          <Pencil />
-        </Button>
-        {confirmingDelete ? (
-          <>
-            <p className="text-sm text-emerald-900/70">{t("deleteCardConfirm")}</p>
+      {readOnly ? null : (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 border-emerald-900/10 bg-white text-emerald-950 hover:bg-emerald-50"
+            onClick={onEdit}
+          >
+            <Pencil />
+          </Button>
+          {confirmingDelete ? (
+            <>
+              <p className="text-sm text-emerald-900/70">{t("deleteCardConfirm")}</p>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 border-red-200 bg-white text-red-800 hover:bg-red-50"
+                onClick={onDelete}
+              >
+                {t("deleteCard")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 border-emerald-900/10 bg-white hover:bg-emerald-50"
+                onClick={onCancelDelete}
+              >
+                {t("cancel")}
+              </Button>
+            </>
+          ) : (
             <Button
               type="button"
               variant="outline"
               className="h-9 border-red-200 bg-white text-red-800 hover:bg-red-50"
-              onClick={onDelete}
+              onClick={onAskDelete}
             >
-              {t("deleteCard")}
+              <Trash2 />
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 border-emerald-900/10 bg-white hover:bg-emerald-50"
-              onClick={onCancelDelete}
-            >
-              {t("cancel")}
-            </Button>
-          </>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9 border-red-200 bg-white text-red-800 hover:bg-red-50"
-            onClick={onAskDelete}
-          >
-            <Trash2 />
-          </Button>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </li>
   );
 }

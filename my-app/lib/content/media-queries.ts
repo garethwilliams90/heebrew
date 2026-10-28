@@ -1,4 +1,5 @@
 import { isContentMediaPath, type MediaKind } from "@/lib/content/media";
+import { peekSignedUrl } from "@/lib/storage/signed-url";
 import { createServiceClient } from "@/lib/supabase/service";
 
 export type MediaView = {
@@ -39,22 +40,12 @@ export async function loadMediaMap(parent: "story" | "post", ids: string[]) {
       return grouped;
     }
     const rows = data as MediaRow[];
-    const paths = rows.map((row) => row.storage_path).filter(isContentMediaPath);
-    const signed = new Map<string, string>();
-    await Promise.all(
-      paths.map(async (path) => {
-        const { data: file, error: signError } = await service.storage.from("content-media").createSignedUrl(path, 60 * 60);
-        if (!signError && file?.signedUrl) {
-          signed.set(path, file.signedUrl);
-        }
-      }),
-    );
     for (const row of rows) {
       const parentId = parent === "story" ? row.story_id : row.post_id;
-      const url = signed.get(row.storage_path);
-      if (!parentId || !url || !isKind(row.kind) || !isContentMediaPath(row.storage_path)) {
+      if (!parentId || !isKind(row.kind) || !isContentMediaPath(row.storage_path)) {
         continue;
       }
+      const url = peekSignedUrl("content-media", row.storage_path) ?? `/api/media/${row.id}`;
       const list = grouped.get(parentId) ?? [];
       list.push({ id: row.id, kind: row.kind, url, alt: row.alt_text });
       grouped.set(parentId, list);

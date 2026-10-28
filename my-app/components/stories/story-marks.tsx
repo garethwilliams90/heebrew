@@ -27,7 +27,7 @@ export function StoryMarks({
 
   if (!signedIn) {
     return (
-      <div className="mt-3 flex gap-2">
+      <div className="flex gap-2">
         <Button asChild variant="outline" size="icon" sound={false}>
           <Link href="/login" aria-label={t("signInToSave")}>
             <Heart />
@@ -43,7 +43,7 @@ export function StoryMarks({
   }
 
   return (
-    <div className="mt-3 flex gap-2">
+    <div className="flex gap-2">
       <Button
         type="button"
         variant="outline"

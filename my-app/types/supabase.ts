@@ -257,14 +257,14 @@ isOneToOne: false
                   ]
                 },"stories": {
                   Row: {
-                    "audio_path": string,"created_at": string,"created_by": string | null,"hebrew_transcript": string,"id": string,"level": string,"published": boolean,"title": string,"transcript_en": string,"transcript_es": string,"transcript_fr": string,"updated_at": string
+                    "audio_path": string,"created_at": string,"created_by": string | null,"hebrew_transcript": string,"id": string,"level": string,"published": boolean,"title": string,"transcript_en": string,"transcript_es": string,"transcript_fr": string,"updated_at": string,"word_cues": Json
                   }
                   ComputedFields: never
                   Insert: {
-                    "audio_path": string,"created_at"?: string,"created_by"?: string | null,"hebrew_transcript": string,"id"?: string,"level": string,"published"?: boolean,"title": string,"transcript_en"?: string,"transcript_es"?: string,"transcript_fr"?: string,"updated_at"?: string
+                    "audio_path": string,"created_at"?: string,"created_by"?: string | null,"hebrew_transcript": string,"id"?: string,"level": string,"published"?: boolean,"title": string,"transcript_en"?: string,"transcript_es"?: string,"transcript_fr"?: string,"updated_at"?: string,"word_cues"?: Json
                   }
                   Update: {
-                    "audio_path"?: string,"created_at"?: string,"created_by"?: string | null,"hebrew_transcript"?: string,"id"?: string,"level"?: string,"published"?: boolean,"title"?: string,"transcript_en"?: string,"transcript_es"?: string,"transcript_fr"?: string,"updated_at"?: string
+                    "audio_path"?: string,"created_at"?: string,"created_by"?: string | null,"hebrew_transcript"?: string,"id"?: string,"level"?: string,"published"?: boolean,"title"?: string,"transcript_en"?: string,"transcript_es"?: string,"transcript_fr"?: string,"updated_at"?: string,"word_cues"?: Json
                   }
                   Relationships: [
                     
