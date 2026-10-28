@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { KofiSupport } from "@/components/support/kofi-support";
 import { Fold } from "@/components/stories/fold";
 import { StoryCard } from "@/components/stories/story-card";
 import { StoryEditor } from "@/components/stories/story-editor";
@@ -32,9 +33,12 @@ export async function StoriesView({
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <header>
-        <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
-        <p className="mt-2 text-emerald-900/80">{t("description")}</p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
+          <p className="mt-2 text-emerald-900/80">{t("description")}</p>
+        </div>
+        <KofiSupport variant="label" />
       </header>
       <div className="flex flex-wrap gap-2">
         {filters.map((filter) => {

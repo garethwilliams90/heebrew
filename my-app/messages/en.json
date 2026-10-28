@@ -834,6 +834,16 @@
     "github": "GitHub",
     "linkedin": "LinkedIn"
   },
+  "Support": {
+    "open": "Support me on Ko-fi",
+    "label": "Support me",
+    "title": "Support Webrew",
+    "body": "A coffee helps keep Webrew free for everyone.",
+    "page": "Open Ko-fi",
+    "close": "Close",
+    "supporters": "Recent support",
+    "someone": "Someone"
+  },
   "Dictionary": {
     "nav": "Dictionary",
     "title": "Dictionary",

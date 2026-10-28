@@ -817,6 +817,16 @@
     "github": "GitHub",
     "linkedin": "LinkedIn"
   },
+  "Support": {
+    "open": "Soutenez-moi sur Ko-fi",
+    "label": "Soutenir",
+    "title": "Soutenir Webrew",
+    "body": "Un café aide à garder Webrew gratuit pour tout le monde.",
+    "page": "Ouvrir la page Ko-fi",
+    "close": "Fermer",
+    "supporters": "Soutiens récents",
+    "someone": "Quelqu'un"
+  },
   "Dictionary": {
     "nav": "Dictionnaire",
     "title": "Dictionnaire",

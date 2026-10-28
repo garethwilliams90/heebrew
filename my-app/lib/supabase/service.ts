@@ -2,8 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 
 /**
- * Service-role client. Import this only from server actions after the owner check.
- * The key bypasses RLS, so every caller must already have checked the owner or the webhook signature.
+ * Service-role client. Import this only from server code after an owner check
+ * or a verified Ko-fi webhook. The key bypasses RLS.
  */
 export function createServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

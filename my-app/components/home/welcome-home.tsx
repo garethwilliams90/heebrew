@@ -7,6 +7,7 @@ import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
 import { DevLevelControl } from "@/components/learn/dev-level";
 import { LevelPath } from "@/components/home/level-path";
+import { KofiSupport } from "@/components/support/kofi-support";
 
 export function WelcomeHome() {
   const t = useTranslations("Home");
@@ -14,6 +15,7 @@ export function WelcomeHome() {
   return (
     <main className="flex min-h-0 flex-1 flex-col items-center gap-12 overflow-y-auto py-6">
       <WelcomeTitle label={t("welcome")} hebrew={t("welcomeHebrew")} />
+      <KofiSupport variant="label" />
       <LevelPath />
       <DevLevelControl />
     </main>

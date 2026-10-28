@@ -311,6 +311,18 @@ isOneToOne: false
                   Insert: { "id"?: string,"prompt": string,"sort_order"?: number,"story_id": string }
                   Update: { "id"?: string,"prompt"?: string,"sort_order"?: number,"story_id"?: string }
                   Relationships: []
+                },"kofi_donations": {
+                  Row: {
+                    "amount": number,"created_at": string,"currency": string,"donated_at": string,"event_type": string,"from_name": string | null,"id": string,"is_public": boolean,"message": string | null,"message_id": string,"transaction_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"currency": string,"donated_at": string,"event_type": string,"from_name"?: string | null,"id"?: string,"is_public"?: boolean,"message"?: string | null,"message_id": string,"transaction_id"?: string | null
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"currency"?: string,"donated_at"?: string,"event_type"?: string,"from_name"?: string | null,"id"?: string,"is_public"?: boolean,"message"?: string | null,"message_id"?: string,"transaction_id"?: string | null
+                  }
+                  Relationships: []
                 },"story_choices": {
                   Row: { "correct": boolean,"id": string,"label": string,"question_id": string,"sort_order": number }
                   ComputedFields: never

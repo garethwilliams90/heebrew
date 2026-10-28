@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { MediaGallery } from "@/components/content/media-gallery";
 import { MediaUploader } from "@/components/content/media-uploader";
 import { PostEditor } from "@/components/blog/post-editor";
+import { KofiSupport } from "@/components/support/kofi-support";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { deletePost } from "@/lib/blog/actions";
@@ -14,9 +15,12 @@ export async function BlogView({ owner, posts }: { owner: boolean; posts: PostVi
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <header>
-        <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
-        <p className="mt-2 text-emerald-900/80">{t("description")}</p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
+          <p className="mt-2 text-emerald-900/80">{t("description")}</p>
+        </div>
+        <KofiSupport variant="label" />
       </header>
       {owner ? (
         <section className={panel}>

@@ -7,6 +7,7 @@ import { AppClock } from "@/components/settings/app-clock";
 import { MobileMenu, SettingsMenu } from "@/components/settings/app-menus";
 import { NavRail } from "@/components/settings/nav-rail";
 import { SocialFab } from "@/components/settings/social-fab";
+import { KofiHomeButton } from "@/components/support/kofi-support";
 import { Link } from "@/i18n/navigation";
 
 export function Navbar({
@@ -31,6 +32,7 @@ export function Navbar({
       <SettingsMenu email={email} />
       <MobileMenu email={email} />
       <AppClock />
+      <KofiHomeButton />
       <SocialFab />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto p-1 pt-14 pb-16 md:pt-16 md:pr-16 md:pb-4 md:pl-20">
         {children}

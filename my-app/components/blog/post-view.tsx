@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { MediaGallery } from "@/components/content/media-gallery";
 import { MediaUploader } from "@/components/content/media-uploader";
 import { PostEditor } from "@/components/blog/post-editor";
+import { KofiSupport } from "@/components/support/kofi-support";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { deletePost } from "@/lib/blog/actions";
@@ -15,9 +16,12 @@ export async function BlogArticle({ owner, post }: { owner: boolean; post: PostV
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <Link href="/blog" className="text-sm font-medium text-emerald-800 hover:underline">
-        {t("back")}
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href="/blog" className="text-sm font-medium text-emerald-800 hover:underline">
+          {t("back")}
+        </Link>
+        <KofiSupport variant="label" />
+      </div>
       <article className={panel}>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-3xl font-semibold tracking-tight">{post.title}</h1>

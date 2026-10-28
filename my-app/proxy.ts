@@ -1,11 +1,19 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import createMiddleware from "next-intl/middleware";
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
 
 const handleI18nRouting = createMiddleware(routing);
 
 export default async function proxy(request: NextRequest) {
+  // Ko-fi is configured to post donations to the site root. Forward that form
+  // post to the webhook and leave Next.js server actions on the home page alone.
+  if (isKofiWebhookPost(request)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/api/kofi/webhook";
+    return NextResponse.rewrite(url);
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -49,6 +57,17 @@ export default async function proxy(request: NextRequest) {
   }
 
   return response;
+}
+
+function isKofiWebhookPost(request: NextRequest) {
+  if (request.method !== "POST" || request.nextUrl.pathname !== "/") {
+    return false;
+  }
+  if (request.headers.has("next-action")) {
+    return false;
+  }
+  const contentType = request.headers.get("content-type") ?? "";
+  return contentType.includes("application/x-www-form-urlencoded");
 }
 
 export const config = {
