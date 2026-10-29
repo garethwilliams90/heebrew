@@ -1,5 +1,6 @@
 import { loadMediaMap, type MediaView } from "@/lib/content/media-queries";
 import { visibleToVisitor } from "@/lib/content/visibility";
+import { pathwayLevelRef, type PathwayLevelRef, isPathwayLevelId } from "@/lib/learn/pathway/lesson-links";
 import { glossOf, type LocaleGloss } from "@/lib/learn/sentences";
 import { isOwnerUser } from "@/lib/owner";
 import { isStoryAudioPath, storyAudioUrl } from "@/lib/stories/audio";
@@ -9,6 +10,13 @@ import { createServiceClient } from "@/lib/supabase/service";
 
 export const storyLevels = ["beginner", "intermediate", "advanced"] as const;
 export type StoryLevel = (typeof storyLevels)[number];
+
+export const storyTabs = ["story", "words", "quiz", "learn"] as const;
+export type StoryTab = (typeof storyTabs)[number];
+
+export function parseStoryTab(value: string | undefined): StoryTab {
+  return value && storyTabs.includes(value as StoryTab) ? (value as StoryTab) : "story";
+}
 
 export type StoryView = {
   id: string;
@@ -42,13 +50,38 @@ export type StoryQuestion = {
   choices: StoryChoice[];
 };
 
+export type StoryLessonExample = {
+  hebrew: string;
+  gloss: LocaleGloss;
+};
+
+export type StoryLesson = {
+  conceptHe: string;
+  concept: LocaleGloss;
+  title: LocaleGloss;
+  body: LocaleGloss;
+  examples: StoryLessonExample[];
+  levels: PathwayLevelRef[];
+};
+
+export type LevelStoryLink = {
+  id: string;
+  title: string;
+};
+
 export type StoryDetail = StoryView & {
   media: MediaView[];
   words: WordView[];
   questions: StoryQuestion[];
+  lesson: StoryLesson;
   hearted: boolean;
   completed: boolean;
 };
+
+function emptyLesson(): StoryLesson {
+  const blank = { en: "", fr: "", es: "" };
+  return { conceptHe: "", concept: blank, title: blank, body: blank, examples: [], levels: [] };
+}
 
 type StoryRow = {
   id: string;
@@ -120,20 +153,105 @@ async function attachStoryDetails(
   viewer: { supabase: Awaited<ReturnType<typeof createClient>>; signedIn: boolean; owner: boolean },
 ) {
   const ids = stories.map((story) => story.id);
-  const [media, marks, words, questions] = await Promise.all([
+  const [media, marks, words, questions, lessons] = await Promise.all([
     loadMediaMap("story", ids),
     loadMarks(viewer.supabase, ids, viewer.signedIn),
     loadWords(ids),
     loadQuestions(viewer.supabase, ids, viewer.owner),
+    loadLessons(ids),
   ]);
   return stories.map((story) => ({
     ...story,
     media: media.get(story.id) ?? [],
     words: words.get(story.id) ?? [],
     questions: questions.get(story.id) ?? [],
+    lesson: lessons.get(story.id) ?? emptyLesson(),
     hearted: marks.hearts.has(story.id),
     completed: marks.done.has(story.id),
   }));
+}
+
+export async function loadLevelStories(levelId: string): Promise<LevelStoryLink[]> {
+  if (!isPathwayLevelId(levelId)) {
+    return [];
+  }
+  const viewer = await readViewer();
+  try {
+    const service = createServiceClient();
+    const links = await service.from("story_pathway_links").select("story_id").eq("level_id", levelId);
+    const ids = (links.data ?? []).map((row) => row.story_id);
+    if (links.error || ids.length === 0) {
+      return [];
+    }
+    const [lessonRows, storyRows] = await Promise.all([
+      service.from("story_lessons").select("story_id, title_en, body_en").in("story_id", ids),
+      service.from("stories").select("id, title, published").in("id", ids),
+    ]);
+    if (lessonRows.error || storyRows.error || !lessonRows.data || !storyRows.data) {
+      return [];
+    }
+    const ready = new Set(
+      lessonRows.data.filter((row) => row.title_en.trim() || row.body_en.trim()).map((row) => row.story_id),
+    );
+    return storyRows.data
+      .filter((row) => ready.has(row.id) && (viewer.owner || row.published))
+      .map((row) => ({ id: row.id, title: row.title }))
+      .sort((a, b) => a.title.localeCompare(b.title));
+  } catch {
+    return [];
+  }
+}
+
+async function loadLessons(ids: string[]) {
+  const grouped = new Map<string, StoryLesson>();
+  if (ids.length === 0) {
+    return grouped;
+  }
+  try {
+    const service = createServiceClient();
+    const [lessons, examples, links] = await Promise.all([
+      service
+        .from("story_lessons")
+        .select("story_id, concept_he, concept_en, concept_fr, concept_es, title_en, title_fr, title_es, body_en, body_fr, body_es")
+        .in("story_id", ids),
+      service
+        .from("story_lesson_examples")
+        .select("story_id, hebrew, gloss_en, gloss_fr, gloss_es, sort_order")
+        .in("story_id", ids)
+        .order("sort_order", { ascending: true }),
+      service.from("story_pathway_links").select("story_id, level_id").in("story_id", ids),
+    ]);
+    if (lessons.error || examples.error || links.error || !lessons.data || !examples.data || !links.data) {
+      return grouped;
+    }
+    for (const row of lessons.data) {
+      grouped.set(row.story_id, {
+        conceptHe: row.concept_he,
+        concept: { en: row.concept_en, fr: row.concept_fr, es: row.concept_es },
+        title: { en: row.title_en, fr: row.title_fr, es: row.title_es },
+        body: { en: row.body_en, fr: row.body_fr, es: row.body_es },
+        examples: [],
+        levels: [],
+      });
+    }
+    for (const row of examples.data) {
+      const lesson = grouped.get(row.story_id) ?? emptyLesson();
+      lesson.examples.push({ hebrew: row.hebrew, gloss: { en: row.gloss_en, fr: row.gloss_fr, es: row.gloss_es } });
+      grouped.set(row.story_id, lesson);
+    }
+    for (const row of links.data) {
+      const level = pathwayLevelRef(row.level_id);
+      if (!level) {
+        continue;
+      }
+      const lesson = grouped.get(row.story_id) ?? emptyLesson();
+      lesson.levels.push(level);
+      grouped.set(row.story_id, lesson);
+    }
+  } catch {
+    return grouped;
+  }
+  return grouped;
 }
 
 async function loadMarks(

@@ -3,6 +3,12 @@
 // and non-Hebrew characters are stripped. NFC keeps letter identity stable.
 
 const hebrewLetter = /[\u05D0-\u05EA]/u;
+const hebrewPhrase = /[\u0590-\u05FF]+(?:\s+[\u0590-\u05FF]+)*/g;
+
+/** Keep a Hebrew phrase in order when it sits inside an English sentence. */
+export function isolateHebrew(text: string) {
+  return text.replace(hebrewPhrase, (phrase) => `\u2067${phrase}\u2069`);
+}
 
 export function withoutNikud(text: string) {
   return text.normalize("NFC").replace(/[\u0591-\u05BD\u05BF-\u05C7]/gu, "");

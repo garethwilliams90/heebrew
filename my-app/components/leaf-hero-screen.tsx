@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Leaf } from "lucide-react";
+import { AlephMark } from "@/components/brand/aleph-mark";
 
 export function LeafHeroScreen({
   title,
@@ -23,7 +23,7 @@ export function LeafHeroScreen({
   return (
     <Tag className={className}>
       {before}
-      <Leaf className="mb-4 size-8 text-emerald-800" aria-hidden />
+      <AlephMark className="mb-4 size-12 text-emerald-800" />
       <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{title}</h1>
       {body ? <p className={bodyClassName}>{body}</p> : null}
       {children}

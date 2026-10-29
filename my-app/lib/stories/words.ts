@@ -61,6 +61,82 @@ export async function addWord(_state: WordActionState, formData: FormData): Prom
   return idle;
 }
 
+export async function saveWords(_state: WordActionState, formData: FormData): Promise<WordActionState> {
+  const owner = await requireOwner();
+  if (!owner) {
+    return failed("forbidden");
+  }
+  const storyId = formData.get("storyId");
+  const raw = formData.get("labels");
+  if (typeof storyId !== "string" || !UUID.test(storyId) || typeof raw !== "string" || raw.length > 20_000) {
+    return failed("invalid");
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return failed("invalid");
+  }
+  if (!Array.isArray(parsed) || parsed.length > 40) {
+    return failed("invalid");
+  }
+  const labels = [];
+  for (const item of parsed) {
+    if (!item || typeof item !== "object") {
+      return failed("invalid");
+    }
+    const row = item as { id?: unknown; label?: unknown };
+    const label = typeof row.label === "string" ? row.label.trim() : "";
+    if (typeof row.id !== "string" || !UUID.test(row.id) || !label || label.length > 200 || label.includes("\0")) {
+      return failed("invalid");
+    }
+    labels.push({ id: row.id, label });
+  }
+
+  const service = createServiceClient();
+  for (const item of labels) {
+    const { error: updateError } = await service.from("story_words").update({ label: item.label }).eq("id", item.id).eq("story_id", storyId);
+    if (updateError) {
+      return failed("storage");
+    }
+  }
+
+  const phraseField = formData.get("phrase");
+  const phrase = typeof phraseField === "string" ? phraseField.trim() : "";
+  const newLabel = cleanRequired(formData.get("label"), 200);
+  if (phrase) {
+    if (!newLabel) {
+      return failed("invalid");
+    }
+    const { data: story, error } = await service.from("stories").select("hebrew_transcript").eq("id", storyId).maybeSingle();
+    if (error || !story) {
+      return failed("invalid");
+    }
+    const selected = phraseInTranscript(story.hebrew_transcript, phrase);
+    if (!selected) {
+      return failed("invalid");
+    }
+    const { count } = await service.from("story_words").select("id", { count: "exact", head: true }).eq("story_id", storyId);
+    if ((count ?? 0) >= 40) {
+      return failed("invalid");
+    }
+    const { error: insertError } = await service.from("story_words").insert({
+      story_id: storyId,
+      phrase: selected,
+      label: newLabel,
+      start_ms: 0,
+      end_ms: 1,
+      sort_order: count ?? 0,
+    });
+    if (insertError) {
+      return failed("storage");
+    }
+  }
+
+  revalidateLocalized("/stories");
+  return idle;
+}
+
 export async function deleteWord(formData: FormData) {
   const owner = await requireOwner();
   if (!owner) {

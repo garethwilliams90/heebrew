@@ -3,15 +3,14 @@
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 import { usePlaySample } from "@/components/settings/settings-provider";
+import { ink } from "@/components/stories/ink";
 import { Button } from "@/components/ui/button";
 import { gradeQuiz, saveQuiz, type QuizActionState, type QuizGrade } from "@/lib/stories/quiz";
 import type { StoryQuestion } from "@/lib/stories/queries";
 import { Label } from "../ui/label";
+import { cn } from "cn";
 
 const initial: QuizActionState = { error: "" };
-
-const fieldClass =
-  "w-full rounded-lg border border-emerald-950/15 bg-white px-3 py-2 text-sm text-emerald-950 outline-none focus-visible:ring-3 focus-visible:ring-emerald-700/30";
 
 type Draft = { prompt: string; choices: { text: string; correct: boolean }[] };
 
@@ -33,7 +32,7 @@ function blankQuestion(): Draft {
   };
 }
 
-export function QuizEditor({ storyId, questions, bare = false }: { storyId: string; questions: StoryQuestion[]; bare?: boolean }) {
+export function QuizEditor({ storyId, questions }: { storyId: string; questions: StoryQuestion[] }) {
   const t = useTranslations("Stories");
   const [drafts, setDrafts] = useState<Draft[]>(() => (questions.length > 0 ? fromQuestions(questions) : [blankQuestion()]));
   const [state, action, pending] = useActionState(saveQuiz, initial);
@@ -43,28 +42,27 @@ export function QuizEditor({ storyId, questions, bare = false }: { storyId: stri
   }
 
   return (
-    <form action={action} className={bare ? "flex flex-col gap-4" : "mt-4 flex flex-col gap-4 border-t border-emerald-950/10 pt-4"}>
-      {bare ? null : <h3 className="text-sm font-medium">{t("quizTitle")}</h3>}
-      <p className="text-sm text-emerald-900/70">{t("quizHint")}</p>
+    <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="storyId" value={storyId} />
       <input type="hidden" name="quiz" value={JSON.stringify(drafts.filter((item) => item.prompt.trim()))} />
       {drafts.map((question, index) => (
-        <fieldset key={index} className="flex flex-col gap-2 rounded-2xl bg-emerald-50/80 p-3">
-          <label className="flex flex-col gap-1 text-sm font-medium">
-            {t("questionLabel")}
-            <input
-              className={fieldClass}
-              value={question.prompt}
-              maxLength={400}
-              onChange={(event) => update(index, { ...question, prompt: event.target.value })}
-            />
-          </label>
+        <fieldset key={index} className="flex flex-col gap-2" dir="rtl" lang="he" translate="no">
+          <input
+            className={cn(ink, "text-xl font-semibold")}
+            dir="rtl"
+            lang="he"
+            value={question.prompt}
+            maxLength={400}
+            aria-label={t("questionLabel")}
+            onChange={(event) => update(index, { ...question, prompt: event.target.value })}
+          />
           {question.choices.map((choice, choiceIndex) => (
-            <label key={choiceIndex} className="flex items-center gap-2 text-sm">
+            <label key={choiceIndex} className="flex items-center gap-2 text-lg">
               <input
                 type="radio"
                 name={`correct-${index}`}
                 checked={choice.correct}
+                aria-label={t("choiceLabel")}
                 onChange={() =>
                   update(index, {
                     ...question,
@@ -73,7 +71,9 @@ export function QuizEditor({ storyId, questions, bare = false }: { storyId: stri
                 }
               />
               <input
-                className={fieldClass}
+                className={cn(ink, "text-lg")}
+                dir="rtl"
+                lang="he"
                 value={choice.text}
                 maxLength={200}
                 aria-label={t("choiceLabel")}
@@ -88,7 +88,7 @@ export function QuizEditor({ storyId, questions, bare = false }: { storyId: stri
               />
             </label>
           ))}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" dir="ltr">
             {question.choices.length < 6 ? (
               <Button
                 type="button"
@@ -112,7 +112,7 @@ export function QuizEditor({ storyId, questions, bare = false }: { storyId: stri
           </div>
         </fieldset>
       ))}
-      {state.error ? <p className="text-sm text-red-800">{t(state.error)}</p> : null}
+      {state.error ? <p className="text-sm text-destructive">{t(state.error)}</p> : null}
       <div className="flex flex-wrap gap-2">
         {drafts.length < 20 ? (
           <Button type="button" variant="outline" onClick={() => setDrafts((current) => [...current, blankQuestion()])}>
@@ -120,7 +120,7 @@ export function QuizEditor({ storyId, questions, bare = false }: { storyId: stri
           </Button>
         ) : null}
         <Button type="submit" disabled={pending}>
-          {pending ? t("saving") : t("saveQuiz")}
+          {pending ? t("saving") : t("save")}
         </Button>
       </div>
     </form>

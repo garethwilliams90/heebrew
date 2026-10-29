@@ -26,7 +26,7 @@ export const learnableWords: readonly BasicWord[] = [
 
 const STORAGE_KEY = "webrew.known-words";
 const DECK_TITLE = "Known words";
-const DECK_ABOUT = "Words you learned in Webrew.";
+const DECK_ABOUT = "Words you learned in Aleph with Gareth.";
 
 const saving = new Map<string, Promise<void>>();
 let deckRequest: Promise<string | null> | null = null;

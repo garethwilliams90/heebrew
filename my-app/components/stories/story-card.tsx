@@ -1,32 +1,40 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, type FormEvent } from "react";
 import { ChevronLeft, Languages, Pencil } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { printFont } from "@/components/alephbet/print-font";
 import { MediaGallery } from "@/components/content/media-gallery";
+import { MediaUploader } from "@/components/content/lazy-owner-tools";
 import { KeywordList, storyFlashcards } from "@/components/stories/keyword-list";
+import { ink } from "@/components/stories/ink";
 import { StoryMarks } from "@/components/stories/story-marks";
 import { StoryPlayer } from "@/components/stories/story-player";
 import { StoryQuiz } from "@/components/stories/story-quiz";
-import { MediaUploader, StoryEditor } from "@/components/content/lazy-owner-tools";
+import { StoryLearn } from "@/components/stories/story-learn";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { deleteStory } from "@/lib/stories/actions";
+import { deleteStory, saveStory, type StoryActionState } from "@/lib/stories/actions";
+import { STORY_AUDIO_MAX_BYTES } from "@/lib/stories/audio";
 import { alignStoryCues } from "@/lib/stories/align";
 import { activeToken, keywordMarks, spreadCues, transcriptTokenLines, type WordCue } from "@/lib/stories/cues";
 import { glossUnderHebrew, pairedTranscript } from "@/lib/stories/lines";
-import type { StoryDetail } from "@/lib/stories/queries";
+import type { PathwayLessonSection } from "@/lib/learn/pathway/lesson-links";
+import { lessonIsVisible } from "@/lib/stories/lesson-model";
+import type { StoryDetail, StoryLevel, StoryTab } from "@/lib/stories/queries";
+
+const storyLevels = ["beginner", "intermediate", "advanced"] as const satisfies readonly StoryLevel[];
 import { cn } from "cn";
 
 const FlashcardSession = dynamic(() =>
   import("@/components/flashcards/flashcard-session").then((mod) => mod.FlashcardSession),
 );
 const QuizEditor = dynamic(() => import("@/components/stories/story-quiz").then((mod) => mod.QuizEditor));
+const StoryLearnEditor = dynamic(() => import("@/components/stories/story-learn-editor").then((mod) => mod.StoryLearnEditor));
 const WordPicker = dynamic(() => import("@/components/stories/word-picker").then((mod) => mod.WordPicker));
-const Fold = dynamic(() => import("@/components/stories/fold").then((mod) => mod.Fold));
 
 const panel = "rounded-3xl border border-emerald-950/10 bg-white/90 p-4 text-emerald-950 shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]";
 const keywordClass = "p-1 rounded text-blue-700 underline decoration-2 underline-offset-4 hover:bg-blue-300/20";
@@ -36,20 +44,54 @@ export function StoryCard({
   owner,
   signedIn,
   gloss,
+  catalog = [],
+  startTab = "story",
+  focused = false,
 }: {
   story: StoryDetail;
   owner: boolean;
   signedIn: boolean;
   gloss: string;
+  catalog?: PathwayLessonSection[];
+  startTab?: StoryTab;
+  focused?: boolean;
 }) {
   const t = useTranslations("Stories");
+  const locale = useLocale();
+  const cardRef = useRef<HTMLElement>(null);
   const alignStarted = useRef(false);
-  const [editing, setEditing] = useState(false);
+  const learnOpen = owner || lessonIsVisible(story.lesson);
+  const [editingTab, setEditingTab] = useState<StoryTab | null>(null);
   const [studying, setStudying] = useState(false);
-  const [tab, setTab] = useState("story");
+  const [tab, setTab] = useState(startTab === "learn" && !learnOpen ? "story" : startTab);
+  const [title, setTitle] = useState(story.title);
+  const [hebrew, setHebrew] = useState(story.hebrew);
+  const [storyLevel, setStoryLevel] = useState(story.level);
+  const glossLocale = locale === "fr" || locale === "es" ? locale : "en";
+  const [glossText, setGlossText] = useState(story.gloss[glossLocale]);
+  const editingStory = editingTab === "story";
+  const formId = `story-save-${story.id}`;
+  const [saveState, saveAction, saving] = useActionState(saveStory, { error: "" } as StoryActionState);
+  const [audioTooBig, setAudioTooBig] = useState(false);
+  const glossChanged = glossText !== story.gloss[glossLocale];
+  const transcriptEn = glossLocale === "en" ? glossText : story.gloss.en;
+  const transcriptFr = glossLocale === "fr" ? glossText : glossLocale === "en" && glossChanged ? "" : story.gloss.fr;
+  const transcriptEs = glossLocale === "es" ? glossText : glossLocale === "en" && glossChanged ? "" : story.gloss.es;
+
+  useEffect(() => {
+    if (focused) {
+      cardRef.current?.scrollIntoView({ block: "start" });
+    }
+  }, [focused]);
+
+  useEffect(() => {
+    setTitle(story.title);
+    setHebrew(story.hebrew);
+    setStoryLevel(story.level);
+    setGlossText(story.gloss[glossLocale]);
+  }, [glossLocale, story.gloss, story.hebrew, story.level, story.title, story.updatedAt]);
+
   const [glossOn, setGlossOn] = useState(false);
-  const [phrase, setPhrase] = useState("");
-  const [wordsOpen, setWordsOpen] = useState(false);
   const [timeMs, setTimeMs] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [durationMs, setDurationMs] = useState(0);
@@ -81,14 +123,6 @@ export function StoryCard({
         setAligned({ id: story.id, updatedAt: story.updatedAt, cues: nextCues });
       }
     });
-  }
-
-  function captureSelection() {
-    const selected = window.getSelection()?.toString().replace(/\s+/g, " ").trim() ?? "";
-    if (selected && story.hebrew.replace(/\s+/g, " ").includes(selected)) {
-      setPhrase(selected);
-      setWordsOpen(true);
-    }
   }
 
   function hebrewToken(token: string, cueIndex: number, label: string | null) {
@@ -130,11 +164,41 @@ export function StoryCard({
   }
 
   return (
-    <article className={panel}>
+    <article ref={cardRef} id={`story-${story.id}`} className={cn(panel, focused && "scroll-mt-24")}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-xl font-semibold">{story.title}</h2>
-          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-900">{t(story.level)}</span>
+          {editingStory ? (
+            <input
+              form={formId}
+              name="title"
+              className={cn(ink, "w-auto min-w-0 text-xl font-semibold")}
+              value={title}
+              maxLength={120}
+              required
+              aria-label={t("titleLabel")}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          ) : (
+            <h2 className="text-xl font-semibold">{story.title}</h2>
+          )}
+          {editingStory ? (
+            <select
+              form={formId}
+              name="level"
+              className="rounded-full border-0 bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-900 outline-none"
+              value={storyLevel}
+              aria-label={t("levelLabel")}
+              onChange={(event) => setStoryLevel(event.target.value as StoryLevel)}
+            >
+              {storyLevels.map((level) => (
+                <option key={level} value={level}>
+                  {t(level)}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-900">{t(story.level)}</span>
+          )}
           {owner && !story.published ? (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-950">{t("draft")}</span>
           ) : null}
@@ -158,20 +222,34 @@ export function StoryCard({
               type="button"
               variant="outline"
               size="icon"
-              aria-pressed={editing}
+              aria-pressed={editingTab === tab}
               aria-label={t("edit")}
-              onClick={() => setEditing((on) => !on)}
+              onClick={() => setEditingTab((current) => (current === tab ? null : tab))}
             >
               <Pencil />
             </Button>
           ) : null}
         </div>
       </div>
-      <Tabs value={tab} onValueChange={setTab} className="mt-3">
+      <Tabs
+        value={tab}
+        onValueChange={(value) => {
+          if (value === "story" || value === "words" || value === "quiz" || value === "learn") {
+            setTab(value);
+          }
+        }}
+        className="mt-3"
+      >
         <TabsList className="w-full">
           <TabsTrigger value="story">{t("tabStory")}</TabsTrigger>
           <TabsTrigger value="words">{t("tabWords")}</TabsTrigger>
           <TabsTrigger value="quiz">{t("tabQuiz")}</TabsTrigger>
+          {learnOpen ? (
+            <TabsTrigger value="learn">
+              {t("tabLearn")}
+              <Badge variant="default">{t("newLesson")}</Badge>
+            </TabsTrigger>
+          ) : null}
         </TabsList>
         <TabsContent value="story" className="text-base">
           {story.audioUrl ? (
@@ -184,7 +262,35 @@ export function StoryCard({
           ) : (
             <p className="mt-3 text-sm text-muted-foreground">{t("audioMissing")}</p>
           )}
-          <div className="mt-3 flex flex-col gap-3" onMouseUp={editing ? captureSelection : undefined} onKeyUp={editing ? captureSelection : undefined}>
+          {editingStory ? (
+            <div className="mt-3 flex flex-col gap-3">
+              <textarea
+                form={formId}
+                name="hebrew"
+                className={cn(ink, printFont.className, "field-sizing-content text-2xl leading-relaxed")}
+                dir="rtl"
+                lang="he"
+                translate="no"
+                value={hebrew}
+                maxLength={20000}
+                rows={4}
+                required
+                aria-label={t("hebrewLabel")}
+                onChange={(event) => setHebrew(event.target.value)}
+              />
+              {glossOn ? (
+                <textarea
+                  className={cn(ink, "field-sizing-content text-sm italic font-extralight text-muted-foreground")}
+                  value={glossText}
+                  maxLength={20000}
+                  rows={3}
+                  aria-label={t(glossLocale === "fr" ? "frLabel" : glossLocale === "es" ? "esLabel" : "enLabel")}
+                  onChange={(event) => setGlossText(event.target.value)}
+                />
+              ) : null}
+            </div>
+          ) : (
+          <div className="mt-3 flex flex-col gap-3">
             {lines.map((line, lineIndex) => {
               const lineTokens = tokenLines[lineIndex] ?? [];
               const marks = keywordMarks(lineTokens, story.words);
@@ -232,10 +338,61 @@ export function StoryCard({
               );
             })}
           </div>
-          <MediaGallery items={story.media} owner={editing} />
+          )}
+          <MediaGallery items={story.media} owner={editingStory} />
+          {editingStory ? (
+            <>
+              <form
+                id={formId}
+                action={saveAction}
+                className="mt-3 flex flex-col gap-3"
+                onSubmit={(event: FormEvent<HTMLFormElement>) => {
+                  const file = new FormData(event.currentTarget).get("audio");
+                  const oversized = file instanceof File && file.size > STORY_AUDIO_MAX_BYTES;
+                  setAudioTooBig(oversized);
+                  if (oversized) {
+                    event.preventDefault();
+                  }
+                }}
+              >
+                <input type="hidden" name="id" value={story.id} />
+                <input type="hidden" name="transcriptEn" value={transcriptEn} />
+                <input type="hidden" name="transcriptFr" value={transcriptFr} />
+                <input type="hidden" name="transcriptEs" value={transcriptEs} />
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input type="checkbox" name="published" value="true" defaultChecked={story.published} />
+                  {t("publish")}
+                </label>
+                <label className="flex flex-col gap-1 text-sm font-medium">
+                  {t("audioReplace")}
+                  <input
+                    type="file"
+                    name="audio"
+                    accept="audio/mpeg,audio/mp4,audio/wav,audio/webm,.mp3,.m4a,.wav,.webm"
+                    className="text-sm"
+                  />
+                </label>
+                {audioTooBig || saveState.error ? (
+                  <p className="text-sm text-destructive">{t(audioTooBig ? "audio" : saveState.error)}</p>
+                ) : null}
+                <Button type="submit" disabled={saving} className="self-start">
+                  {saving ? t("saving") : t("save")}
+                </Button>
+              </form>
+              <MediaUploader storyId={story.id} quiet />
+              <form action={deleteStory}>
+                <input type="hidden" name="id" value={story.id} />
+                <Button type="submit" variant="destructive">
+                  {t("delete")}
+                </Button>
+              </form>
+            </>
+          ) : null}
         </TabsContent>
         <TabsContent value="words" className="flex flex-col gap-3 text-base">
-          {story.words.length > 0 ? (
+          {editingTab === "words" ? (
+            <WordPicker key={story.words.map((word) => `${word.id}:${word.label}`).join()} storyId={story.id} words={story.words} />
+          ) : story.words.length > 0 ? (
             <>
               <Button type="button" className="self-start" onClick={() => setStudying(true)}>
                 {t("studyFlashcards")}
@@ -247,31 +404,29 @@ export function StoryCard({
           )}
         </TabsContent>
         <TabsContent value="quiz" className="text-base">
-          {questions.length > 0 ? (
+          {editingTab === "quiz" ? (
+            <QuizEditor key={story.updatedAt} storyId={story.id} questions={story.questions} />
+          ) : questions.length > 0 ? (
             <StoryQuiz storyId={story.id} questions={questions} bare />
           ) : (
             <p className="text-sm text-muted-foreground">{t("emptyQuiz")}</p>
           )}
         </TabsContent>
+        {learnOpen ? (
+          <TabsContent value="learn" className="text-base">
+            {editingTab === "learn" ? (
+              <StoryLearnEditor
+                key={`${story.updatedAt}:${story.lesson.title.en}:${story.lesson.levels.map((level) => level.id).join()}`}
+                storyId={story.id}
+                lesson={story.lesson}
+                catalog={catalog}
+              />
+            ) : (
+              <StoryLearn lesson={story.lesson} />
+            )}
+          </TabsContent>
+        ) : null}
       </Tabs>
-      {editing ? (
-        <div className="mt-4 flex flex-col gap-4">
-          <StoryEditor key={`${story.id}:${story.updatedAt}`} story={story} />
-          <MediaUploader storyId={story.id} bare />
-          <Fold title={story.words.length > 0 ? `${t("wordTitle")} (${story.words.length})` : t("wordTitle")} open={wordsOpen} onToggle={setWordsOpen}>
-            <WordPicker storyId={story.id} phrase={phrase} words={story.words} />
-          </Fold>
-          <Fold title={t("quizTitle")}>
-            <QuizEditor key={story.updatedAt} storyId={story.id} questions={story.questions} bare />
-          </Fold>
-          <form action={deleteStory}>
-            <input type="hidden" name="id" value={story.id} />
-            <Button type="submit" variant="destructive">
-              {t("delete")}
-            </Button>
-          </form>
-        </div>
-      ) : null}
     </article>
   );
 }

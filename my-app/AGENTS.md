@@ -8,7 +8,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# Webrew
+# Aleph Hebrew
 
 ## Sources of truth
 
@@ -17,7 +17,7 @@ Refer to these two files, and only these, for how the project is defined:
 - **AGENTS.md** — tech stack, interface language and direction, how current features behave, and working agreements.
 - **LearningFlow.md** — the pathway content: sections, levels, exercises, exams, and the words those levels teach.
 
-Webrew is an interactive, modern, fully responsive web app for Hebrew learners at every level, from total beginners to advanced speakers. It should feel easy and intuitive: a sleek UI, clean smooth animations, and a subtle nature theme that shows up in logos, icons, and sound effects.
+Aleph Hebrew is an interactive, modern, fully responsive web app for Hebrew learners at every level, from total beginners to advanced speakers. It should feel easy and intuitive: a sleek UI, clean smooth animations, and a subtle nature theme that shows up in logos, icons, and sound effects.
 
 The app lives in this Next.js project (`my-app`). The repo root README describes it as a Hebrew language learning platform for all levels.
 
@@ -108,6 +108,7 @@ Login, logout, and registration through Supabase. Email and password are at `/lo
 - Every curriculum level renders inside `LevelFrame`, which holds the panel, the level badge, and the exit button.
 - A pathway level is data in a section content file plus `LevelFrame`. Each exercise type is one component under `components/learn/exercises`. A new level is a new object, not a new screen.
 - Pathway sections render through the shared section component on the home path. Progress is stored in the browser under `webrew.pathway`.
+- A story can include a Learn lesson: a concept, a title, the lesson text, and examples. The owner attaches that story to pathway levels from the story editor. The Learn tab links to those levels, and each attached level links back to the story.
 - When a feature touches the database or auth, use Supabase. Browser code uses `lib/supabase/client.ts`. Server Components, Server Actions, and Route Handlers use `lib/supabase/server.ts`. `proxy.ts` refreshes the auth session, then applies locale routing. Credentials live in `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Do not commit that file.
 
 ## Local development

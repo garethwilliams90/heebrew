@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { saveStory, type StoryActionState } from "@/lib/stories/actions";
+import { STORY_AUDIO_MAX_BYTES } from "@/lib/stories/audio";
 import type { StoryView } from "@/lib/stories/queries";
 
 const initial: StoryActionState = { error: "" };
@@ -14,9 +15,19 @@ const fieldClass =
 export function StoryEditor({ story }: { story?: StoryView }) {
   const t = useTranslations("Stories");
   const [state, action, pending] = useActionState(saveStory, initial);
+  const [tooBig, setTooBig] = useState(false);
+
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    const file = new FormData(event.currentTarget).get("audio");
+    const oversized = file instanceof File && file.size > STORY_AUDIO_MAX_BYTES;
+    setTooBig(oversized);
+    if (oversized) {
+      event.preventDefault();
+    }
+  }
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form action={action} className="flex flex-col gap-3" onSubmit={onSubmit}>
       {story ? <input type="hidden" name="id" value={story.id} /> : null}
       <label className="flex flex-col gap-1 text-sm font-medium">
         {t("titleLabel")}
@@ -87,7 +98,7 @@ export function StoryEditor({ story }: { story?: StoryView }) {
         <input type="checkbox" name="published" value="true" defaultChecked={story?.published ?? false} />
         {t("publish")}
       </label>
-      {state.error ? <p className="text-sm text-red-800">{t(state.error)}</p> : null}
+      {tooBig || state.error ? <p className="text-sm text-red-800">{t(tooBig ? "audio" : state.error)}</p> : null}
       {story ? (
         <Button type="submit" disabled={pending} className="self-start">
           {pending ? t("saving") : t("save")}

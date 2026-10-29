@@ -10,14 +10,24 @@ const initial: MediaActionState = { error: "" };
 const fieldClass =
   "w-full rounded-lg border border-emerald-950/15 bg-white px-3 py-2 text-sm text-emerald-950 outline-none focus-visible:ring-3 focus-visible:ring-emerald-700/30";
 
-export function MediaUploader({ storyId, postId, bare = false }: { storyId?: string; postId?: string; bare?: boolean }) {
+export function MediaUploader({
+  storyId,
+  postId,
+  bare = false,
+  quiet = false,
+}: {
+  storyId?: string;
+  postId?: string;
+  bare?: boolean;
+  quiet?: boolean;
+}) {
   const t = useTranslations("Media");
   const [state, action, pending] = useActionState(addMedia, initial);
 
   return (
     <form action={action} className={bare ? "flex flex-col gap-3" : "mt-4 flex flex-col gap-3 border-t border-emerald-950/10 pt-4"}>
-      {bare ? null : <h3 className="text-sm font-medium">{t("title")}</h3>}
-      <p className="text-sm text-emerald-900/70">{t("hint")}</p>
+      {bare || quiet ? null : <h3 className="text-sm font-medium">{t("title")}</h3>}
+      {quiet ? null : <p className="text-sm text-emerald-900/70">{t("hint")}</p>}
       {storyId ? <input type="hidden" name="storyId" value={storyId} /> : null}
       {postId ? <input type="hidden" name="postId" value={postId} /> : null}
       <label className="flex flex-col gap-1 text-sm font-medium">

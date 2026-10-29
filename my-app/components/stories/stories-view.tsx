@@ -4,7 +4,8 @@ import { Fold } from "@/components/stories/fold";
 import { StoryCard } from "@/components/stories/story-card";
 import { StoryEditor } from "@/components/content/lazy-owner-tools";
 import { Link } from "@/i18n/navigation";
-import { storyGloss, storyLevels, type StoryDetail, type StoryLevel } from "@/lib/stories/queries";
+import type { PathwayLessonSection } from "@/lib/learn/pathway/lesson-links";
+import { storyGloss, storyLevels, type StoryDetail, type StoryLevel, type StoryTab } from "@/lib/stories/queries";
 import { cn } from "cn";
 
 const panel = "rounded-3xl border border-emerald-950/10 bg-white/90 p-5 text-emerald-950 shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]";
@@ -14,11 +15,17 @@ export async function StoriesView({
   owner,
   signedIn,
   stories,
+  catalog,
+  focusStory = "",
+  startTab = "story",
 }: {
   level: StoryLevel | null;
   owner: boolean;
   signedIn: boolean;
   stories: StoryDetail[];
+  catalog: PathwayLessonSection[];
+  focusStory?: string;
+  startTab?: StoryTab;
 }) {
   const t = await getTranslations("Stories");
   const locale = await getLocale();
@@ -66,7 +73,16 @@ export async function StoriesView({
       ) : null}
       {stories.length === 0 ? <p className="text-sm text-emerald-900/70">{t("empty")}</p> : null}
       {stories.map((story) => (
-        <StoryCard key={story.id} story={story} owner={owner} signedIn={signedIn} gloss={storyGloss(story, locale)} />
+        <StoryCard
+          key={story.id}
+          story={story}
+          owner={owner}
+          signedIn={signedIn}
+          gloss={storyGloss(story, locale)}
+          catalog={owner ? catalog : []}
+          startTab={story.id === focusStory ? startTab : "story"}
+          focused={story.id === focusStory}
+        />
       ))}
     </main>
   );

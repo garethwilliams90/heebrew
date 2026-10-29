@@ -1,7 +1,7 @@
 "use client";
 
-import { Leaf } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { AlephMark } from "@/components/brand/aleph-mark";
 import { NatureScene } from "@/components/learn/nature-scene";
 import { AppClock } from "@/components/settings/app-clock";
 import { NavRail } from "@/components/settings/nav-rail";
@@ -24,7 +24,7 @@ export function Navbar({
       <div aria-hidden className="pointer-events-none absolute -top-24 -left-24 size-80 rounded-full bg-emerald-200/50 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute right-0 bottom-0 size-96 rounded-full bg-lime-100/80 blur-3xl" />
       <Link href="/" className="fixed top-4 left-4 z-30 hidden items-center gap-2 md:flex">
-        <Leaf className="size-5 text-emerald-800" aria-hidden />
+        <AlephMark className="size-8" />
         <p className="text-lg font-semibold tracking-tight">{flashcards("brand")}</p>
       </Link>
       <NavRail />

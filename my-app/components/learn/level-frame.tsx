@@ -50,7 +50,7 @@ export function LevelFrame({
       </header>
       <div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {corner ? <div className="z-20 flex shrink-0 justify-start pb-1">{corner}</div> : null}
+          {corner ? <div className="z-20 flex w-full shrink-0 justify-start pb-1">{corner}</div> : null}
           <div className="relative min-h-0 flex-1 overflow-y-auto">
             <div className="flex min-h-full w-full flex-col items-center justify-center gap-4 py-2">{children}</div>
           </div>

@@ -329,6 +329,36 @@ isOneToOne: false
                   Insert: { "correct"?: boolean,"id"?: string,"label": string,"question_id": string,"sort_order"?: number }
                   Update: { "correct"?: boolean,"id"?: string,"label"?: string,"question_id"?: string,"sort_order"?: number }
                   Relationships: []
+                },"story_lessons": {
+                  Row: {
+                    "body_en": string,"body_es": string,"body_fr": string,"concept_en": string,"concept_es": string,"concept_fr": string,"concept_he": string,"story_id": string,"title_en": string,"title_es": string,"title_fr": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body_en"?: string,"body_es"?: string,"body_fr"?: string,"concept_en"?: string,"concept_es"?: string,"concept_fr"?: string,"concept_he"?: string,"story_id": string,"title_en"?: string,"title_es"?: string,"title_fr"?: string
+                  }
+                  Update: {
+                    "body_en"?: string,"body_es"?: string,"body_fr"?: string,"concept_en"?: string,"concept_es"?: string,"concept_fr"?: string,"concept_he"?: string,"story_id"?: string,"title_en"?: string,"title_es"?: string,"title_fr"?: string
+                  }
+                  Relationships: []
+                },"story_lesson_examples": {
+                  Row: {
+                    "gloss_en": string,"gloss_es": string,"gloss_fr": string,"hebrew": string,"id": string,"sort_order": number,"story_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "gloss_en"?: string,"gloss_es"?: string,"gloss_fr"?: string,"hebrew": string,"id"?: string,"sort_order"?: number,"story_id": string
+                  }
+                  Update: {
+                    "gloss_en"?: string,"gloss_es"?: string,"gloss_fr"?: string,"hebrew"?: string,"id"?: string,"sort_order"?: number,"story_id"?: string
+                  }
+                  Relationships: []
+                },"story_pathway_links": {
+                  Row: { "level_id": string,"story_id": string }
+                  ComputedFields: never
+                  Insert: { "level_id": string,"story_id": string }
+                  Update: { "level_id"?: string,"story_id"?: string }
+                  Relationships: []
                 }
           }
           Views: {

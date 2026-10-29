@@ -9,6 +9,7 @@ import { IntroSlideView } from "@/components/learn/pathway/intro-slide";
 import { useLocalhost } from "@/components/learn/dev-level";
 import { LevelFrame } from "@/components/learn/level-frame";
 import { LevelNav } from "@/components/learn/level-nav";
+import { LevelStoryLinks } from "@/components/learn/pathway/level-story-links";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -20,12 +21,21 @@ import { batchExercise } from "@/lib/learn/pathway/question-batch";
 import { completeLevel, levelIsOpen, touchStudy } from "@/lib/learn/pathway/progress";
 import type { ExerciseStep, IntroSlide } from "@/lib/learn/pathway/types";
 import { glossOf } from "@/lib/learn/sentences";
+import type { LevelStoryLink } from "@/lib/stories/queries";
 import { toBasicWord, wordById } from "@/lib/learn/words/catalog";
 import { cn } from "cn";
 
 type Frame = { kind: "intro"; slide: IntroSlide } | { kind: "exercise"; step: ExerciseStep };
 
-export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId: string }) {
+export function LevelRunner({
+  sectionId,
+  levelId,
+  relatedStories = [],
+}: {
+  sectionId: string;
+  levelId: string;
+  relatedStories?: LevelStoryLink[];
+}) {
   const t = useTranslations("Learn");
   const locale = useLocale();
   const local = useLocalhost();
@@ -114,7 +124,11 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
 
   if (!allowed) {
     return (
-      <LevelFrame label={level.badge ?? gematria(level.index + 1)} finished>
+      <LevelFrame
+        label={level.badge ?? gematria(level.index + 1)}
+        finished
+        corner={relatedStories.length > 0 ? <LevelStoryLinks stories={relatedStories} /> : undefined}
+      >
         <p className="text-center text-base text-emerald-900">{t("levelLocked")}</p>
       </LevelFrame>
     );
@@ -145,6 +159,7 @@ export function LevelRunner({ sectionId, levelId }: { sectionId: string; levelId
     <LevelFrame
       label={label}
       finished={done}
+      corner={relatedStories.length > 0 ? <LevelStoryLinks stories={relatedStories} /> : undefined}
       footer={
         done || !frame || frame.kind === "exercise" ? null : (
           <LevelNav

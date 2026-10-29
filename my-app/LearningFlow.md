@@ -1,6 +1,6 @@
 # Learning flow
 
-This file is the source of truth for the conceptual path a learner takes through Webrew: the first visit, the gated curriculum, and ideas for later levels. It records intent, not implementation.
+This file is the source of truth for the conceptual path a learner takes through Aleph Hebrew: the first visit, the gated curriculum, and ideas for later levels. It records intent, not implementation.
 
 [AGENTS.md](AGENTS.md) stays the source of truth for the tech stack, interface language and direction, how current features behave, and working agreements.
 

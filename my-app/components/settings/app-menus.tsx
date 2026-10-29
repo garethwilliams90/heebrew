@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, animate, motion, useMotionValue } from "motion/react";
-import { Leaf, Menu, Settings, X } from "lucide-react";
+import { Menu, Settings, X } from "lucide-react";
+import { AlephMark } from "@/components/brand/aleph-mark";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -165,7 +166,7 @@ export function MobileMenu({ email }: { email: string | null }) {
               transition={spring}
             >
               <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-                <Leaf className="size-5 text-emerald-800" aria-hidden />
+                <AlephMark className="size-8" />
                 <span className="text-lg font-semibold tracking-tight">{flashcards("brand")}</span>
               </Link>
               <NavLinks expanded onNavigate={() => setOpen(false)} />

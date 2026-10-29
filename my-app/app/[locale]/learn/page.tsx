@@ -1,5 +1,6 @@
 import { LevelRunner, SectionExam } from "@/components/learn/pathway/learn-route";
 import { redirect } from "@/i18n/navigation";
+import { loadLevelStories } from "@/lib/stories/queries";
 import { getLocale } from "next-intl/server";
 
 export default async function Learn({
@@ -12,7 +13,8 @@ export default async function Learn({
     return <SectionExam sectionId={section} review={review === "1"} />;
   }
   if (section && level) {
-    return <LevelRunner key={`${section}-${level}`} sectionId={section} levelId={level} />;
+    const relatedStories = await loadLevelStories(level);
+    return <LevelRunner key={`${section}-${level}`} sectionId={section} levelId={level} relatedStories={relatedStories} />;
   }
 
   const locale = await getLocale();

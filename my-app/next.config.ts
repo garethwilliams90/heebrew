@@ -11,8 +11,11 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["radix-ui"],
+    // Story recordings are allowed up to 20 MB. The proxy otherwise keeps
+    // the first 10 MB, and the cut-off upload crashes with "Unexpected end of form".
+    proxyClientMaxBodySize: "22mb",
     serverActions: {
-      bodySizeLimit: "20mb",
+      bodySizeLimit: "22mb",
     },
   },
 };
