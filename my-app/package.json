@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@shadcn/react": "^0.3.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "@vercel/speed-insights": "^2.0.0",

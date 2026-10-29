@@ -68,10 +68,6 @@ export const soundPrompts: readonly SoundPrompt[] = [
 
 export const soundKnownWords: readonly BasicWord[] = [aba, gad, bad];
 
-export function soundPromptsForLevel(level: 1 | 2) {
-  return soundPrompts.filter((item) => item.level === level);
-}
-
 export function soundPromptById(id: string) {
   return soundPrompts.find((item) => item.id === id);
 }

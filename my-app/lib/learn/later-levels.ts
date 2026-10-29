@@ -25,10 +25,6 @@ export type CurriculumLevelDef = {
   steps: readonly LevelStep[];
 };
 
-export function isRoundStep(step: LevelStep): step is { id: string; exam?: boolean; rounds: readonly BuilderSentence[] } {
-  return "rounds" in step;
-}
-
 const g = (en: string, fr: string, es: string): LocaleGloss => ({ en, fr, es });
 const w = word;
 
@@ -329,19 +325,3 @@ export const curriculumLevels: readonly CurriculumLevelDef[] = [
 ];
 
 export const laterKnownWords: readonly BasicWord[] = curriculumLevels.flatMap((level) => level.knownWords);
-
-export function curriculumLevelDef(level: number) {
-  return curriculumLevels.find((item) => item.level === level);
-}
-
-export function stagesFor(level: number) {
-  const found = curriculumLevelDef(level);
-  if (!found) {
-    return undefined;
-  }
-  return found.steps.map((step) => ({
-    id: step.id,
-    href: `/learn?level=${level}&from=${step.id}` as const,
-    practice: isRoundStep(step),
-  }));
-}

@@ -4,11 +4,8 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { XIcon } from "lucide-react";
 import { FormDialog } from "@/components/flashcards/form-dialog";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Link, useRouter } from "@/i18n/navigation";
-import { cn } from "cn";
-
-const lastLevel = 40;
+import { Button } from "@/components/ui/button";
+import { useRouter } from "@/i18n/navigation";
 
 export function LevelClose({ finished, className }: { finished: boolean; className?: string }) {
   const t = useTranslations("Learn");
@@ -60,25 +57,5 @@ export function LevelClose({ finished, className }: { finished: boolean; classNa
         </FormDialog>
       ) : null}
     </>
-  );
-}
-
-export function NextLevelLink({ level }: { level: number }) {
-  const t = useTranslations("Learn");
-  if (level >= lastLevel) {
-    return (
-      <Link href="/" className={cn(buttonVariants(), "mt-6 h-12 px-6")}>
-        {t("back")}
-      </Link>
-    );
-  }
-
-  const next = level + 1;
-  const href = next === 2 ? "/learn?from=2.0" : `/learn?level=${next}`;
-
-  return (
-    <Link href={href} className={cn(buttonVariants(), "mt-6 h-12 px-6")}>
-      {t("goToLevel", { level: next })}
-    </Link>
   );
 }
