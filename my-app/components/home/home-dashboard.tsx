@@ -1,12 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { LevelCard } from "./level-card";
-import { PracticeChart } from "./practice-chart";
 import { readLocalPractice } from "@/lib/flashcards/daily-practice";
 import { loadExperience } from "@/lib/flashcards/experience";
 import { AlephBetCard } from "./aleph-bet-card";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const PracticeChart = dynamic(() => import("./practice-chart").then((mod) => mod.PracticeChart), {
+  loading: () => <Skeleton className="h-72 w-full rounded-3xl" />,
+});
 
 type HomeView = {
   signedIn: boolean;

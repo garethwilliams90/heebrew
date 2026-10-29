@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "cn";
 import { printFont } from "@/components/alephbet/print-font";
@@ -8,6 +9,8 @@ import { AnswerPop, answerTone } from "@/components/learn/exercises/answer-mark"
 import { ExerciseChrome } from "@/components/learn/exercises/lesson-session";
 import { useAdvance } from "@/components/learn/exercises/use-advance";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { isOptimizedWordImage } from "@/lib/content/word-image";
 import { playStudyClip } from "@/lib/learn/pathway/play-study";
 import type { PictureWordItem } from "@/lib/learn/pathway/types";
 import type { CatalogWord } from "@/lib/learn/words/catalog";
@@ -90,9 +93,9 @@ export function PictureWord({ items, onPass, onMiss }: { items: readonly Picture
     <ExerciseChrome index={index} total={items.length} prompt={promptFor(item.direction, t)} canHint={canHint} onHint={hint}>
       <div className="flex w-full max-w-xl flex-col items-center gap-6">
         {item.direction === "picture-hebrew" && !picture ? (
-          <div className="h-40 w-full max-w-xs animate-pulse rounded-3xl bg-emerald-950/10" />
+          <Skeleton className="h-40 w-full max-w-xs rounded-3xl" />
         ) : picture ? (
-          <img src={picture} alt="" className="h-40 w-full max-w-xs rounded-3xl object-cover" />
+          <WordPicture src={picture} />
         ) : answer ? (
           <PromptWord word={answer} hebrew={item.direction === "hebrew-english"} locale={locale} />
         ) : null}
@@ -139,6 +142,21 @@ export function PictureWord({ items, onPass, onMiss }: { items: readonly Picture
         )}
       </div>
     </ExerciseChrome>
+  );
+}
+
+function WordPicture({ src }: { src: string }) {
+  return (
+    <div className="relative h-40 w-full max-w-xs overflow-hidden rounded-3xl">
+      <Skeleton className="absolute inset-0 size-full rounded-3xl" />
+      {isOptimizedWordImage(src) ? (
+        <Image src={src} alt="" fill sizes="320px" className="object-cover" />
+      ) : (
+        // Hosts outside images.remotePatterns cannot use the optimizer.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" loading="lazy" decoding="async" className="relative size-full object-cover" />
+      )}
+    </div>
   );
 }
 

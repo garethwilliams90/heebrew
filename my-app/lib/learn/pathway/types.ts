@@ -142,6 +142,24 @@ export type PathwaySection = {
   };
 };
 
+/** Path and nav data. Exercises stay off this type so the home bundle can omit them. */
+export type PathwayLevelOutline = {
+  id: string;
+  index: number;
+  title: Gloss;
+  about: Gloss;
+  badge?: string;
+};
+
+export type PathwaySectionOutline = {
+  id: string;
+  index: number;
+  title: Gloss;
+  about: Gloss;
+  hasExam: boolean;
+  levels: readonly PathwayLevelOutline[];
+};
+
 export type ExamQuestion =
   | { type: "nikud-drop"; round: NikudDropRound }
   | { type: "recognize-sound"; item: RecognizeItem }

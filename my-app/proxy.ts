@@ -14,6 +14,11 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
+  const deckRedirect = homeDeckRedirect(request);
+  if (deckRedirect) {
+    return deckRedirect;
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -57,6 +62,21 @@ export default async function proxy(request: NextRequest) {
   }
 
   return response;
+}
+
+function homeDeckRedirect(request: NextRequest) {
+  const deck = request.nextUrl.searchParams.get("deck");
+  if (!deck) {
+    return null;
+  }
+  const path = request.nextUrl.pathname;
+  const home = path === "/" || routing.locales.some((locale) => path === `/${locale}`);
+  if (!home) {
+    return null;
+  }
+  const url = request.nextUrl.clone();
+  url.pathname = path === "/" ? "/decks" : `${path}/decks`;
+  return NextResponse.redirect(url);
 }
 
 function isKofiWebhookPost(request: NextRequest) {

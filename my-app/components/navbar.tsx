@@ -4,18 +4,17 @@ import { Leaf } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { NatureScene } from "@/components/learn/nature-scene";
 import { AppClock } from "@/components/settings/app-clock";
-import { MobileMenu, SettingsMenu } from "@/components/settings/app-menus";
 import { NavRail } from "@/components/settings/nav-rail";
 import { SocialFab } from "@/components/settings/social-fab";
 import { KofiHomeButton } from "@/components/support/kofi-support";
 import { Link } from "@/i18n/navigation";
 
 export function Navbar({
-  email,
   children,
+  menus,
 }: {
-  email: string | null;
   children: React.ReactNode;
+  menus: React.ReactNode;
 }) {
   const flashcards = useTranslations("Flashcards");
 
@@ -29,8 +28,7 @@ export function Navbar({
         <p className="text-lg font-semibold tracking-tight">{flashcards("brand")}</p>
       </Link>
       <NavRail />
-      <SettingsMenu email={email} />
-      <MobileMenu email={email} />
+      {menus}
       <AppClock />
       <KofiHomeButton />
       <SocialFab />

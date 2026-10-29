@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { nextStop } from "@/lib/learn/pathway/catalog";
+import { nextStop } from "@/lib/learn/pathway/shape";
 import { completeLevel, devSetPlace, devSkipAll, openSectionIndex, passExam, PATHWAY_EVENT } from "@/lib/learn/pathway/progress";
 import { isLocalHost } from "@/lib/learn/local-host";
 

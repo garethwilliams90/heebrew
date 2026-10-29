@@ -8,15 +8,16 @@ import { printFont } from "@/components/alephbet/print-font";
 import { DevLevelControl } from "@/components/learn/dev-level";
 import { LevelPath } from "@/components/home/level-path";
 import { KofiSupport } from "@/components/support/kofi-support";
+import type { PathwaySectionOutline } from "@/lib/learn/pathway/types";
 
-export function WelcomeHome() {
+export function WelcomeHome({ outline }: { outline: readonly PathwaySectionOutline[] }) {
   const t = useTranslations("Home");
 
   return (
     <main className="flex min-h-0 flex-1 flex-col items-center gap-12 overflow-y-auto py-6">
       <WelcomeTitle label={t("welcome")} hebrew={t("welcomeHebrew")} />
       <KofiSupport variant="label" />
-      <LevelPath />
+      <LevelPath outline={outline} />
       <DevLevelControl />
     </main>
   );

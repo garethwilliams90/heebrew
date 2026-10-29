@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { MediaGallery } from "@/components/content/media-gallery";
-import { MediaUploader } from "@/components/content/media-uploader";
-import { PostEditor } from "@/components/blog/post-editor";
+import { MediaUploader, PostEditor } from "@/components/content/lazy-owner-tools";
 import { KofiSupport } from "@/components/support/kofi-support";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";

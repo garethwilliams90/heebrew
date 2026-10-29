@@ -36,9 +36,15 @@ export function PathLamp({
         )}
         style={{ animationDelay: `${delay}s` }}
       />
+      {/* Decorative SVGs. The image optimizer does not resize these. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={sources[kind][side]}
         alt=""
+        width={kind === "torch" ? 135 : 273}
+        height={kind === "torch" ? 541 : 488}
+        loading="lazy"
+        decoding="async"
         draggable={false}
         className={cn("relative w-auto max-w-none", kind === "torch" ? "h-36" : "h-32")}
       />

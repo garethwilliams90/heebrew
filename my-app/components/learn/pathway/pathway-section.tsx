@@ -7,7 +7,7 @@ import { StonePath } from "@/components/learn/nature-scene";
 import { PathLamp } from "@/components/learn/pathway/path-lamp";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "@/i18n/navigation";
-import type { PathwaySection } from "@/lib/learn/pathway/types";
+import type { PathwaySectionOutline } from "@/lib/learn/pathway/types";
 import { gematria } from "@/lib/learn/gematria";
 import { glossOf } from "@/lib/learn/sentences";
 import { cn } from "cn";
@@ -21,7 +21,7 @@ export function PathwaySectionView({
   levelOpen,
   startIndex,
 }: {
-  section: PathwaySection;
+  section: PathwaySectionOutline;
   open: boolean;
   previousExamHref?: string;
   levelOpen: (levelId: string) => boolean;
@@ -51,7 +51,7 @@ export function PathwaySectionView({
         const href = `/learn?section=${section.id}&level=${level.id}`;
         const place = startIndex + index;
         const lean = Math.round(((shifts[place % shifts.length] ?? 0) - 23) * 0.6);
-        const showStones = index < section.levels.length - 1 || (open && Boolean(section.exam));
+        const showStones = index < section.levels.length - 1 || (open && section.hasExam);
         const number = level.badge ?? gematria(level.index + 1);
         return (
           <div key={level.id} className="flex w-full justify-center overflow-x-clip">
@@ -76,7 +76,7 @@ export function PathwaySectionView({
           </div>
         );
       })}
-      {open && section.exam ? (
+      {open && section.hasExam ? (
         <div className="relative">
           <LevelNode
             mark={t("examName")}

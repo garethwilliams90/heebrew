@@ -4,9 +4,48 @@ import { section1 } from "@/lib/learn/pathway/section-1-alephbet";
 import { section2 } from "@/lib/learn/pathway/section-2-fundamentals";
 import { section3 } from "@/lib/learn/pathway/section-3-existential";
 import { seededOrder } from "@/lib/learn/pathway/order";
-import type { ExamQuestion, ExerciseType, PathwayLevel, PathwaySection } from "@/lib/learn/pathway/types";
+import { pathwayShape } from "@/lib/learn/pathway/shape";
+import type {
+  ExamQuestion,
+  ExerciseType,
+  PathwayLevel,
+  PathwaySection,
+  PathwaySectionOutline,
+} from "@/lib/learn/pathway/types";
+
+export { nextStop } from "@/lib/learn/pathway/shape";
 
 export const pathwaySections: readonly PathwaySection[] = [section0, section1, section2, section3];
+
+const shapeFromSections = pathwaySections.map((section) => ({
+  id: section.id,
+  index: section.index,
+  hasExam: Boolean(section.exam),
+  levels: section.levels.map((level) => ({ id: level.id, index: level.index })),
+}));
+
+if (JSON.stringify(shapeFromSections) !== JSON.stringify(pathwayShape)) {
+  throw new Error(
+    `Pathway shape is out of date. Update lib/learn/pathway/shape.ts.\nSections: ${JSON.stringify(shapeFromSections)}\nShape: ${JSON.stringify(pathwayShape)}`,
+  );
+}
+
+export function pathwayOutline(): readonly PathwaySectionOutline[] {
+  return pathwaySections.map((section) => ({
+    id: section.id,
+    index: section.index,
+    title: section.title,
+    about: section.about,
+    hasExam: Boolean(section.exam),
+    levels: section.levels.map((level) => ({
+      id: level.id,
+      index: level.index,
+      title: level.title,
+      about: level.about,
+      badge: level.badge,
+    })),
+  }));
+}
 
 export function sectionById(id: string) {
   return pathwaySections.find((section) => section.id === id) ?? null;
@@ -24,27 +63,6 @@ export function levelById(id: string) {
 
 export function sectionOfLevel(level: PathwayLevel) {
   return sectionById(level.sectionId);
-}
-
-export function nextStop(sectionId: string, levelId: string) {
-  const section = sectionById(sectionId);
-  if (!section) {
-    return "/";
-  }
-  const index = section.levels.findIndex((item) => item.id === levelId);
-  const next = section.levels[index + 1];
-  if (next) {
-    return `/learn?section=${section.id}&level=${next.id}`;
-  }
-  if (section.exam) {
-    return `/learn?section=${section.id}&exam=1`;
-  }
-  const following = pathwaySections.find((item) => item.index === section.index + 1);
-  const first = following?.levels[0];
-  if (first) {
-    return `/learn?section=${following.id}&level=${first.id}`;
-  }
-  return "/";
 }
 
 export function examQuestions(

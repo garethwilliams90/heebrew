@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Popover } from "radix-ui";
 import dynamic from "next/dynamic";
 import { LetterDialog } from "@/components/alephbet/letter-dialog";
+import { RouteSkeleton } from "@/components/loading/route-skeleton";
 import { letterCells, LetterCard } from "@/components/alephbet/letter-card";
 import { useSoundPrefs } from "@/components/flashcards/sound-toggle";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,9 @@ import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import { consonantSrc, letterConsonantSrc, letterPair } from "@/lib/learn/consonant-sounds";
 import { playAudio } from "@/lib/settings/master-volume";
 
-const LetterStudy = dynamic(() =>
-  import("@/components/alephbet/letter-study").then((mod) => mod.LetterStudy),
-);
+const LetterStudy = dynamic(() => import("@/components/alephbet/letter-study").then((mod) => mod.LetterStudy), {
+  loading: () => <RouteSkeleton kind="study" />,
+});
 
 const scrimFade = { duration: 0.2, ease: "easeOut" as const };
 const soundGapMs = 320;

@@ -4,14 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, animate, motion, useMotionValue } from "motion/react";
 import { Leaf, Menu, Settings, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { NavLinks } from "@/components/settings/nav-rail";
-import { SettingsPanel } from "@/components/settings/settings-panel";
 import { lessonAudioUrl } from "@/lib/audio/lesson-audio";
 import { useSettings } from "@/components/settings/settings-provider";
 import { Link } from "@/i18n/navigation";
 
 const spring = { type: "spring" as const, bounce: 0.18, visualDuration: 0.32 };
+
+const SettingsPanel = dynamic(() => import("@/components/settings/settings-panel").then((mod) => mod.SettingsPanel), {
+  loading: () => <Skeleton className="h-64 w-56 rounded-3xl" />,
+});
 
 export function SettingsMenu({ email }: { email: string | null }) {
   const t = useTranslations("Settings");

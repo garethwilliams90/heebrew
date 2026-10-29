@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { KofiSupport } from "@/components/support/kofi-support";
 import { Fold } from "@/components/stories/fold";
 import { StoryCard } from "@/components/stories/story-card";
-import { StoryEditor } from "@/components/stories/story-editor";
+import { StoryEditor } from "@/components/content/lazy-owner-tools";
 import { Link } from "@/i18n/navigation";
 import { storyGloss, storyLevels, type StoryDetail, type StoryLevel } from "@/lib/stories/queries";
 import { cn } from "cn";

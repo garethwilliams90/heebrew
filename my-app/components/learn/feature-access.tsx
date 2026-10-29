@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
+import { RouteSkeleton } from "@/components/loading/route-skeleton";
 import { cn } from "cn";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "@/i18n/navigation";
@@ -46,11 +47,12 @@ function useFeatureMessage(feature: LockedFeature) {
 }
 
 export function FeatureAccess({ feature, children }: { feature: LockedFeature; children: ReactNode }) {
+  const loading = useTranslations("Settings");
   const open = useFeatureOpen(featureSection[feature], feature === "study");
   const message = useFeatureMessage(feature);
 
   if (open === null) {
-    return null;
+    return <RouteSkeleton kind="study" label={loading("loading")} />;
   }
 
   if (!open) {

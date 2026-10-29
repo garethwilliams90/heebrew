@@ -811,7 +811,8 @@
     "links": "Enlaces",
     "openLinks": "Abrir enlaces",
     "closeLinks": "Cerrar enlaces",
-    "mainNav": "Principal"
+    "mainNav": "Principal",
+    "loading": "Cargando"
   },
   "Social": {
     "github": "GitHub",

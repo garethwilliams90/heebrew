@@ -1,5 +1,8 @@
 import { nikudCycle } from "@/lib/alephbet/intro-alphabet";
+import { INTRO_LEVEL_ID } from "@/lib/learn/pathway/shape";
 import { gloss, type PathwaySection } from "@/lib/learn/pathway/types";
+
+export { INTRO_LEVEL_ID };
 
 const title = gloss("Meet the nikud", "Rencontrer les nikud", "Conoce los nikud");
 
@@ -14,8 +17,6 @@ const body = gloss(
   "Ce signe change le son de bet.",
   "Este signo cambia el sonido de bet.",
 );
-
-export const INTRO_LEVEL_ID = "s0-intro";
 
 export const section0: PathwaySection = {
   id: "s0",

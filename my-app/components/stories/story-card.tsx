@@ -10,6 +10,7 @@ import { KeywordList, storyFlashcards } from "@/components/stories/keyword-list"
 import { StoryMarks } from "@/components/stories/story-marks";
 import { StoryPlayer } from "@/components/stories/story-player";
 import { StoryQuiz } from "@/components/stories/story-quiz";
+import { MediaUploader, StoryEditor } from "@/components/content/lazy-owner-tools";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -23,8 +24,6 @@ import { cn } from "cn";
 const FlashcardSession = dynamic(() =>
   import("@/components/flashcards/flashcard-session").then((mod) => mod.FlashcardSession),
 );
-const StoryEditor = dynamic(() => import("@/components/stories/story-editor").then((mod) => mod.StoryEditor));
-const MediaUploader = dynamic(() => import("@/components/content/media-uploader").then((mod) => mod.MediaUploader));
 const QuizEditor = dynamic(() => import("@/components/stories/story-quiz").then((mod) => mod.QuizEditor));
 const WordPicker = dynamic(() => import("@/components/stories/word-picker").then((mod) => mod.WordPicker));
 const Fold = dynamic(() => import("@/components/stories/fold").then((mod) => mod.Fold));

@@ -828,7 +828,8 @@
     "links": "Links",
     "openLinks": "Open links",
     "closeLinks": "Close links",
-    "mainNav": "Main"
+    "mainNav": "Main",
+    "loading": "Loading"
   },
   "Social": {
     "github": "GitHub",

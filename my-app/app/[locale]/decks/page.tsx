@@ -1,26 +1,13 @@
-import dynamic from "next/dynamic";
-import { getTranslations } from "next-intl/server";
 import { DeckPicker } from "@/components/flashcards/deck-picker";
+import { DeckBrowser, FlashcardSession, KnownWordsStudy, StudySetup } from "@/components/flashcards/deck-route";
 import { FlashcardsAccess } from "@/components/flashcards/flashcards-access";
+import { getTranslations } from "next-intl/server";
 import { isBuiltinDeck } from "@/lib/flashcards/builtin";
 import { loadLibrary } from "@/lib/flashcards/catalog";
 import { mergeDeck } from "@/lib/flashcards/merge";
 import type { Flashcard } from "@/lib/flashcards/types";
 import { starterDeck } from "@/lib/flashcards/starter-deck";
 import { parseStudyCount, parseStudyMode } from "@/lib/flashcards/study-plan";
-
-const DeckBrowser = dynamic(() =>
-  import("@/components/flashcards/deck-browser").then((mod) => mod.DeckBrowser),
-);
-const FlashcardSession = dynamic(() =>
-  import("@/components/flashcards/flashcard-session").then((mod) => mod.FlashcardSession),
-);
-const StudySetup = dynamic(() =>
-  import("@/components/flashcards/study-setup").then((mod) => mod.StudySetup),
-);
-const KnownWordsStudy = dynamic(() =>
-  import("@/components/learn/known-words-study").then((mod) => mod.KnownWordsStudy),
-);
 
 export default async function DecksPage({
   searchParams,

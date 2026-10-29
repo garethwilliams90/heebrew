@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { printFont } from "@/components/alephbet/print-font";
 import { GenderMark } from "@/components/flashcards/gender-mark";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -413,7 +414,13 @@ function DeckPicker({
         </h2>
         <p className="mt-1 text-sm text-emerald-900/75">{t("pickDeckBody", { word: word.gloss.en })}</p>
 
-        {status === "loading" ? <p className="mt-4 text-sm text-emerald-800">{t("loadingDecks")}</p> : null}
+        {status === "loading" ? (
+          <div className="mt-4 flex flex-col gap-2" role="status" aria-label={t("loadingDecks")}>
+            <Skeleton className="h-12 w-full rounded-2xl" />
+            <Skeleton className="h-12 w-full rounded-2xl" />
+            <Skeleton className="h-12 w-full rounded-2xl" />
+          </div>
+        ) : null}
         {status === "signed-out" ? (
           <p className="mt-4 text-sm text-emerald-900">
             <Link href="/login" className="text-emerald-800 underline underline-offset-2">

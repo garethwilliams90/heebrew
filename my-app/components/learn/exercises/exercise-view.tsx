@@ -1,15 +1,53 @@
 "use client";
 
-import { ComposeGap } from "@/components/learn/exercises/compose-gap";
-import { Comprehend } from "@/components/learn/exercises/comprehend";
-import { ConjugateChoice } from "@/components/learn/exercises/conjugate-choice";
-import { ListenRepeat } from "@/components/learn/exercises/listen-repeat";
-import { NikudDropExercise, NikudRoundQuestion } from "@/components/learn/exercises/nikud-drop-exercise";
-import { PictureWord } from "@/components/learn/exercises/picture-word";
-import { ReadTranslation, WriteHebrew } from "@/components/learn/exercises/read-translation";
-import { RecognizeSound } from "@/components/learn/exercises/recognize-sound";
-import { SpellWord } from "@/components/learn/exercises/spell-word";
+import dynamic from "next/dynamic";
+import { ExercisePlaceholder } from "@/components/loading/exercise-placeholder";
 import type { ExamQuestion, ExerciseStep } from "@/lib/learn/pathway/types";
+
+function exerciseFallback() {
+  return <ExercisePlaceholder />;
+}
+
+const ComposeGap = dynamic(() => import("@/components/learn/exercises/compose-gap").then((mod) => mod.ComposeGap), {
+  loading: exerciseFallback,
+});
+const Comprehend = dynamic(() => import("@/components/learn/exercises/comprehend").then((mod) => mod.Comprehend), {
+  loading: exerciseFallback,
+});
+const ConjugateChoice = dynamic(
+  () => import("@/components/learn/exercises/conjugate-choice").then((mod) => mod.ConjugateChoice),
+  { loading: exerciseFallback },
+);
+const ListenRepeat = dynamic(
+  () => import("@/components/learn/exercises/listen-repeat").then((mod) => mod.ListenRepeat),
+  { loading: exerciseFallback },
+);
+const NikudDropExercise = dynamic(
+  () => import("@/components/learn/exercises/nikud-drop-exercise").then((mod) => mod.NikudDropExercise),
+  { loading: exerciseFallback },
+);
+const NikudRoundQuestion = dynamic(
+  () => import("@/components/learn/exercises/nikud-drop-exercise").then((mod) => mod.NikudRoundQuestion),
+  { loading: exerciseFallback },
+);
+const PictureWord = dynamic(() => import("@/components/learn/exercises/picture-word").then((mod) => mod.PictureWord), {
+  loading: exerciseFallback,
+});
+const ReadTranslation = dynamic(
+  () => import("@/components/learn/exercises/read-translation").then((mod) => mod.ReadTranslation),
+  { loading: exerciseFallback },
+);
+const WriteHebrew = dynamic(
+  () => import("@/components/learn/exercises/read-translation").then((mod) => mod.WriteHebrew),
+  { loading: exerciseFallback },
+);
+const RecognizeSound = dynamic(
+  () => import("@/components/learn/exercises/recognize-sound").then((mod) => mod.RecognizeSound),
+  { loading: exerciseFallback },
+);
+const SpellWord = dynamic(() => import("@/components/learn/exercises/spell-word").then((mod) => mod.SpellWord), {
+  loading: exerciseFallback,
+});
 
 export function ExerciseView({
   step,

@@ -1,5 +1,4 @@
-import { LevelRunner } from "@/components/learn/pathway/level-runner";
-import { SectionExam } from "@/components/learn/pathway/section-exam";
+import { LevelRunner, SectionExam } from "@/components/learn/pathway/learn-route";
 import { redirect } from "@/i18n/navigation";
 import { getLocale } from "next-intl/server";
 
