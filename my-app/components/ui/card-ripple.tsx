@@ -1,7 +1,6 @@
 "use client"
 
 import { animate, frame, motion, useSpring } from "motion/react"
-import { hover } from "motion"
 import { useEffect, useRef } from "react"
 
 const softLight =
@@ -123,7 +122,10 @@ function CardRipple() {
       moveTo(event.clientX, event.clientY, false)
     }
 
-    const stopHover = hover(card, (_element, event) => {
+    let endHover: (() => void) | null = null
+
+    const onEnter = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return
       hovering = true
       const fadeTarget = prefersReducedMotion() ? wash : glow
 
@@ -139,7 +141,7 @@ function CardRipple() {
         { duration: 0.20, ease: "easeOut" }
       )
 
-      return () => {
+      endHover = () => {
         hovering = false
         card.removeEventListener("pointermove", onMove)
         fadeIn.stop()
@@ -152,7 +154,12 @@ function CardRipple() {
           if (!hovering) glow.style.willChange = "auto"
         }, () => {})
       }
-    })
+    }
+
+    const onLeave = () => {
+      endHover?.()
+      endHover = null
+    }
 
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0) return
@@ -165,10 +172,14 @@ function CardRipple() {
       )
     }
 
+    card.addEventListener("pointerenter", onEnter)
+    card.addEventListener("pointerleave", onLeave)
     card.addEventListener("pointerdown", onPointerDown)
 
     return () => {
-      stopHover()
+      card.removeEventListener("pointerenter", onEnter)
+      card.removeEventListener("pointerleave", onLeave)
+      onLeave()
       card.removeEventListener("pointerdown", onPointerDown)
       card.removeEventListener("pointermove", onMove)
       borderAnimation?.stop()
