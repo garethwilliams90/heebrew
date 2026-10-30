@@ -16,6 +16,8 @@ export type QuizGrade = {
   answer: string;
 };
 
+export type QuizAnswer = { questionId: string; choiceIds: string[] };
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function saveQuiz(_state: QuizActionState, formData: FormData): Promise<QuizActionState> {
@@ -69,11 +71,19 @@ export async function saveQuiz(_state: QuizActionState, formData: FormData): Pro
   return { error: "" };
 }
 
-export async function gradeQuiz(storyId: string, answers: { questionId: string; choiceId: string }[]): Promise<QuizGrade[] | null> {
+export async function gradeQuiz(storyId: string, answers: QuizAnswer[]): Promise<QuizGrade[] | null> {
   if (!UUID.test(storyId) || !Array.isArray(answers) || answers.length > 20) {
     return null;
   }
-  if (answers.some((answer) => !UUID.test(answer.questionId) || !UUID.test(answer.choiceId))) {
+  if (
+    answers.some(
+      (answer) =>
+        !UUID.test(answer.questionId) ||
+        !Array.isArray(answer.choiceIds) ||
+        answer.choiceIds.length > 6 ||
+        answer.choiceIds.some((choiceId) => !UUID.test(choiceId)),
+    )
+  ) {
     return null;
   }
 
@@ -88,12 +98,13 @@ export async function gradeQuiz(storyId: string, answers: { questionId: string; 
     if (!question) {
       return [];
     }
-    const chosen = question.choices.find((choice) => choice.id === answer.choiceId);
-    const right = question.choices.find((choice) => choice.correct);
-    if (!chosen || !right) {
-      return [];
-    }
-    return [{ questionId: question.id, ok: chosen.correct, answer: right.label }];
+    const correct = question.choices.filter((choice) => choice.correct);
+    const picked = new Set(answer.choiceIds);
+    const ok =
+      correct.length > 0 &&
+      correct.every((choice) => picked.has(choice.id)) &&
+      question.choices.every((choice) => choice.correct || !picked.has(choice.id));
+    return [{ questionId: question.id, ok, answer: correct.map((choice) => choice.label).join(" · ") }];
   });
 }
 

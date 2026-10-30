@@ -153,7 +153,8 @@ function fillGaps(cues: WordCue[], endMs: number) {
     while (index < next.length && next[index].endMs <= next[index].startMs) {
       index += 1;
     }
-    const left = start > 0 ? next[start - 1].endMs : 0;
+    const speech = index < next.length ? next[index].startMs : endMs;
+    const left = start > 0 ? next[start - 1].endMs : speech;
     const right = index < next.length ? next[index].startMs : Math.max(endMs, left + 1);
     const count = index - start;
     const span = Math.max(right - left, count);
@@ -164,6 +165,25 @@ function fillGaps(cues: WordCue[], endMs: number) {
     }
   }
   return next;
+}
+
+/** Moves a track that starts during leading silence onto the speech itself. */
+export function fitCuesToSpeech(cues: WordCue[], speechStartMs: number, speechEndMs: number): WordCue[] {
+  if (cues.length === 0 || speechEndMs <= speechStartMs) {
+    return cues;
+  }
+  const first = cues[0]?.startMs ?? 0;
+  const last = cues[cues.length - 1]?.endMs ?? first;
+  if (first >= speechStartMs - 400) {
+    return cues;
+  }
+  const from = Math.max(last - first, 1);
+  const span = speechEndMs - speechStartMs;
+  return cues.map((cue) => {
+    const startMs = Math.round(speechStartMs + ((cue.startMs - first) / from) * span);
+    const endMs = Math.round(speechStartMs + ((cue.endMs - first) / from) * span);
+    return { startMs, endMs: Math.max(endMs, startMs + 1) };
+  });
 }
 
 export function readCues(value: unknown): WordCue[] {

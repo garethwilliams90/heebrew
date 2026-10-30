@@ -88,7 +88,7 @@ export const StoryPlayer = forwardRef<StoryPlayerHandle, { src: string; onTime?:
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-3">
+    <div className="mt-3 flex flex-wrap items-center gap-2">
       <audio
         ref={audioRef}
         preload="metadata"
@@ -110,11 +110,11 @@ export const StoryPlayer = forwardRef<StoryPlayerHandle, { src: string; onTime?:
           onDurationRef.current?.(event.currentTarget.duration);
         }}
       />
-      <p className="text-sm text-emerald-900/70">
+      <p className="text-sm text-muted-foreground tabular-nums">
         {clock}
         {duration != null ? ` / ${formatClock(duration)}` : ""}
       </p>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1">
         <Button type="button" variant="outline" size="sm" onClick={() => skip(-15)} aria-label={t("back15")}>
           -15
         </Button>

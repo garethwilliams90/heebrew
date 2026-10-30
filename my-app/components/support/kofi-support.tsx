@@ -77,7 +77,7 @@ function KofiDialog({ onClose }: { onClose: () => void }) {
   return (
     <FormDialog label={t("title")} onClose={onClose} className="w-full max-w-md">
       <motion.div
-        className="rounded-3xl bg-white p-5 text-emerald-950 shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]"
+        className="flex flex-col gap-4 rounded-3xl bg-white p-5 text-emerald-950 shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]"
         initial={reduce ? false : { opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", bounce: 0.2, visualDuration: 0.28 }}
@@ -92,7 +92,7 @@ function KofiDialog({ onClose }: { onClose: () => void }) {
           </Button>
         </div>
         {supporters.length > 0 ? (
-          <ul className="mt-4 flex flex-col gap-2">
+          <ul className="flex flex-col gap-2">
             <li className="text-xs font-medium tracking-wide text-emerald-800/70 uppercase">{t("supporters")}</li>
             {supporters.map((supporter) => (
               <li key={supporter.id} className="rounded-2xl bg-emerald-50 px-3 py-2 text-sm">
@@ -104,15 +104,17 @@ function KofiDialog({ onClose }: { onClose: () => void }) {
           </ul>
         ) : null}
         <iframe
-          title={t("title")}
+          id="kofiframe"
+          title="alefhebrew"
           src={kofiEmbedUrl}
-          className="mt-4 h-[32rem] w-full rounded-2xl border border-emerald-950/10 bg-[#f9f9f9]"
+          height={712}
+          className="w-full rounded-2xl border-0 bg-[#f9f9f9] p-1"
         />
         <a
           href={socialLinks.kofi}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex text-sm font-medium text-[#ff5e5b] underline-offset-4 hover:underline"
+          className="text-sm font-medium text-[#ff5e5b] underline-offset-4 hover:underline"
         >
           {t("page")}
         </a>

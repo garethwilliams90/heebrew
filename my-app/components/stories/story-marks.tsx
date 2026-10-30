@@ -1,15 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CircleCheck, Heart } from "lucide-react";
+import { Check, CircleCheck, Heart } from "lucide-react";
 import { animate, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
 import useSound from "use-sound";
 import { useSettings } from "@/components/settings/settings-provider";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "@/i18n/navigation";
 import { lessonAudioUrl } from "@/lib/audio/lesson-audio";
-import { toggleComplete, toggleHeart } from "@/lib/stories/engagement";
+import { toggleComplete, toggleHeart, toggleTabComplete } from "@/lib/stories/engagement";
+import type { StoryTab } from "@/lib/stories/queries";
 
 type MarkResult = boolean | "signed-out";
 
@@ -72,11 +74,13 @@ export function StoryMarks({
   signedIn,
   hearted,
   completed,
+  doneTabs,
 }: {
   storyId: string;
   signedIn: boolean;
   hearted: boolean;
   completed: boolean;
+  doneTabs: StoryTab[];
 }) {
   const t = useTranslations("Stories");
 
@@ -97,17 +101,19 @@ export function StoryMarks({
     );
   }
 
-  return <SignedMarks storyId={storyId} hearted={hearted} completed={completed} />;
+  return <SignedMarks storyId={storyId} hearted={hearted} completed={completed} doneTabs={doneTabs} />;
 }
 
 function SignedMarks({
   storyId,
   hearted,
   completed,
+  doneTabs,
 }: {
   storyId: string;
   hearted: boolean;
   completed: boolean;
+  doneTabs: StoryTab[];
 }) {
   const t = useTranslations("Stories");
   const { sound, volume } = useSettings();
@@ -118,6 +124,7 @@ function SignedMarks({
   const doneOffSound = useClip("ui/pop-down.mp3", 0.5, sound, volume);
   const [heartOn, setHeartOn] = useState(hearted);
   const [done, setDone] = useState(completed);
+  const [tabsOn, setTabsOn] = useState(doneTabs);
   const [heartBusy, setHeartBusy] = useState(false);
   const [doneBusy, setDoneBusy] = useState(false);
   const heartLock = useRef(false);
@@ -176,8 +183,25 @@ function SignedMarks({
     })();
   }
 
+  function markTab(tab: StoryTab) {
+    const had = tabsOn.includes(tab);
+    setTabsOn((current) => (had ? current.filter((item) => item !== tab) : [...current, tab]));
+    if (had) {
+      setDone(false);
+    }
+    void toggleTabComplete(storyId, tab).then((result) => {
+      if (result === "signed-out") {
+        setTabsOn(doneTabs);
+        setDone(completed);
+        return;
+      }
+      setTabsOn((current) => (result.on ? (current.includes(tab) ? current : [...current, tab]) : current.filter((item) => item !== tab)));
+      setDone(result.completed);
+    });
+  }
+
   return (
-    <div className="flex gap-2">
+    <div className="flex items-center gap-1">
       <Button
         type="button"
         variant="outline"
@@ -214,7 +238,7 @@ function SignedMarks({
         aria-label={done ? t("completed") : t("complete")}
         aria-busy={doneBusy}
         disabled={doneBusy}
-        className={done ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white disabled:opacity-100" : "disabled:opacity-100"}
+        className={done ? "bg-primary text-primary-foreground disabled:opacity-100" : "disabled:opacity-100"}
         onClick={() =>
           commit(
             !done,

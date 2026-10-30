@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { formatClock, nearestRate, nextTime, PLAYBACK_RATES } from "./playback";
-import { activeToken, alignCues, keywordMask } from "./cues";
+import { activeToken, alignCues, fitCuesToSpeech, keywordMask } from "./cues";
 import { glossUnderHebrew, pairedTranscript } from "./lines";
 import { phraseInTranscript } from "./words-model";
 import { parseQuiz } from "./quiz-model";
@@ -30,6 +30,23 @@ test("spoken words line up with the transcript and keywords stay marked", () => 
     { startMs: 400, endMs: 900 },
   ]);
   assert.equal(activeToken(cues, 450), 1);
+  const late = alignCues(["אה", "שלום"], [{ text: "שלום", startMs: 2000, endMs: 2400 }], 3000);
+  assert.ok(late[0] && late[0].startMs >= 2000);
+  assert.equal(activeToken(late, 500), -1);
+  const fitted = fitCuesToSpeech(
+    [
+      { startMs: 0, endMs: 500 },
+      { startMs: 500, endMs: 1000 },
+    ],
+    2000,
+    4000,
+  );
+  assert.equal(fitted[0]?.startMs, 2000);
+  assert.equal(fitted[1]?.endMs, 4000);
+  assert.equal(
+    fitCuesToSpeech([{ startMs: 1800, endMs: 2200 }], 2000, 4000)[0]?.startMs,
+    1800,
+  );
   assert.deepEqual(keywordMask(["גרייס", "אוהבת", "גזר"], ["גרייס אוהבת", "גזר"]), [true, true, true]);
   assert.deepEqual(keywordMask(["הסיפור", "ודגולה", "ובערב"], ["סיפור", "דגולה", "בערב"]), [true, true, true]);
 });
@@ -54,14 +71,29 @@ test("a labeled phrase must appear in the transcript", () => {
   assert.equal(phraseInTranscript("שלום עולם", "חתול"), "");
 });
 
-test("a quiz needs one correct choice among at least two answers", () => {
+test("a quiz needs at least one correct choice among at least two answers", () => {
   const quiz = parseQuiz([
-    { prompt: "Who arrived?", choices: [{ text: "Dana", correct: true }, { text: "Yonatan", correct: false }] },
+    {
+      prompt: "Who arrived?",
+      choices: [
+        { text: "Dana", correct: true },
+        { text: "Noa", correct: true },
+        { text: "Yonatan", correct: false },
+      ],
+    },
   ]);
-  assert.equal(quiz?.length, 1);
+  assert.equal(quiz?.[0]?.choices.filter((choice) => choice.correct).length, 2);
   assert.equal(parseQuiz([{ prompt: "Who?", choices: [{ text: "Dana", correct: true }] }]), null);
   assert.equal(
-    parseQuiz([{ prompt: "Who?", choices: [{ text: "Dana", correct: true }, { text: "Noa", correct: true }] }]),
+    parseQuiz([
+      {
+        prompt: "Who?",
+        choices: [
+          { text: "Dana", correct: false },
+          { text: "Noa", correct: false },
+        ],
+      },
+    ]),
     null,
   );
 });

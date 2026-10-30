@@ -27,7 +27,7 @@ export async function alignStoryCues(storyId: string): Promise<WordCue[]> {
   }
   const tokens = transcriptTokenLines(data.hebrew_transcript).flat();
   const saved = readCues(data.word_cues);
-  if (saved.length === tokens.length && saved.length > 0) {
+  if (saved.length === tokens.length && saved.length > 0 && saved[0].startMs > 80) {
     return saved;
   }
   const downloaded = await service.storage.from("story-audio").download(data.audio_path);

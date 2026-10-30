@@ -43,7 +43,7 @@ export function parseQuiz(input: unknown): QuizQuestion[] | null {
       }
       choices.push({ text, correct: (choice as { correct?: unknown }).correct === true });
     }
-    if (choices.filter((choice) => choice.correct).length !== 1) {
+    if (!choices.some((choice) => choice.correct)) {
       return null;
     }
     questions.push({ prompt, choices });

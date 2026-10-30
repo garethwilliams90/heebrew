@@ -27,6 +27,7 @@ import { isPartOfSpeech, partsOfSpeech, type PartOfSpeech } from "@/lib/flashcar
 import { readKnownWords } from "@/lib/learn/known-words";
 import { useLocalhost } from "@/components/learn/dev-level";
 import { playStudyClip } from "@/lib/learn/pathway/play-study";
+import { spokenKey } from "@/lib/stories/cues";
 import { cn } from "cn";
 
 type KnowledgeFilter = "all" | "known" | "unknown";
@@ -35,7 +36,7 @@ type DeckStatus = "loading" | "ready" | "signed-out" | "error";
 
 const typeRank = ["noun", "adjective", "verb"];
 
-export function DictionaryPage() {
+export function DictionaryPage({ extra = [] }: { extra?: DictionaryEntry[] }) {
   const t = useTranslations("Dictionary");
   const flashcards = useTranslations("Flashcards");
   const local = useLocalhost();
@@ -54,7 +55,7 @@ export function DictionaryPage() {
     ...customDecks,
   ];
   const typeOptions = partsOfSpeech
-    .filter((part) => dictionaryWords.some((word) => word.partOfSpeech === part))
+    .filter((part) => dictionaryWords.some((word) => word.partOfSpeech === part) || extra.some((word) => word.partOfSpeech === part))
     .sort((left, right) => {
       const leftRank = typeRank.indexOf(left);
       const rightRank = typeRank.indexOf(right);
@@ -83,7 +84,9 @@ export function DictionaryPage() {
     };
   }, []);
 
-  const typed = dictionaryWords.filter((word) => wordType === "all" || word.partOfSpeech === wordType);
+  const knownHebrew = new Set(dictionaryWords.map((word) => spokenKey(word.hebrew)));
+  const words = [...dictionaryWords, ...extra.filter((word) => !knownHebrew.has(spokenKey(word.hebrew)))];
+  const typed = words.filter((word) => wordType === "all" || word.partOfSpeech === wordType);
   const known = typed.filter((word) => knownIds.has(word.id));
   const unknown = typed.filter((word) => !knownIds.has(word.id));
   const narrowed = knowledge !== "all" || wordType !== "all";
@@ -275,7 +278,16 @@ function WordRow({
             </span>
           </div>
           <p className="mt-1 text-base text-emerald-950">{word.gloss.en}</p>
-          <p className="text-sm text-emerald-800/70">{word.transliteration}</p>
+          {word.transliteration ? <p className="text-sm text-emerald-800/70">{word.transliteration}</p> : null}
+          {word.gender ? <GenderMark gender={word.gender} /> : null}
+          {word.exampleHebrew ? (
+            <p className="mt-1 text-sm text-muted-foreground">
+              <span dir="rtl" lang="he" className={printFont.className}>
+                {word.exampleHebrew}
+              </span>
+              {word.exampleGloss ? <span> · {word.exampleGloss}</span> : null}
+            </p>
+          ) : null}
           {note ? <p className="mt-1 text-sm text-emerald-800">{note}</p> : null}
         </div>
         <div className="flex shrink-0 items-center gap-2">

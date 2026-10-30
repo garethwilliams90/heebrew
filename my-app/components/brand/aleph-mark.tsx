@@ -104,8 +104,6 @@ export function AlephMark({ className }: { className?: string }) {
     const controls = animate(pose.current.letter, to, {
       ...options,
       onUpdate: (value) => {
-        const trace = ((window as unknown as { __letter?: number[] }).__letter ??= []);
-        if (trace.length < 24) trace.push(Math.round(value * 10) / 10);
         pose.current.letter = value;
         paint();
       },
@@ -155,7 +153,6 @@ export function AlephMark({ className }: { className?: string }) {
     const shift = mergedShift();
     if (!shift) return;
     arm();
-    (window as unknown as { __letter?: number[] }).__letter = [];
     glide("x0", shift.x0, travel);
     glide("y0", shift.y0, travel);
     glide("x2", shift.x2, travel);

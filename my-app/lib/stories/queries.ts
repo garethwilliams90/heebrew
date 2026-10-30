@@ -76,6 +76,7 @@ export type StoryDetail = StoryView & {
   lesson: StoryLesson;
   hearted: boolean;
   completed: boolean;
+  doneTabs: StoryTab[];
 };
 
 function emptyLesson(): StoryLesson {
@@ -168,6 +169,7 @@ async function attachStoryDetails(
     lesson: lessons.get(story.id) ?? emptyLesson(),
     hearted: marks.hearts.has(story.id),
     completed: marks.done.has(story.id),
+    doneTabs: marks.tabs.get(story.id) ?? [],
   }));
 }
 
@@ -261,13 +263,15 @@ async function loadMarks(
 ) {
   const hearts = new Set<string>();
   const done = new Set<string>();
+  const tabs = new Map<string, StoryTab[]>();
   if (!signedIn || ids.length === 0) {
-    return { hearts, done };
+    return { hearts, done, tabs };
   }
   try {
-    const [heartRows, doneRows] = await Promise.all([
+    const [heartRows, doneRows, tabRows] = await Promise.all([
       supabase.from("story_hearts").select("story_id").in("story_id", ids),
       supabase.from("story_completions").select("story_id").in("story_id", ids),
+      supabase.from("story_tab_completions").select("story_id, tab").in("story_id", ids),
     ]);
     for (const row of heartRows.data ?? []) {
       hearts.add(row.story_id);
@@ -275,10 +279,18 @@ async function loadMarks(
     for (const row of doneRows.data ?? []) {
       done.add(row.story_id);
     }
+    for (const row of tabRows.data ?? []) {
+      if (!storyTabs.includes(row.tab as StoryTab)) {
+        continue;
+      }
+      const list = tabs.get(row.story_id) ?? [];
+      list.push(row.tab as StoryTab);
+      tabs.set(row.story_id, list);
+    }
   } catch {
-    return { hearts, done };
+    return { hearts, done, tabs };
   }
-  return { hearts, done };
+  return { hearts, done, tabs };
 }
 
 async function loadWords(ids: string[]) {

@@ -1,13 +1,14 @@
 import { getTranslations } from "next-intl/server";
+import { OwnerEditor } from "@/components/blog/owner-editor";
 import { MediaGallery } from "@/components/content/media-gallery";
 import { MediaUploader, PostEditor } from "@/components/content/lazy-owner-tools";
 import { KofiSupport } from "@/components/support/kofi-support";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
 import { deletePost } from "@/lib/blog/actions";
 import type { PostView } from "@/lib/blog/queries";
-
-const panel = "rounded-3xl border border-emerald-950/10 bg-white/90 p-5 text-emerald-950 shadow-[0_24px_60px_-32px_rgba(6,78,59,0.45)]";
 
 export async function BlogView({ owner, posts }: { owner: boolean; posts: PostView[] }) {
   const t = await getTranslations("Blog");
@@ -22,38 +23,45 @@ export async function BlogView({ owner, posts }: { owner: boolean; posts: PostVi
         <KofiSupport variant="label" />
       </header>
       {owner ? (
-        <section className={panel}>
-          <h2 className="text-lg font-semibold">{t("ownerTitle")}</h2>
-          <p className="mt-1 mb-4 text-sm text-emerald-900/70">{t("ownerHint")}</p>
-          <PostEditor />
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("ownerTitle")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-3 text-sm text-muted-foreground">{t("ownerHint")}</p>
+            <OwnerEditor label={t("ownerTitle")}>
+              <PostEditor />
+            </OwnerEditor>
+          </CardContent>
+        </Card>
       ) : null}
-      {posts.length === 0 ? <p className="text-sm text-emerald-900/70">{t("empty")}</p> : null}
+      {posts.length === 0 ? <p className="text-sm text-muted-foreground">{t("empty")}</p> : null}
       <ul className="flex flex-col gap-3">
         {posts.map((post) => (
-          <li key={post.id} className={panel}>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-semibold">
-                <Link href={`/blog/${post.slug}`} className="hover:underline">
-                  {post.title}
-                </Link>
-              </h2>
-              {owner && !post.published ? (
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-950">{t("draft")}</span>
-              ) : null}
-            </div>
-            <MediaGallery items={post.media} owner={owner} />
-            {owner ? (
-              <>
-                <MediaUploader postId={post.id} />
-                <form action={deletePost} className="mt-4">
-                  <input type="hidden" name="id" value={post.id} />
-                  <Button type="submit" variant="destructive">
-                    {t("delete")}
-                  </Button>
-                </form>
-              </>
-            ) : null}
+          <li key={post.id}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex flex-wrap items-center gap-2 text-xl">
+                  <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                  {owner && !post.published ? <Badge variant="secondary">{t("draft")}</Badge> : null}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <MediaGallery items={post.media} owner={owner} />
+                {owner ? (
+                  <OwnerEditor label={t("edit")}>
+                    <MediaUploader postId={post.id} quiet />
+                    <PostEditor key={`${post.id}:${post.updatedAt}`} post={post} />
+                    <form action={deletePost}>
+                      <input type="hidden" name="id" value={post.id} />
+                      <Button type="submit" variant="destructive">
+                        {t("delete")}
+                      </Button>
+                    </form>
+                  </OwnerEditor>
+                ) : null}
+              </CardContent>
+            </Card>
           </li>
         ))}
       </ul>

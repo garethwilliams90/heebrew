@@ -20,10 +20,6 @@ export function StoryLearn({ lesson }: { lesson: StoryLesson }) {
   const t = useTranslations("Stories");
   const locale = useLocale();
   const visible = lessonIsVisible(lesson);
-  const paragraphs = glossOf(lesson.body, locale)
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
   const concept = glossOf(lesson.concept, locale);
 
   return (
@@ -43,9 +39,17 @@ export function StoryLearn({ lesson }: { lesson: StoryLesson }) {
           </div>
           <h3 className="text-xl font-semibold">{glossOf(lesson.title, locale)}</h3>
           <div className="flex max-w-2xl flex-col gap-3 text-base leading-relaxed">
-            {paragraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
+            {glossOf(lesson.body, locale)
+              .split("\n")
+              .map((line, index) => {
+                if (/^-{3,}$/.test(line.trim())) {
+                  return <Separator key={`rule-${index}`} />;
+                }
+                if (!line.trim()) {
+                  return null;
+                }
+                return <p key={`${index}:${line}`}>{line}</p>;
+              })}
           </div>
           {lesson.examples.length > 0 ? (
             <div className="flex flex-col gap-3">

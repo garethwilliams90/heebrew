@@ -21,6 +21,8 @@ export type DictionaryEntry = {
   partOfSpeech: PartOfSpeech;
   gender: GrammaticalGender | null;
   forms?: WordForms;
+  exampleHebrew?: string;
+  exampleGloss?: string;
 };
 
 const adjectiveForms: Record<string, WordForms> = {

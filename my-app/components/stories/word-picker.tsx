@@ -1,11 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { printFont } from "@/components/alephbet/print-font";
+import { GenderMark } from "@/components/flashcards/gender-mark";
 import { ink } from "@/components/stories/ink";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { exampleFromStory, inferHebrewGender } from "@/lib/stories/word-facts";
 import { createWordDeck, deleteWord, saveWords, type WordActionState } from "@/lib/stories/words";
 import type { WordView } from "@/lib/stories/queries";
 import { cn } from "cn";
@@ -14,14 +16,32 @@ const idle: WordActionState = { error: "", deckId: "" };
 
 const card = "rounded-3xl border border-emerald-950/10 bg-white/90 p-5";
 
-export function WordPicker({ storyId, words }: { storyId: string; words: WordView[] }) {
+export function WordPicker({
+  storyId,
+  words,
+  hebrew,
+  gloss,
+  initialPhrase = "",
+}: {
+  storyId: string;
+  words: WordView[];
+  hebrew: string;
+  gloss: string;
+  initialPhrase?: string;
+}) {
   const t = useTranslations("Stories");
   const [labels, setLabels] = useState(() => words.map((word) => ({ id: word.id, label: word.label })));
-  const [phrase, setPhrase] = useState("");
+  const [phrase, setPhrase] = useState(initialPhrase);
   const [newLabel, setNewLabel] = useState("");
   const [saveState, saveAction, saving] = useActionState(saveWords, idle);
   const [deckState, deckAction, making] = useActionState(createWordDeck, idle);
   const phrases = new Map(words.map((word) => [word.id, word.phrase]));
+
+  useEffect(() => {
+    if (initialPhrase) {
+      setPhrase(initialPhrase);
+    }
+  }, [initialPhrase]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -45,6 +65,7 @@ export function WordPicker({ storyId, words }: { storyId: string; words: WordVie
               <p dir="rtl" lang="he" translate="no" className={cn(printFont.className, "mt-4 text-3xl")}>
                 {phrases.get(word.id)}
               </p>
+              <WordFacts phrase={phrases.get(word.id) ?? ""} hebrew={hebrew} gloss={gloss} />
               <Button type="submit" form={`remove-word-${word.id}`} variant="outline" size="sm" className="mt-3">
                 {t("removeWord")}
               </Button>
@@ -70,6 +91,7 @@ export function WordPicker({ storyId, words }: { storyId: string; words: WordVie
               aria-label={t("hebrewLabel")}
               onChange={(event) => setPhrase(event.target.value)}
             />
+            {phrase.trim() ? <WordFacts phrase={phrase} hebrew={hebrew} gloss={gloss} /> : null}
           </li>
         </ul>
         {saveState.error ? (
@@ -100,6 +122,29 @@ export function WordPicker({ storyId, words }: { storyId: string; words: WordVie
           {making ? t("saving") : t("createDeck")}
         </Button>
       </form>
+    </div>
+  );
+}
+
+function WordFacts({ phrase, hebrew, gloss }: { phrase: string; hebrew: string; gloss: string }) {
+  const t = useTranslations("Stories");
+  const gender = inferHebrewGender(phrase);
+  const example = exampleFromStory(hebrew, gloss, phrase);
+  if (!gender && !example) {
+    return null;
+  }
+  return (
+    <div className="mt-3 flex flex-col gap-1">
+      {gender ? <GenderMark gender={gender} /> : null}
+      {example ? (
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{t("fromStory")} </span>
+          <span dir="rtl" lang="he" translate="no" className={printFont.className}>
+            {example.hebrew}
+          </span>
+          {example.gloss ? <span> · {example.gloss}</span> : null}
+        </p>
+      ) : null}
     </div>
   );
 }

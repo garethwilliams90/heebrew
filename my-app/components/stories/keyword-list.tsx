@@ -7,20 +7,24 @@ import { loadSpeechClip } from "@/lib/flashcards/speech-clip";
 import type { Flashcard } from "@/lib/flashcards/types";
 import { playAudio } from "@/lib/settings/master-volume";
 import type { WordView } from "@/lib/stories/queries";
+import { exampleFromStory, inferHebrewGender, storyPartOfSpeech } from "@/lib/stories/word-facts";
 
-export function storyFlashcards(words: WordView[]): Flashcard[] {
-  return words.map((word) => ({
-    id: word.id,
-    english: word.label,
-    partOfSpeech: "phrase" as const,
-    example: "",
-    hebrew: word.phrase,
-    hebrewExample: "",
-    gender: null,
-  }));
+export function storyFlashcards(words: WordView[], hebrew: string, gloss: string): Flashcard[] {
+  return words.map((word) => {
+    const example = exampleFromStory(hebrew, gloss, word.phrase);
+    return {
+      id: word.id,
+      english: word.label,
+      partOfSpeech: storyPartOfSpeech(word.phrase),
+      example: example?.gloss ?? "",
+      hebrew: word.phrase,
+      hebrewExample: example?.hebrew ?? "",
+      gender: inferHebrewGender(word.phrase),
+    };
+  });
 }
 
-export function KeywordList({ words }: { words: WordView[] }) {
+export function KeywordList({ words, hebrew, gloss }: { words: WordView[]; hebrew: string; gloss: string }) {
   const sound = useSoundPrefs();
   const clips = useRef(new Map<string, HTMLAudioElement>());
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -54,7 +58,7 @@ export function KeywordList({ words }: { words: WordView[] }) {
   return (
     <section className="flex flex-col gap-3">
       <ul className="flex flex-col gap-3">
-        {storyFlashcards(words).map((card) => (
+        {storyFlashcards(words, hebrew, gloss).map((card) => (
           <BrowserCard
             key={card.id}
             readOnly

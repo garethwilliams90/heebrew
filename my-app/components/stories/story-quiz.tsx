@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { usePlaySample } from "@/components/settings/settings-provider";
 import { ink } from "@/components/stories/ink";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { gradeQuiz, saveQuiz, type QuizActionState, type QuizGrade } from "@/lib/stories/quiz";
 import type { StoryQuestion } from "@/lib/stories/queries";
 import { Label } from "../ui/label";
@@ -58,15 +59,15 @@ export function QuizEditor({ storyId, questions }: { storyId: string; questions:
           />
           {question.choices.map((choice, choiceIndex) => (
             <label key={choiceIndex} className="flex items-center gap-2 text-lg">
-              <input
-                type="radio"
-                name={`correct-${index}`}
+              <Checkbox
                 checked={choice.correct}
                 aria-label={t("choiceLabel")}
-                onChange={() =>
+                onCheckedChange={(checked) =>
                   update(index, {
                     ...question,
-                    choices: question.choices.map((item, itemIndex) => ({ ...item, correct: itemIndex === choiceIndex })),
+                    choices: question.choices.map((item, itemIndex) =>
+                      itemIndex === choiceIndex ? { ...item, correct: checked === true } : item,
+                    ),
                   })
                 }
               />
@@ -130,7 +131,7 @@ export function QuizEditor({ storyId, questions }: { storyId: string; questions:
 export function StoryQuiz({ storyId, questions, bare = false }: { storyId: string; questions: StoryQuestion[]; bare?: boolean }) {
   const t = useTranslations("Stories");
   const play = usePlaySample();
-  const [picked, setPicked] = useState<Record<string, string>>({});
+  const [picked, setPicked] = useState<Record<string, string[]>>({});
   const [grades, setGrades] = useState<QuizGrade[] | null>(null);
   const [pending, setPending] = useState(false);
   if (questions.length === 0) {
@@ -147,10 +148,7 @@ export function StoryQuiz({ storyId, questions, bare = false }: { storyId: strin
         setPending(true);
         void gradeQuiz(
           storyId,
-          questions.flatMap((question) => {
-            const choiceId = picked[question.id];
-            return choiceId ? [{ questionId: question.id, choiceId }] : [];
-          }),
+          questions.map((question) => ({ questionId: question.id, choiceIds: picked[question.id] ?? [] })),
         )
           .then((result) => {
             setGrades(result);
@@ -171,12 +169,15 @@ export function StoryQuiz({ storyId, questions, bare = false }: { storyId: strin
             <legend className="text-xl font-semibold">{index + 1}. {question.prompt}</legend>
             {question.choices.map((choice) => (
               <Label key={choice.id} className="flex items-center gap-2 text-lg" dir="rtl" lang="he" translate="no">
-                <input
-                  type="radio"
-                  name={question.id}
-                  value={choice.id}
-                  checked={picked[question.id] === choice.id}
-                  onChange={() => setPicked((current) => ({ ...current, [question.id]: choice.id }))}
+                <Checkbox
+                  checked={(picked[question.id] ?? []).includes(choice.id)}
+                  onCheckedChange={(checked) =>
+                    setPicked((current) => {
+                      const list = current[question.id] ?? [];
+                      const next = checked === true ? [...list, choice.id] : list.filter((id) => id !== choice.id);
+                      return { ...current, [question.id]: next };
+                    })
+                  }
                 />
                 {choice.text}
               </Label>

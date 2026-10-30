@@ -293,6 +293,12 @@ isOneToOne: false
                   Insert: { "completed_at"?: string,"story_id": string,"user_id": string }
                   Update: { "completed_at"?: string,"story_id"?: string,"user_id"?: string }
                   Relationships: []
+                },"story_tab_completions": {
+                  Row: { "completed_at": string,"story_id": string,"tab": string,"user_id": string }
+                  ComputedFields: never
+                  Insert: { "completed_at"?: string,"story_id": string,"tab": string,"user_id": string }
+                  Update: { "completed_at"?: string,"story_id"?: string,"tab"?: string,"user_id"?: string }
+                  Relationships: []
                 },"story_words": {
                   Row: {
                     "created_at": string,"end_ms": number,"id": string,"label": string,"phrase": string,"sort_order": number,"start_ms": number,"story_id": string

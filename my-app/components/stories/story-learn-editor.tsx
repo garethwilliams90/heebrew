@@ -222,6 +222,9 @@ export function StoryLearnEditor({
       </div>
       {state.error ? <p className="text-sm text-destructive">{t(state.error)}</p> : null}
       <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={() => setCopy("body", `${body.replace(/\s*$/, "")}\n---\n`)}>
+          {t("divider")}
+        </Button>
         {draft.examples.length < 8 ? (
           <Button type="button" variant="outline" onClick={() => patch({ examples: [...draft.examples, { hebrew: "", en: "", fr: "", es: "" }] })}>
             {t("addExample")}

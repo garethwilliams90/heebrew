@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useActionState, useEffect, useRef, useState, type FormEvent } from "react";
-import { ChevronLeft, Languages, Pencil } from "lucide-react";
+import { BookOpen, ChevronLeft, Languages, Pencil, X } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { printFont } from "@/components/alephbet/print-font";
 import { MediaGallery } from "@/components/content/media-gallery";
@@ -20,14 +21,17 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { deleteStory, saveStory, type StoryActionState } from "@/lib/stories/actions";
 import { STORY_AUDIO_MAX_BYTES } from "@/lib/stories/audio";
 import { alignStoryCues } from "@/lib/stories/align";
-import { activeToken, keywordMarks, spreadCues, transcriptTokenLines, type WordCue } from "@/lib/stories/cues";
+import { activeToken, fitCuesToSpeech, keywordMarks, spreadCues, transcriptTokenLines, type WordCue } from "@/lib/stories/cues";
 import { glossUnderHebrew, pairedTranscript } from "@/lib/stories/lines";
+import { speechBounds } from "@/lib/stories/speech";
+import { phraseInTranscript } from "@/lib/stories/words-model";
 import type { PathwayLessonSection } from "@/lib/learn/pathway/lesson-links";
 import { lessonIsVisible } from "@/lib/stories/lesson-model";
 import type { StoryDetail, StoryLevel, StoryTab } from "@/lib/stories/queries";
+import { cn } from "cn";
 
 const storyLevels = ["beginner", "intermediate", "advanced"] as const satisfies readonly StoryLevel[];
-import { cn } from "cn";
+const highlightSpring = { type: "spring" as const, bounce: 0.15, visualDuration: 0.28 };
 
 const FlashcardSession = dynamic(() =>
   import("@/components/flashcards/flashcard-session").then((mod) => mod.FlashcardSession),
@@ -58,6 +62,7 @@ export function StoryCard({
 }) {
   const t = useTranslations("Stories");
   const locale = useLocale();
+  const reduceMotion = useReducedMotion();
   const cardRef = useRef<HTMLElement>(null);
   const alignStarted = useRef(false);
   const learnOpen = owner || lessonIsVisible(story.lesson);
@@ -73,6 +78,10 @@ export function StoryCard({
   const formId = `story-save-${story.id}`;
   const [saveState, saveAction, saving] = useActionState(saveStory, { error: "" } as StoryActionState);
   const [audioTooBig, setAudioTooBig] = useState(false);
+  const [reading, setReading] = useState(false);
+  const [pendingPhrase, setPendingPhrase] = useState("");
+  const [speech, setSpeech] = useState<{ startMs: number; endMs: number } | null>(null);
+  const requiredTabs: StoryTab[] = learnOpen ? ["story", "learn", "words", "quiz"] : ["story", "words", "quiz"];
   const glossChanged = glossText !== story.gloss[glossLocale];
   const transcriptEn = glossLocale === "en" ? glossText : story.gloss.en;
   const transcriptFr = glossLocale === "fr" ? glossText : glossLocale === "en" && glossChanged ? "" : story.gloss.fr;
@@ -83,6 +92,49 @@ export function StoryCard({
       cardRef.current?.scrollIntoView({ block: "start" });
     }
   }, [focused]);
+
+  useEffect(() => {
+    if (!story.audioUrl) {
+      return;
+    }
+    let cancel = false;
+    let closed = false;
+    const context = new AudioContext();
+    function close() {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      void context.close().catch(() => {});
+    }
+    void fetch(story.audioUrl)
+      .then((response) => response.arrayBuffer())
+      .then((buffer) => context.decodeAudioData(buffer))
+      .then((audio) => {
+        if (!cancel) {
+          setSpeech(speechBounds(audio.getChannelData(0), audio.sampleRate));
+        }
+      })
+      .catch(() => {})
+      .finally(close);
+    return () => {
+      cancel = true;
+      close();
+    };
+  }, [story.audioUrl]);
+
+  useEffect(() => {
+    if (!reading) {
+      return;
+    }
+    function onChange() {
+      if (!document.fullscreenElement) {
+        setReading(false);
+      }
+    }
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, [reading]);
 
   useEffect(() => {
     setTitle(story.title);
@@ -104,17 +156,47 @@ export function StoryCard({
     aligned && aligned.id === story.id && aligned.updatedAt === story.updatedAt && aligned.cues.length === tokens.length
       ? aligned.cues
       : story.cues;
-  const cues = savedCues.length === tokens.length ? savedCues : durationMs > 0 ? spreadCues(tokens, durationMs) : [];
+  const baseCues = savedCues.length === tokens.length ? savedCues : durationMs > 0 ? spreadCues(tokens, durationMs) : [];
+  const cues = speech ? fitCuesToSpeech(baseCues, speech.startMs, speech.endMs) : baseCues;
   const active = playing ? activeToken(cues, timeMs) : -1;
   const questions = story.questions.map((question) => ({
     ...question,
     choices: question.choices.map((choice) => ({ ...choice, correct: false })),
   }));
-  const cards = storyFlashcards(story.words);
+  const cards = storyFlashcards(story.words, story.hebrew, gloss);
+
+  function openRead() {
+    setTab("story");
+    setEditingTab(null);
+    setReading(true);
+    void cardRef.current?.requestFullscreen?.().catch(() => {});
+  }
+
+  function closeRead() {
+    setReading(false);
+    if (document.fullscreenElement) {
+      void document.exitFullscreen?.();
+    }
+  }
+
+  function takePhrase() {
+    if (!owner) {
+      return;
+    }
+    const selected = window.getSelection()?.toString().replace(/\s+/g, " ").trim() ?? "";
+    const phrase = phraseInTranscript(story.hebrew, selected);
+    if (!phrase) {
+      return;
+    }
+    setPendingPhrase(phrase);
+    setTab("words");
+    setEditingTab("words");
+  }
 
   function handlePlaying(next: boolean) {
     setPlaying(next);
-    if (!next || alignStarted.current || (savedCues.length === tokens.length && savedCues.length > 0)) {
+    const trusted = savedCues.length === tokens.length && savedCues.length > 0 && (savedCues[0]?.startMs ?? 0) > 80;
+    if (!next || alignStarted.current || trusted) {
       return;
     }
     alignStarted.current = true;
@@ -126,15 +208,25 @@ export function StoryCard({
   }
 
   function hebrewToken(token: string, cueIndex: number, label: string | null) {
-    const className = cn(label && keywordClass, cueIndex === active && "rounded bg-amber-200 px-0.5 text-emerald-950");
+    const hot = cueIndex === active;
+    const word = (
+      <span className="relative inline-block">
+        {hot ? (
+          <motion.span
+            layoutId={`story-highlight-${story.id}`}
+            className="absolute inset-0 rounded-md bg-primary/15"
+            transition={reduceMotion ? { duration: 0 } : highlightSpring}
+          />
+        ) : null}
+        <span className={cn("relative", label && keywordClass)}>{token}</span>
+      </span>
+    );
     if (!label) {
-      return <span className={className}>{token}</span>;
+      return word;
     }
     return (
       <Tooltip>
-        <TooltipTrigger asChild>
-          <span className={className}>{token}</span>
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{word}</TooltipTrigger>
         <TooltipContent>{label}</TooltipContent>
       </Tooltip>
     );
@@ -164,9 +256,13 @@ export function StoryCard({
   }
 
   return (
-    <article ref={cardRef} id={`story-${story.id}`} className={cn(panel, focused && "scroll-mt-24")}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
+    <article
+      ref={cardRef}
+      id={`story-${story.id}`}
+      className={cn(panel, focused && "scroll-mt-24", reading && "fixed inset-0 z-40 overflow-y-auto bg-background p-6")}
+    >
+      <div className="flex items-start justify-between gap-3" dir="rtl" lang="he" translate="no">
+        <div  className="flex flex-wrap items-center gap-2">
           {editingStory ? (
             <input
               form={formId}
@@ -203,33 +299,6 @@ export function StoryCard({
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-950">{t("draft")}</span>
           ) : null}
         </div>
-        <div className="flex shrink-0 gap-2">
-          {story.published ? (
-            <StoryMarks storyId={story.id} signedIn={signedIn} hearted={story.hearted} completed={story.completed} />
-          ) : null}
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-pressed={glossOn}
-            aria-label={glossOn ? t("hideGloss") : t("showGloss")}
-            onClick={() => setGlossOn((on) => !on)}
-          >
-            <Languages />
-          </Button>
-          {owner ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              aria-pressed={editingTab === tab}
-              aria-label={t("edit")}
-              onClick={() => setEditingTab((current) => (current === tab ? null : tab))}
-            >
-              <Pencil />
-            </Button>
-          ) : null}
-        </div>
       </div>
       <Tabs
         value={tab}
@@ -240,17 +309,63 @@ export function StoryCard({
         }}
         className="mt-3"
       >
-        <TabsList className="w-full">
-          <TabsTrigger value="story">{t("tabStory")}</TabsTrigger>
-          <TabsTrigger value="words">{t("tabWords")}</TabsTrigger>
-          <TabsTrigger value="quiz">{t("tabQuiz")}</TabsTrigger>
-          {learnOpen ? (
-            <TabsTrigger value="learn">
-              {t("tabLearn")}
-              <Badge variant="default">{t("newLesson")}</Badge>
-            </TabsTrigger>
-          ) : null}
-        </TabsList>
+        <div className="flex flex-wrap items-center gap-2">
+          {reading ? null : (
+            <TabsList>
+              <TabsTrigger value="story">{t("tabStory")}</TabsTrigger>
+              {learnOpen ? (
+                <TabsTrigger value="learn">
+                  {t("tabLearn")}
+                  <Badge>{t("newLesson")}</Badge>
+                </TabsTrigger>
+              ) : null}
+              <TabsTrigger value="words">{t("tabWords")}</TabsTrigger>
+              <TabsTrigger value="quiz">{t("tabQuiz")}</TabsTrigger>
+            </TabsList>
+          )}
+          <div className="ml-auto flex items-center gap-1 rounded-full border bg-card p-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-pressed={glossOn}
+              aria-label={glossOn ? t("hideGloss") : t("showGloss")}
+              onClick={() => setGlossOn((on) => !on)}
+            >
+              <Languages />
+            </Button>
+            {story.published ? (
+              <StoryMarks
+                storyId={story.id}
+                signedIn={signedIn}
+                hearted={story.hearted}
+                completed={story.completed}
+                doneTabs={story.doneTabs}
+              />
+            ) : null}
+            {reading ? (
+              <Button type="button" variant="ghost" size="icon" aria-label={t("closeRead")} onClick={closeRead}>
+                <X />
+              </Button>
+            ) : (
+              <Button type="button" variant="ghost" size="icon" aria-label={t("read")} onClick={openRead}>
+                <BookOpen />
+              </Button>
+            )}
+            {owner && !reading ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-pressed={editingTab === tab}
+                aria-label={t("edit")}
+                onClick={() => setEditingTab((current) => (current === tab ? null : tab))}
+              >
+                <Pencil />
+              </Button>
+            ) : null}
+          </div>
+        </div>
         <TabsContent value="story" className="text-base">
           {story.audioUrl ? (
             <StoryPlayer
@@ -290,7 +405,7 @@ export function StoryCard({
               ) : null}
             </div>
           ) : (
-          <div className="mt-3 flex flex-col gap-3">
+          <div className="mt-3 flex flex-col gap-3" onMouseUp={owner && !editingStory ? takePhrase : undefined}>
             {lines.map((line, lineIndex) => {
               const lineTokens = tokenLines[lineIndex] ?? [];
               const marks = keywordMarks(lineTokens, story.words);
@@ -298,7 +413,7 @@ export function StoryCard({
               const offset = tokenLines.slice(0, lineIndex).reduce((sum, row) => sum + row.length, 0);
               if (!glossOn) {
                 return (
-                  <p key={`${lineIndex}:${line.hebrew}`} dir="rtl" lang="he" translate="no" className={cn(printFont.className, "text-2xl leading-relaxed")}>
+                  <p key={`${lineIndex}:${line.hebrew}`} dir="rtl" lang="he" translate="no" className={cn(printFont.className, reading ? "text-4xl" : "text-2xl", "leading-relaxed")}>
                     {lineTokens.map((token, index) => {
                       const cueIndex = offset + index;
                       return (
@@ -312,7 +427,7 @@ export function StoryCard({
                 );
               }
               return (
-                <div key={`${lineIndex}:${line.hebrew}`} dir="rtl" className={cn(printFont.className, "flex flex-wrap gap-x-3 gap-y-2 text-2xl leading-relaxed")}>
+                <div key={`${lineIndex}:${line.hebrew}`} dir="rtl" className={cn(printFont.className, "flex flex-wrap gap-x-3 gap-y-2 leading-relaxed", reading ? "text-4xl" : "text-2xl")}>
                   {lineTokens.map((token, index) => {
                     const cueIndex = offset + index;
                     const slot = glossSlots[index];
@@ -339,8 +454,8 @@ export function StoryCard({
             })}
           </div>
           )}
-          <MediaGallery items={story.media} owner={editingStory} />
-          {editingStory ? (
+          {reading ? null : <MediaGallery items={story.media} owner={editingStory} />}
+          {editingStory && !reading ? (
             <>
               <form
                 id={formId}
@@ -391,13 +506,20 @@ export function StoryCard({
         </TabsContent>
         <TabsContent value="words" className="flex flex-col gap-3 text-base">
           {editingTab === "words" ? (
-            <WordPicker key={story.words.map((word) => `${word.id}:${word.label}`).join()} storyId={story.id} words={story.words} />
+            <WordPicker
+              key={`${story.words.map((word) => `${word.id}:${word.label}`).join()}|${pendingPhrase}`}
+              storyId={story.id}
+              words={story.words}
+              hebrew={story.hebrew}
+              gloss={gloss}
+              initialPhrase={pendingPhrase}
+            />
           ) : story.words.length > 0 ? (
             <>
               <Button type="button" className="self-start" onClick={() => setStudying(true)}>
                 {t("studyFlashcards")}
               </Button>
-              <KeywordList words={story.words} />
+              <KeywordList words={story.words} hebrew={story.hebrew} gloss={gloss} />
             </>
           ) : (
             <p className="text-sm text-muted-foreground">{t("emptyWords")}</p>

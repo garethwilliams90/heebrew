@@ -5,6 +5,8 @@ import { routing } from "@/i18n/routing";
 import { revalidateLocalized } from "@/lib/content/revalidate";
 import { cleanRequired } from "@/lib/content/text";
 import { requireOwner } from "@/lib/owner-session";
+import { translateEnglishToLocales } from "@/lib/azure/translate";
+import { exampleFromStory, inferHebrewGender, storyPartOfSpeech, storyWordKey } from "@/lib/stories/word-facts";
 import { deckTitle, phraseInTranscript } from "@/lib/stories/words-model";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -133,8 +135,68 @@ export async function saveWords(_state: WordActionState, formData: FormData): Pr
     }
   }
 
+  try {
+    await publishStoryWords(service, storyId);
+  } catch {
+    // The story words are already saved. The dictionary updates on the next save.
+  }
   revalidateLocalized("/stories");
   return idle;
+}
+
+async function publishStoryWords(service: ReturnType<typeof createServiceClient>, storyId: string) {
+  const { data: story } = await service
+    .from("stories")
+    .select("hebrew_transcript, transcript_en, transcript_fr, transcript_es")
+    .eq("id", storyId)
+    .maybeSingle();
+  const { data: words } = await service.from("story_words").select("phrase, label").eq("story_id", storyId);
+  if (!story || !words || words.length === 0) {
+    return;
+  }
+  let locales: { fr: string; es: string }[] = [];
+  try {
+    locales = await translateEnglishToLocales(words.map((word) => word.label));
+  } catch {
+    locales = [];
+  }
+  for (const [index, word] of words.entries()) {
+    const exampleEn = exampleFromStory(story.hebrew_transcript, story.transcript_en, word.phrase);
+    const exampleFr = exampleFromStory(story.hebrew_transcript, story.transcript_fr, word.phrase);
+    const exampleEs = exampleFromStory(story.hebrew_transcript, story.transcript_es, word.phrase);
+    const { data: saved, error } = await service
+      .from("vocabulary_words")
+      .upsert(
+        {
+          word_key: storyWordKey(word.phrase),
+          hebrew: word.phrase,
+          en: word.label,
+          fr: locales[index]?.fr || null,
+          es: locales[index]?.es || null,
+          part_of_speech: storyPartOfSpeech(word.phrase),
+          gender: inferHebrewGender(word.phrase),
+          tags: ["story"],
+        },
+        { onConflict: "word_key" },
+      )
+      .select("id")
+      .single();
+    if (error || !saved || !exampleEn?.hebrew) {
+      continue;
+    }
+    const existing = await service.from("word_examples").select("id").eq("word_id", saved.id).eq("hebrew", exampleEn.hebrew).maybeSingle();
+    if (existing.data) {
+      continue;
+    }
+    await service.from("word_examples").insert({
+      word_id: saved.id,
+      hebrew: exampleEn.hebrew,
+      en: exampleEn.gloss || word.label,
+      fr: exampleFr?.gloss || null,
+      es: exampleEs?.gloss || null,
+    });
+  }
+  revalidateLocalized("/dictionary");
 }
 
 export async function deleteWord(formData: FormData) {
@@ -162,7 +224,11 @@ export async function createWordDeck(_state: WordActionState, formData: FormData
   }
 
   const service = createServiceClient();
-  const { data: story } = await service.from("stories").select("title").eq("id", storyId).maybeSingle();
+  const { data: story } = await service
+    .from("stories")
+    .select("title, hebrew_transcript, transcript_en")
+    .eq("id", storyId)
+    .maybeSingle();
   const { data: words } = await service
     .from("story_words")
     .select("phrase, label")
@@ -186,13 +252,19 @@ export async function createWordDeck(_state: WordActionState, formData: FormData
   }
 
   const { error: cardError } = await supabase.from("cards").insert(
-    words.map((word) => ({
-      user_id: owner.id,
-      deck_id: deck.id,
-      english: word.label,
-      part_of_speech: "phrase" as const,
-      hebrew: word.phrase,
-    })),
+    words.map((word) => {
+      const example = exampleFromStory(story.hebrew_transcript, story.transcript_en, word.phrase);
+      return {
+        user_id: owner.id,
+        deck_id: deck.id,
+        english: word.label,
+        part_of_speech: storyPartOfSpeech(word.phrase),
+        hebrew: word.phrase,
+        gender: inferHebrewGender(word.phrase),
+        example: example?.gloss ?? "",
+        hebrew_example: example?.hebrew ?? "",
+      };
+    }),
   );
   if (cardError) {
     await supabase.from("cards").delete().eq("user_id", owner.id).eq("deck_id", deck.id);
@@ -200,6 +272,11 @@ export async function createWordDeck(_state: WordActionState, formData: FormData
     return failed("storage");
   }
 
+  try {
+    await publishStoryWords(service, storyId);
+  } catch {
+    // The deck is already created. The dictionary updates on the next word save.
+  }
   revalidatePath("/decks");
   for (const locale of routing.locales) {
     revalidatePath(`/${locale}/decks`);
