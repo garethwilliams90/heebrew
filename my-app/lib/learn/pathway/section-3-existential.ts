@@ -107,7 +107,7 @@ const customerLines = [
   line("ma-kore", "מַה קוֹרֶה", "what's up", "quoi de neuf", "qué pasa"),
   line("efshar-order", "אֶפְשָׁר לְהַזְמִין", "can I order", "puis-je commander", "puedo pedir"),
   line("please-hafuch", "אֶפְשָׁר בְּבַקָּשָׁה הָפוּךְ", "can I have a capuccino please", "puis-je avoir un capuccino s'il vous plaît", "puedo pedir un capuccino por favor"),
-  line("please-kal", "אֶפְשָׁר בְּבַקָּשָׁה קָפֶה קר", "can I have an iced coffee please", "puis-je avoir un café glacé s'il vous plaît", "puedo pedir un café helado por favor"),
+  line("please-kal", "אֶפְשָׁר בְּבַקָּשָׁה קָפֶה קַל", "can I have a light coffee please", "puis-je avoir un café léger s'il vous plaît", "puedo pedir un café ligero por favor"),
   spoken("espresso"),
   spoken("ve-kruason"),
 ];
@@ -520,9 +520,9 @@ const levels: readonly PathwayLevel[] = [
       {
         title: gloss("What you say", "Ce que tu dis", "Lo que dices"),
         body: gloss(
-          `These are the customer's lines. ${he("אפשר")} asks if you may. ${he("בבקשה")} is please. A hafuch is a coffee with milk. ${he("קפה קר")} is a light coffee. ${he("וקרואסון")} adds a croissant.`,
-          `Ce sont les phrases du client. ${he("אפשר")} demande la permission. ${he("בבקשה")} veut dire s'il vous plaît. Un hafouch est un café au lait. ${he("קפה קר")} est un café léger. ${he("וקרואסון")} ajoute un croissant.`,
-          `Estas son las frases del cliente. ${he("אפשר")} pide permiso. ${he("בבקשה")} significa por favor. Un hafuj es un café con leche. ${he("קפה קר")} es un café ligero. ${he("וקרואסון")} añade un cruasán.`,
+          `These are the customer's lines. ${he("אפשר")} asks if you may. ${he("בבקשה")} is please. A hafuch is a coffee with milk. ${he("קפה קל")} is a light coffee. ${he("וקרואסון")} adds a croissant.`,
+          `Ce sont les phrases du client. ${he("אפשר")} demande la permission. ${he("בבקשה")} veut dire s'il vous plaît. Un hafouch est un café au lait. ${he("קפה קל")} est un café léger. ${he("וקרואסון")} ajoute un croissant.`,
+          `Estas son las frases del cliente. ${he("אפשר")} pide permiso. ${he("בבקשה")} significa por favor. Un hafuj es un café con leche. ${he("קפה קל")} es un café ligero. ${he("וקרואסון")} añade un cruasán.`,
         ),
         samples: customerLines.map((item) => ({ hebrew: item.hebrew, gloss: item.gloss, audio: item.audio, say: item.say })),
       },

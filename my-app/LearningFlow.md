@@ -270,7 +270,7 @@ This level covers a full interaction scenario between a customer and waiter/wait
 - מה נשמע (ma nishma - how are you) or מה קורה (ma koreh - what's up)
 - אפשר להזמין (efshar lehazmin - can I order)
 - אפשר בבקשה הפוך (efshar bevakasha hafuch - can I have a hafuch please)
-- אפשר בבקשה קפה קר (efshar bevakasha kafe kar - can I have an iced coffee please)
+- אפשר בבקשה קפה קל (efshar bevakasha kafe kal - can I have a light coffee please)
 - אספרסו (espresso)
 - וקרואסון (ve kuason - and a croissant)
 
