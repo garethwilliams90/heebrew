@@ -366,6 +366,7 @@
     "speakWrongClosest": "Pas tout à fait. C'était plus proche de <word></word>. Réessayez.",
     "speakEmpty": "Rien n'est passé. Réessayez.",
     "speakMicMissing": "Ce navigateur ne peut pas utiliser le micro. Autorisez-le et réessayez.",
+    "speakScoreFailed": "Impossible de vérifier. Réessayez.",
     "micSource": "Microphone",
     "micDefault": "Par défaut",
     "micMute": "Couper le micro",

@@ -383,6 +383,7 @@
     "speakWrongClosest": "Not quite. That was closer to <word></word>. Try again.",
     "speakEmpty": "Nothing came through. Try again.",
     "speakMicMissing": "This browser can't use the microphone. Allow the mic and try again.",
+    "speakScoreFailed": "Couldn't check that. Try again.",
     "micSource": "Microphone",
     "micDefault": "Default",
     "micMute": "Mute mic",
