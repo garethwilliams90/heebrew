@@ -366,6 +366,7 @@
     "speakWrongClosest": "Casi. Eso se acercaba más a <word></word>. Inténtalo de nuevo.",
     "speakEmpty": "No se oyó nada. Inténtalo de nuevo.",
     "speakMicMissing": "Este navegador no puede usar el micrófono. Permítelo e inténtalo de nuevo.",
+    "speakScoreFailed": "No se pudo comprobar. Inténtalo de nuevo.",
     "micSource": "Micrófono",
     "micDefault": "Predeterminado",
     "micMute": "Silenciar micrófono",

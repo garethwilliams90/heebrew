@@ -19,7 +19,9 @@ import { cn } from "cn";
 const recordMs = 4000;
 const deviceKey = "webrew.mic-device";
 
-type Phase = "ready" | "listening" | "scoring" | "close" | "wrong" | "missing";
+type Phase = "ready" | "listening" | "scoring" | "close" | "wrong" | "missing" | "error";
+
+type ScoreBody = { pass?: boolean; close?: boolean; error?: string };
 
 export function ListenRepeat({
   items,
@@ -133,7 +135,20 @@ export function ListenRepeat({
     form.set("audio", wavBlob(wav), "clip.wav");
     try {
       const response = await fetch("/api/speech/score", { method: "POST", body: form });
-      const body = (await response.json()) as { pass?: boolean; close?: boolean };
+      let body: ScoreBody;
+      try {
+        body = (await response.json()) as ScoreBody;
+      } catch {
+        setTone(null);
+        setPhase("error");
+        return;
+      }
+      // Network/Azure/API failures must not burn hearts — only explicit graded fails do.
+      if (!response.ok || body.error || typeof body.pass !== "boolean") {
+        setTone(null);
+        setPhase("error");
+        return;
+      }
       if (body.pass && body.close) {
         setTone("correct");
         setPhase("close");
@@ -146,15 +161,13 @@ export function ListenRepeat({
         advance.pass();
         return;
       }
-    } catch {
       setTone("wrong");
       setPhase("wrong");
       advance.miss(() => void playStudyClip({ ...item, letterId: undefined }));
-      return;
+    } catch {
+      setTone(null);
+      setPhase("error");
     }
-    setTone("wrong");
-    setPhase("wrong");
-    advance.miss(() => void playStudyClip({ ...item, letterId: undefined }));
   }
 
   if (!item) {
@@ -232,6 +245,7 @@ export function ListenRepeat({
       {phase === "close" ? <p className="text-emerald-800">{t("slightlyOff")}</p> : null}
       {phase === "wrong" ? <p className="text-red-800">{t("speakWrong")}</p> : null}
       {phase === "missing" ? <p className="text-emerald-800">{t("speakMicMissing")}</p> : null}
+      {phase === "error" ? <p className="text-emerald-800">{t("speakScoreFailed")}</p> : null}
     </div>
     </ExerciseChrome>
   );
