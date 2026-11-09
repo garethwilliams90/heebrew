@@ -194,7 +194,7 @@ export async function saveSessionProgress(
           }
         : {}),
     })),
-    { onConflict: "user_id,deck_id,card_id" },
+    { onConflict: "user_id,deck_id,card_id", defaultToNull: false },
   );
 
   if (!error) {

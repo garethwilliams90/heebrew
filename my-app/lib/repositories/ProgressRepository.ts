@@ -89,7 +89,10 @@ export class ProgressRepository extends BaseRepository {
     return this.progress().upsert(row, options);
   }
 
-  upsertRows(rows: ProgressUpsertRow[], options: { onConflict: string }) {
+  upsertRows(
+    rows: ProgressUpsertRow[],
+    options: { onConflict: string; defaultToNull?: boolean },
+  ) {
     return this.progress().upsert(rows, options);
   }
 }
